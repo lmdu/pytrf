@@ -1,2 +1,2 @@
-# trit
-tandem repeat identification tool
+# strit
+short tandem repeat identification tool
