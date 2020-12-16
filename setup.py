@@ -1,7 +1,7 @@
 from setuptools import setup, Extension
 
 extension = Extension('strit',
-	sources = ['tandem.c', 'module.c'],
+	sources = ['src/tandem.c', 'src/module.c'],
 )
 
 description = (
