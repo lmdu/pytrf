@@ -6,3 +6,4 @@ strit.cpython-36m-x86_64-linux-gnu.so
 build/temp.linux-x86_64-3.6/src/module.o
 build/temp.linux-x86_64-3.6/src/tandem.o
 chr1.fa.gz
+build/temp.linux-x86_64-3.6/src/strit.o

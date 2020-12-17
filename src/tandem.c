@@ -26,6 +26,9 @@ PyObject *find_short_tandem_repeats(PyObject *self, PyObject *args, PyObject *kw
 	// tandem repeat length
 	int replen;
 
+	// mono repeat len
+	int mono_len;
+
 	//tandem repeat repeats
 	int repeats;
 
@@ -38,8 +41,13 @@ PyObject *find_short_tandem_repeats(PyObject *self, PyObject *args, PyObject *kw
 		return NULL;
 	}
 
+	for (i = 1; i <= 6; ++i) {
+		minreps[i] = minreps[i] * i;
+	}
+
 	PyObject *ssrs = PyList_New(0);
 	PyObject *tmp;
+	mono_len = 0;
 
 	for (i = 0; i < size; ++i) {
 		if (seq[i] == 78) {
@@ -63,16 +71,19 @@ PyObject *find_short_tandem_repeats(PyObject *self, PyObject *args, PyObject *kw
 
 			start = i;
 
-			while (seq[i] != 78 && seq[i] == seq[i+j]) {
+			while (seq[i] == seq[i+j]) {
 				++i;
 			}
 
 			replen = i + j - start;
-			repeats = replen/j;
 
-			if (repeats >= minreps[j]) {
+			printf("%c, %d, %d\n", seq[start], j, replen);
+
+			if (replen >= minreps[j]) {
 				memcpy(motif, seq+start, j);
 				motif[j] = '\0';
+
+				repeats = replen/j;
 
 				i += j;
  
