@@ -1,7 +1,7 @@
 from setuptools import setup, Extension
 
-extension = Extension('strit',
-	sources = ['src/tandem.c', 'src/strit.c'],
+extension = Extension('stripy',
+	sources = ['src/ssr.c', 'src/stripy.c'],
 )
 
 description = (
@@ -15,7 +15,7 @@ with open('README.rst') as fh:
 version = '0.0.1'
 
 setup(
-    name = 'strit',
+    name = 'stripy',
     version = version,
     ext_modules = [extension],
     description = description,
