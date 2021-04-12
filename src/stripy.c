@@ -1,5 +1,6 @@
 #include <Python.h>
 #include "ssr.h"
+#include "vntr.h"
 
 PyObject *test(PyObject *self, PyObject *args, PyObject *kwargs) {
 	return Py_BuildValue("s", "hello");
@@ -26,6 +27,7 @@ static PyObject *strit_module_init(void) {
 		return NULL;
 	}
 
+	//SSR
 	if (PyType_Ready(&stripy_SSRMinerType) < 0) {
 		return NULL;
 	}
@@ -37,6 +39,19 @@ static PyObject *strit_module_init(void) {
 	}
 	Py_INCREF((PyObject *)&stripy_SSRType);
 	PyModule_AddObject(module, "SSR", (PyObject *)&stripy_SSRType);
+
+	//VNTR
+	if (PyType_Ready(&stripy_VNTRMinerType) < 0) {
+		return NULL;
+	}
+	Py_INCREF((PyObject *)&stripy_VNTRMinerType);
+	PyModule_AddObject(module, "VNTRMiner", (PyObject *)&stripy_VNTRMinerType);
+
+	if (PyType_Ready(&stripy_VNTRType) < 0) {
+		return NULL;
+	}
+	Py_INCREF((PyObject *)&stripy_VNTRType);
+	PyModule_AddObject(module, "VNTR", (PyObject *)&stripy_VNTRType);
 
 	return module;
 }

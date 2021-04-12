@@ -1,10 +1,8 @@
 import time
-import strit
+import stripy
 import pyfastx
 
-#for name, seq in pyfastx.Fasta('chr1.fa.gz', build_index=False):
-seq = "AGACGTTTGCATCCTGCACAGCTAGAGATCCTTTATTAAAAGCACACTGT"
-start = time.time()
-ssrs = strit.find_ssrs(seq, (10,7,5,4,4,4))
-print(len(ssrs))
-print(time.time()-start)
+for name, seq, _ in pyfastx.Fastx('tests/data/chr1.fa.gz'):
+	vntrs = stripy.VNTRMiner(name, seq, 7, 100, 3)
+	for vntr in vntrs:
+		print(vntr.as_string())

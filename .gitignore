@@ -7,3 +7,9 @@ build/temp.linux-x86_64-3.6/src/module.o
 build/temp.linux-x86_64-3.6/src/tandem.o
 chr1.fa.gz
 build/temp.linux-x86_64-3.6/src/strit.o
+build/lib.linux-x86_64-3.8/stripy.cpython-38-x86_64-linux-gnu.so
+build/temp.linux-x86_64-3.8/src/ssr.o
+build/temp.linux-x86_64-3.8/src/stripy.o
+build/temp.linux-x86_64-3.8/src/vntr.o
+stripy.cpython-38-x86_64-linux-gnu.so
+tests/data/chr1.fa.gz.fxi
