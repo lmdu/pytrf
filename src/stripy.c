@@ -1,4 +1,5 @@
 #include <Python.h>
+#include "tre.h"
 #include "ssr.h"
 #include "vntr.h"
 
@@ -26,6 +27,13 @@ static PyObject *strit_module_init(void) {
 	if (module == NULL) {
 		return NULL;
 	}
+
+	//TRE
+	if (PyType_Ready(&stripy_TREType) < 0) {
+		return NULL;
+	}
+	Py_INCREF((PyObject *)&stripy_TREType);
+	PyModule_AddObject(module, "TRE", (PyObject *)&stripy_TREType);
 
 	//SSR
 	if (PyType_Ready(&stripy_SSRMinerType) < 0) {

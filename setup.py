@@ -1,7 +1,7 @@
 from setuptools import setup, Extension
 
 extension = Extension('stripy',
-	sources = ['src/ssr.c', 'src/stripy.c', 'src/vntr.c'],
+	sources = ['src/ssr.c', 'src/stripy.c', 'src/vntr.c', 'src/tre.c'],
 )
 
 description = (

@@ -173,14 +173,14 @@ static PyObject* stripy_vntrminer_as_list(stripy_VNTRMiner *self) {
 }
 
 /* methods for SSR object */
-void stripy_vntr_dealloc(stripy_VNTR *self) {
+/*void stripy_vntr_dealloc(stripy_VNTR *self) {
 	Py_DECREF(self->seqid);
 	Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 PyObject* stripy_vntr_repr(stripy_VNTR *self) {
 	return PyUnicode_FromFormat("<VNTR> (%s)%d @ %s:%zd-%zd", self->motif, self->repeats, PyUnicode_AsUTF8(self->seqid), self->start, self->end);
-}
+}*/
 
 static PyMethodDef stripy_vntrminer_methods[] = {
 	{"as_list", (PyCFunction)stripy_vntrminer_as_list, METH_NOARGS, NULL},
@@ -228,7 +228,7 @@ PyTypeObject stripy_VNTRMinerType = {
     stripy_vntrminer_new,              /* tp_new */
 };
 
-PyObject* stripy_vntr_as_list(stripy_VNTR *self) {
+/*PyObject* stripy_vntr_as_list(stripy_VNTR *self) {
 	return Py_BuildValue("OnnsII", self->seqid, self->start, self->end, self->motif, self->repeats, self->length);
 }
 
@@ -254,10 +254,10 @@ PyObject* stripy_vntr_as_string(stripy_VNTR *self, PyObject *args, PyObject *kwa
 		self->length,
 		terminator ? "\n" : ""
 	);
-}
+}*/
 
 /* VNTR */
-static PyMethodDef stripy_vntr_methods[] = {
+/*static PyMethodDef stripy_vntr_methods[] = {
 	{"as_list", (PyCFunction)stripy_vntr_as_list, METH_NOARGS, NULL},
 	{"as_string", (PyCFunction)stripy_vntr_as_string, METH_VARARGS | METH_KEYWORDS, NULL},
 	{NULL, NULL, 0, NULL}
@@ -271,19 +271,19 @@ static PyMemberDef stripy_vntr_members[] = {
 	{"repeats", T_UINT, offsetof(stripy_VNTR, repeats), READONLY},
 	{"length", T_UINT, offsetof(stripy_VNTR, length), READONLY},
 	{NULL}
-};
+};*/
 
 PyTypeObject stripy_VNTRType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "VNTR",                        /* tp_name */
     sizeof(stripy_VNTR),          /* tp_basicsize */
     0,                              /* tp_itemsize */
-    (destructor)stripy_vntr_dealloc,   /* tp_dealloc */
+    0,   /* tp_dealloc */
     0,                              /* tp_print */
     0,                              /* tp_getattr */
     0,                              /* tp_setattr */
     0,                              /* tp_reserved */
-    (reprfunc)stripy_vntr_repr,                              /* tp_repr */
+    0,                              /* tp_repr */
     0,                              /* tp_as_number */
     0,                   /* tp_as_sequence */
     0,                   /* tp_as_mapping */
@@ -301,10 +301,10 @@ PyTypeObject stripy_VNTRType = {
     0,                              /* tp_weaklistoffset */
     0,     /* tp_iter */
     0,    /* tp_iternext */
-    stripy_vntr_methods,          /* tp_methods */
-    stripy_vntr_members,          /* tp_members */
+    0,          /* tp_methods */
+    0,          /* tp_members */
     0,                               /* tp_getset */
-    0,                              /* tp_base */
+    &stripy_TREType,                              /* tp_base */
     0,                              /* tp_dict */
     0,                              /* tp_descr_get */
     0,                              /* tp_descr_set */

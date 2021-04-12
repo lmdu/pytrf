@@ -2,6 +2,7 @@
 #ifndef STRIPY_VNTR_H
 #define STRIPY_VNTR_H
 #include "Python.h"
+#include "tre.h"
 
 typedef struct {
 	PyObject_HEAD
@@ -33,25 +34,7 @@ typedef struct {
 } stripy_VNTRMiner;
 
 typedef struct {
-	PyObject_HEAD
-
-	//sequence name or identifier
-	PyObject* seqid;
-
-	//SSR motif sequence
-	char* motif;
-
-	//SSR start position
-	Py_ssize_t start;
-
-	//SSR stop position
-	Py_ssize_t end;
-
-	//number of tandem repeats
-	unsigned int repeats;
-
-	//SSR length
-	unsigned int length;
+	stripy_TRE super;
 
 } stripy_VNTR;
 
