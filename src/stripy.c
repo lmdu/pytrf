@@ -42,24 +42,12 @@ static PyObject *strit_module_init(void) {
 	Py_INCREF((PyObject *)&stripy_SSRMinerType);
 	PyModule_AddObject(module, "SSRMiner", (PyObject *)&stripy_SSRMinerType);
 
-	if (PyType_Ready(&stripy_SSRType) < 0) {
-		return NULL;
-	}
-	Py_INCREF((PyObject *)&stripy_SSRType);
-	PyModule_AddObject(module, "SSR", (PyObject *)&stripy_SSRType);
-
 	//VNTR
 	if (PyType_Ready(&stripy_VNTRMinerType) < 0) {
 		return NULL;
 	}
 	Py_INCREF((PyObject *)&stripy_VNTRMinerType);
 	PyModule_AddObject(module, "VNTRMiner", (PyObject *)&stripy_VNTRMinerType);
-
-	if (PyType_Ready(&stripy_VNTRType) < 0) {
-		return NULL;
-	}
-	Py_INCREF((PyObject *)&stripy_VNTRType);
-	PyModule_AddObject(module, "VNTR", (PyObject *)&stripy_VNTRType);
 
 	return module;
 }

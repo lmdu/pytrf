@@ -8,6 +8,7 @@
 
 #ifndef STRIPY_TRE_H
 #define STRIPY_TRE_H
+#include "Python.h"
 
 typedef struct {
 	PyObject_HEAD
@@ -15,19 +16,22 @@ typedef struct {
 	//sequence name or identifier
 	PyObject* seqid;
 
-	//SSR motif sequence
+	//tandem repeat element motif sequence
 	char* motif;
 
-	//SSR start position
+	//tandem repeat element motif length
+	unsigned int mlen;
+
+	//tandem repeat element start position
 	Py_ssize_t start;
 
-	//SSR stop position
+	//tandem repeat element stop position
 	Py_ssize_t end;
 
 	//number of tandem repeats
 	unsigned int repeats;
 
-	//SSR length
+	//tandem repeat element length
 	unsigned int length;
 
 } stripy_TRE;

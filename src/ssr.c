@@ -1,5 +1,6 @@
 #define PY_SSIZE_T_CLEAN
 #include "ssr.h"
+#include "tre.h"
 #include "structmember.h"
 
 int stripy_ssrminer_set_min_repeats(stripy_SSRMiner *self, PyObject* minrep_obj) {
@@ -127,9 +128,11 @@ static PyObject* stripy_ssrminer_next(stripy_SSRMiner *self) {
 			replen = i + j - current_start;
 
 			if (replen >= self->min_lens[j]) {
-				stripy_SSR *ssr = (stripy_SSR *)PyObject_CallObject((PyObject *)&stripy_SSRType, NULL);
+				stripy_TRE *ssr = PyObject_New(stripy_TRE, &stripy_TREType);
+				ssr->motif = (char *)malloc(j + 1);
 				memcpy(ssr->motif, self->seq+self->next_start, j);
 				ssr->motif[j] = '\0';
+				ssr->mlen = j;
 				ssr->seqid = self->seqname;
 				Py_INCREF(ssr->seqid);
 				ssr->repeats = replen/j;
@@ -203,17 +206,8 @@ static PyObject* stripy_ssrminer_as_list(stripy_SSRMiner *self) {
 		}
 	}
 
+	free(motif);
 	return ssrs;
-}
-
-/* methods for SSR object */
-void stripy_ssr_dealloc(stripy_SSR *self) {
-	Py_DECREF(self->seqid);
-	Py_TYPE(self)->tp_free((PyObject *)self);
-}
-
-PyObject* stripy_ssr_repr(stripy_SSR *self) {
-	return PyUnicode_FromFormat("<SSR> (%s)%d @ %s:%zd-%zd", self->motif, self->repeats, PyUnicode_AsUTF8(self->seqid), self->start, self->end);
 }
 
 static PyMethodDef stripy_ssrminer_methods[] = {
@@ -243,7 +237,7 @@ PyTypeObject stripy_SSRMinerType = {
     0,                              /* tp_setattro */
     0,                              /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT,             /* tp_flags */
-    0,                              /* tp_doc */
+    "find microsatellites from DNA sequence",                              /* tp_doc */
     0,                              /* tp_traverse */
     0,                              /* tp_clear */
     0,                              /* tp_richcompare */
@@ -259,57 +253,6 @@ PyTypeObject stripy_SSRMinerType = {
     0,                              /* tp_descr_set */
     0,                              /* tp_dictoffset */
     0,                              /* tp_init */
-    PyType_GenericAlloc,            /* tp_alloc */
+    0,            /* tp_alloc */
     stripy_ssrminer_new,              /* tp_new */
-};
-
-static PyMemberDef stripy_ssr_members[] = {
-	{"seqid", T_OBJECT, offsetof(stripy_SSR, seqid), READONLY},
-	{"start", T_PYSSIZET, offsetof(stripy_SSR, start), READONLY},
-	{"end", T_PYSSIZET, offsetof(stripy_SSR, end), READONLY},
-	{"motif", T_STRING, offsetof(stripy_SSR, motif), READONLY},
-	{"repeats", T_UINT, offsetof(stripy_SSR, repeats), READONLY},
-	{"length", T_UINT, offsetof(stripy_SSR, length), READONLY},
-	{NULL}
-};
-
-PyTypeObject stripy_SSRType = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "SSR",                        /* tp_name */
-    sizeof(stripy_SSR),          /* tp_basicsize */
-    0,                              /* tp_itemsize */
-    (destructor)stripy_ssr_dealloc,   /* tp_dealloc */
-    0,                              /* tp_print */
-    0,                              /* tp_getattr */
-    0,                              /* tp_setattr */
-    0,                              /* tp_reserved */
-    (reprfunc)stripy_ssr_repr,                              /* tp_repr */
-    0,                              /* tp_as_number */
-    0,                   /* tp_as_sequence */
-    0,                   /* tp_as_mapping */
-    0,                              /* tp_hash */
-    0,                              /* tp_call */
-    0,                              /* tp_str */
-    0,                              /* tp_getattro */
-    0,                              /* tp_setattro */
-    0,                              /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,             /* tp_flags */
-    0,                              /* tp_doc */
-    0,                              /* tp_traverse */
-    0,                              /* tp_clear */
-    0,                              /* tp_richcompare */
-    0,                              /* tp_weaklistoffset */
-    0,     /* tp_iter */
-    0,    /* tp_iternext */
-    0,          /* tp_methods */
-    stripy_ssr_members,          /* tp_members */
-    0,                               /* tp_getset */
-    0,                              /* tp_base */
-    0,                              /* tp_dict */
-    0,                              /* tp_descr_get */
-    0,                              /* tp_descr_set */
-    0,                              /* tp_dictoffset */
-    0,                              /* tp_init */
-    PyType_GenericAlloc,            /* tp_alloc */
-    PyType_GenericNew,              /* tp_new */
 };

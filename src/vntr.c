@@ -89,10 +89,12 @@ static PyObject* stripy_vntrminer_next(stripy_VNTRMiner *self) {
 
 				//otherwise we found a vntr
 				if (is_vntr) {
-					stripy_VNTR *vntr = (stripy_VNTR *)PyObject_CallObject((PyObject *)&stripy_VNTRType, NULL);
+					//stripy_VNTR *vntr = (stripy_VNTR *)PyObject_CallObject((PyObject *)&stripy_VNTRType, NULL);
+					stripy_TRE *vntr = PyObject_New(stripy_TRE, &stripy_TREType);
 					vntr->motif = (char *)malloc(j + 1);
 					memcpy(vntr->motif, self->seq+current_start, j);
 					vntr->motif[j] = '\0';
+					vntr->mlen = j;
 					vntr->seqid = self->seqname;
 					Py_INCREF(vntr->seqid);
 					vntr->repeats = repeats;
@@ -208,7 +210,7 @@ PyTypeObject stripy_VNTRMinerType = {
     0,                              /* tp_setattro */
     0,                              /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT,             /* tp_flags */
-    0,                              /* tp_doc */
+    "find minisatellites from DNA sequence",                              /* tp_doc */
     0,                              /* tp_traverse */
     0,                              /* tp_clear */
     0,                              /* tp_richcompare */
@@ -224,7 +226,7 @@ PyTypeObject stripy_VNTRMinerType = {
     0,                              /* tp_descr_set */
     0,                              /* tp_dictoffset */
     0,                              /* tp_init */
-    PyType_GenericAlloc,            /* tp_alloc */
+    0,            /* tp_alloc */
     stripy_vntrminer_new,              /* tp_new */
 };
 
@@ -273,43 +275,43 @@ static PyMemberDef stripy_vntr_members[] = {
 	{NULL}
 };*/
 
-PyTypeObject stripy_VNTRType = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "VNTR",                        /* tp_name */
-    sizeof(stripy_VNTR),          /* tp_basicsize */
-    0,                              /* tp_itemsize */
-    0,   /* tp_dealloc */
-    0,                              /* tp_print */
-    0,                              /* tp_getattr */
-    0,                              /* tp_setattr */
-    0,                              /* tp_reserved */
-    0,                              /* tp_repr */
-    0,                              /* tp_as_number */
-    0,                   /* tp_as_sequence */
-    0,                   /* tp_as_mapping */
-    0,                              /* tp_hash */
-    0,                              /* tp_call */
-    0,                              /* tp_str */
-    0,                              /* tp_getattro */
-    0,                              /* tp_setattro */
-    0,                              /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,             /* tp_flags */
-    0,                              /* tp_doc */
-    0,                              /* tp_traverse */
-    0,                              /* tp_clear */
-    0,                              /* tp_richcompare */
-    0,                              /* tp_weaklistoffset */
-    0,     /* tp_iter */
-    0,    /* tp_iternext */
-    0,          /* tp_methods */
-    0,          /* tp_members */
-    0,                               /* tp_getset */
-    &stripy_TREType,                              /* tp_base */
-    0,                              /* tp_dict */
-    0,                              /* tp_descr_get */
-    0,                              /* tp_descr_set */
-    0,                              /* tp_dictoffset */
-    0,                              /* tp_init */
-    PyType_GenericAlloc,            /* tp_alloc */
-    PyType_GenericNew,              /* tp_new */
-};
+//PyTypeObject stripy_VNTRType = {
+//    PyVarObject_HEAD_INIT(NULL, 0)
+//    "VNTR",                        /* tp_name */
+//    sizeof(stripy_VNTR),          /* tp_basicsize */
+//    0,                              /* tp_itemsize */
+//    0,   /* tp_dealloc */
+//    0,                              /* tp_print */
+//    0,                              /* tp_getattr */
+//    0,                              /* tp_setattr */
+//    0,                              /* tp_reserved */
+//    0,                              /* tp_repr */
+//    0,                              /* tp_as_number */
+//    0,                   /* tp_as_sequence */
+//    0,                   /* tp_as_mapping */
+//    0,                              /* tp_hash */
+//    0,                              /* tp_call */
+//    0,                              /* tp_str */
+//    0,                              /* tp_getattro */
+//    0,                              /* tp_setattro */
+//    0,                              /* tp_as_buffer */
+//    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,             /* tp_flags */
+//    0,                              /* tp_doc */
+//    0,                              /* tp_traverse */
+//    0,                              /* tp_clear */
+//    0,                              /* tp_richcompare */
+//    0,                              /* tp_weaklistoffset */
+//    0,     /* tp_iter */
+//    0,    /* tp_iternext */
+//    0,          /* tp_methods */
+//    0,          /* tp_members */
+//    0,                               /* tp_getset */
+//    &stripy_TREType,                              /* tp_base */
+//    0,                              /* tp_dict */
+//    0,                              /* tp_descr_get */
+//    0,                              /* tp_descr_set */
+//    0,                              /* tp_dictoffset */
+//    0,                              /* tp_init */
+//    0,            /* tp_alloc */
+//    PyType_GenericNew,              /* tp_new */
+//};

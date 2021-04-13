@@ -33,12 +33,6 @@ typedef struct {
 
 } stripy_VNTRMiner;
 
-typedef struct {
-	stripy_TRE super;
-
-} stripy_VNTR;
-
 extern PyTypeObject stripy_VNTRMinerType;
-extern PyTypeObject stripy_VNTRType;
 
 #endif

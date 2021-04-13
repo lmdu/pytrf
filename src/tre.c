@@ -10,12 +10,13 @@
 #include "structmember.h"
 
 void stripy_tre_dealloc(stripy_TRE *self) {
+	free(self->motif);
 	Py_DECREF(self->seqid);
 	Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 PyObject* stripy_tre_repr(stripy_TRE *self) {
-	return PyUnicode_FromFormat("<%s> (%s)%d @ %s:%zd-%zd", Py_TYPE(self)->tp_name, self->motif, self->repeats, PyUnicode_AsUTF8(self->seqid), self->start, self->end);
+	return PyUnicode_FromFormat("<TRE> (%s)%d @ %s:%zd-%zd", self->motif, self->repeats, PyUnicode_AsUTF8(self->seqid), self->start, self->end);
 }
 
 PyObject* stripy_tre_as_list(stripy_TRE *self) {
@@ -46,11 +47,25 @@ PyObject* stripy_tre_as_string(stripy_TRE *self, PyObject *args, PyObject *kwarg
 	);
 }
 
-/* VNTR */
+PyObject *stripy_tre_get_seq(stripy_TRE *self, void* closure) {
+	PyObject* ret = PyUnicode_New(self->length, 127);
+	Py_UCS1* p = PyUnicode_1BYTE_DATA(ret);
+	for (unsigned int i = 0; i < self->repeats; ++i) {
+		memcpy(p, self->motif, self->mlen);
+		p += self->mlen;
+	}
+	return ret;
+}
+
 static PyMethodDef stripy_tre_methods[] = {
 	{"as_list", (PyCFunction)stripy_tre_as_list, METH_NOARGS, NULL},
 	{"as_string", (PyCFunction)stripy_tre_as_string, METH_VARARGS | METH_KEYWORDS, NULL},
 	{NULL, NULL, 0, NULL}
+};
+
+static PyGetSetDef stripy_tre_getsets[] = {
+	{"seq", (getter)stripy_tre_get_seq, NULL, NULL, NULL},
+	{NULL}
 };
 
 static PyMemberDef stripy_tre_members[] = {
@@ -58,9 +73,10 @@ static PyMemberDef stripy_tre_members[] = {
 	{"start", T_PYSSIZET, offsetof(stripy_TRE, start), READONLY},
 	{"end", T_PYSSIZET, offsetof(stripy_TRE, end), READONLY},
 	{"motif", T_STRING, offsetof(stripy_TRE, motif), READONLY},
+	{"type", T_UINT, offsetof(stripy_TRE, mlen), READONLY},
 	{"repeats", T_UINT, offsetof(stripy_TRE, repeats), READONLY},
 	{"length", T_UINT, offsetof(stripy_TRE, length), READONLY},
-	{NULL}
+	{NULL}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
 };
 
 PyTypeObject stripy_TREType = {
@@ -83,8 +99,8 @@ PyTypeObject stripy_TREType = {
     0,                              /* tp_getattro */
     0,                              /* tp_setattro */
     0,                              /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,             /* tp_flags */
-    0,                              /* tp_doc */
+    Py_TPFLAGS_DEFAULT,             /* tp_flags */
+    "tandem repeat element",                              /* tp_doc */
     0,                              /* tp_traverse */
     0,                              /* tp_clear */
     0,                              /* tp_richcompare */
@@ -93,13 +109,13 @@ PyTypeObject stripy_TREType = {
     0,    /* tp_iternext */
     stripy_tre_methods,          /* tp_methods */
     stripy_tre_members,          /* tp_members */
-    0,                               /* tp_getset */
+    stripy_tre_getsets,                               /* tp_getset */
     0,                              /* tp_base */
     0,                              /* tp_dict */
     0,                              /* tp_descr_get */
     0,                              /* tp_descr_set */
     0,                              /* tp_dictoffset */
     0,                              /* tp_init */
-    PyType_GenericAlloc,            /* tp_alloc */
+    0,            /* tp_alloc */
     PyType_GenericNew,              /* tp_new */
 };

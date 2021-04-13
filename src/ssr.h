@@ -26,30 +26,6 @@ typedef struct {
 
 } stripy_SSRMiner;
 
-typedef struct {
-	PyObject_HEAD
-
-	//sequence name or identifier
-	PyObject* seqid;
-
-	//SSR motif sequence
-	char motif[7];
-
-	//SSR start position
-	Py_ssize_t start;
-
-	//SSR stop position
-	Py_ssize_t end;
-
-	//number of tandem repeats
-	unsigned int repeats;
-
-	//SSR length
-	unsigned int length;
-
-} stripy_SSR;
-
 extern PyTypeObject stripy_SSRMinerType;
-extern PyTypeObject stripy_SSRType;
 
 #endif
