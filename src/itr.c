@@ -36,29 +36,28 @@ static void release_matrix(int **matrix, unsigned int size){
 	free(matrix);
 }
 
-static int* build_left_matrix(char *seq, char *motif, int **matrix, int start, int size, int max_error){
-	char ref1;
-	char ref2;
+static int* build_left_matrix(const char *seq, char *motif, int mlen, int **matrix, Py_ssize_t start, int size, int max_error){
+	char h; //horizantal base in matrix
+	char v; //vertical base in matrix
 	int i = 0;
 	int j = 0;
 	int x = 0;
 	int y = 0;
 	int last_x = 0;
 	int last_y = 0;
-	size_t mlen = strlen(motif); //motif length
 	int error = 0; //consective errors
 	int smaller;
 	
 	static int res[2]; //result arrary
 
-	for(x=1,y=1; x<=size && y<=size; x++,y++){
-		ref1 = seq[start-y];
-		ref2 = motif[(mlen-x%mlen)%mlen];
+	for(x = 1, y = 1; x <= size && y <= size; ++x, ++y){
+		h = seq[start-y];
+		v = motif[(mlen-x%mlen)%mlen];
 		
 		//fill column, column number fixed
 		if(i != y){
 			for(i=1; i<x; i++){
-				if(ref1 == motif[(mlen-i%mlen)%mlen]){
+				if(h == motif[(mlen-i%mlen)%mlen]){
 					matrix[i][y] = matrix[i-1][y-1];
 				}else{
 					matrix[i][y] = min_three(matrix[i-1][y-1], matrix[i-1][y], matrix[i][y-1]) + 1;
@@ -68,7 +67,7 @@ static int* build_left_matrix(char *seq, char *motif, int **matrix, int start, i
 		//fill row, row number fixed
 		if(j != x){
 			for(j=1; j<y; j++){
-				if(ref2 == seq[start-j]){
+				if(v == seq[start-j]){
 					matrix[x][j] = matrix[x-1][j-1];
 				}else{
 					matrix[x][j] = min_three(matrix[x-1][j-1], matrix[x-1][j], matrix[x][j-1]) + 1;
@@ -79,7 +78,7 @@ static int* build_left_matrix(char *seq, char *motif, int **matrix, int start, i
 		i = y;
 		j = x;
 
-		if(ref1 == ref2){
+		if(h == v){
 			matrix[x][y] = matrix[x-1][y-1];
 			error = 0;
 		}else{
@@ -249,7 +248,7 @@ static PyObject* stripy_itrminer_new(PyTypeObject *type, PyObject *args, PyObjec
 	obj->max_errors = 3;
 	obj->max_motif = 6;
 	obj->min_motif = 1;
-	obj->max_extend_length = 1000;
+	obj->max_extend_length = 2000;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iiiiiii", keywords, &obj->seqname, &obj->seqobj, &obj->min_motif_size, &obj->max_motif_size, &obj->seed_minrep, &obj->seed_minlen, &obj->max_errors, &obj->max_extend_length)) {
 		return NULL;
@@ -277,6 +276,24 @@ static PyObject* stripy_itrminer_repr(stripy_ITRMiner *self) {
 static PyObject* stripy_itrminer_as_list(stripy_ITRMiner *self) {
 	PyObject *itrs = PyList_New(0);
 	PyObject *tmp;
+	
+	Py_ssize_t seed_start;
+	Py_ssize_t seed_end;
+	int seed_length;
+	int seed_repeat;
+	int seed_good;
+
+	int matches;
+	int substitution;
+	int insertion;
+	int deletion;
+
+	Py_ssize_t extend_start;
+	Py_ssize_t extend_end;
+	int extend_maxlen;
+	int extend_len;
+	
+	char* motif = (char *)malloc(self->max_motif + 1);
 
 	int **matrix = initial_matrix(self->max_extend_length);
 
@@ -285,7 +302,65 @@ static PyObject* stripy_itrminer_as_list(stripy_ITRMiner *self) {
 			continue;
 		}
 
-		for (j)
+		seed_start = i;
+		for (int j = self->min_motif; j <= self->max_motif; ++j) {
+			while (self->seq[i] == self->seq[i+j]) {
+				++i;
+			}
+
+			seed_length = i + j - seed_start;
+			seed_repeat = seed_length/j;
+
+			//corrected length
+			seed_length = seed_repeat*j;
+
+			if (see_repeat >= self->seed_min_repeats && seed_length >= self->seed_min_length) {
+				const char *p = self->seq + seed_start;
+				seed_good = 1;
+
+				for (unsigned int k = 1; k < self->min_motif; ++k) {
+					unsigned int l = 0;
+					while ((p[l] == p[l+k]) && (l+k < j)) {
+						++l;
+					}
+					if (l+k == j) {
+						seed_good = 0;
+						break;
+					}
+				}
+
+				if (seed_good) {
+					//get motif sequence
+					memcpy(motif, self->seq + seed_start, j);
+					motif[j] = '\0';
+
+					seed_end = seed_start + seed_length - 1;
+					matches = seed_length;
+					insertion = 0;
+					deletion = 0;
+					substitution = 0;
+
+					//extend left flank
+					extend_start = seed_start;
+					extend_maxlen = extend_start;
+
+					if (extend_maxlen > self->max_extend_length) {
+						extend_maxlen = self->max_extend_length;
+					}
+
+					extend_end = build_left_matrix(self->seq, motif, j, matrix, extend_start, extend_maxlen, self->max_continuous_errors);
+					extend_len = backtrace_matrix(matrix, extend_end, &matches, &substitution, &insertion, &deletion);
+
+
+
+
+				}
+			}
+
+
+
+
+		}
 	}
 
 
