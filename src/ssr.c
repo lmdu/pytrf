@@ -206,7 +206,6 @@ static PyObject* stripy_ssrminer_as_list(stripy_SSRMiner *self) {
 		}
 	}
 
-	free(motif);
 	return ssrs;
 }
 

@@ -118,29 +118,28 @@ static int* build_left_matrix(const char *seq, char *motif, int mlen, int **matr
 	return res;
 }
 
-static int* build_right_matrix(char *seq, char *motif, int **matrix, int start, int size, int max_error){
-	char ref1;
-	char ref2;
+static int* build_right_matrix(char *seq, char *motif, int mlen, int **matrix, Py_ssize_t start, int size, int max_error){
+	char h; //horizantal base in sequence
+	char v; //vertical base
 	int i = 0;
 	int j = 0;
 	int x = 0;
 	int y = 0;
 	int last_x = 0;
 	int last_y = 0;
-	size_t mlen = strlen(motif); //motif length
 	int error = 0; //consective errors
 	int smaller;
 	
 	static int res[2]; //result arrary
 
 	for(x=1,y=1; x<=size && y<=size; x++,y++){
-		ref1 = seq[start+y];
-		ref2 = motif[(x-1)%mlen];
+		h = seq[start+y];
+		v = motif[(x-1)%mlen];
 		
 		//fill column, column number fixed
 		if(i != y){
 			for(i=1; i<x; i++){
-				if(ref1 == motif[(i-1)%mlen]){
+				if(h == motif[(i-1)%mlen]){
 					matrix[i][y] = matrix[i-1][y-1];
 				}else{
 					matrix[i][y] = min_three(matrix[i-1][y-1], matrix[i-1][y], matrix[i][y-1]) + 1;
@@ -150,7 +149,7 @@ static int* build_right_matrix(char *seq, char *motif, int **matrix, int start, 
 		//fill row, row number fixed
 		if(j != x){
 			for(j=1; j<y; j++){
-				if(ref2 == seq[start+j]){
+				if(v == seq[start+j]){
 					matrix[x][j] = matrix[x-1][j-1];
 				}else{
 					matrix[x][j] = min_three(matrix[x-1][j-1], matrix[x-1][j], matrix[x][j-1]) + 1;
@@ -161,7 +160,7 @@ static int* build_right_matrix(char *seq, char *motif, int **matrix, int start, 
 		i = y;
 		j = x;
 
-		if(ref1 == ref2){
+		if(h == v){
 			matrix[x][y] = matrix[x-1][y-1];
 			error = 0;
 		}else{
@@ -289,9 +288,16 @@ static PyObject* stripy_itrminer_as_list(stripy_ITRMiner *self) {
 	int deletion;
 
 	Py_ssize_t extend_start;
-	Py_ssize_t extend_end;
+	int* extend_end;
 	int extend_maxlen;
 	int extend_len;
+	int extend_total;
+
+	Py_ssize_t tandem_start;
+	Py_ssize_t tandem_end;
+	int tandem_length;
+
+	float align_rate;
 	
 	char* motif = (char *)malloc(self->max_motif + 1);
 
@@ -339,6 +345,7 @@ static PyObject* stripy_itrminer_as_list(stripy_ITRMiner *self) {
 					insertion = 0;
 					deletion = 0;
 					substitution = 0;
+					extend_total = 0;
 
 					//extend left flank
 					extend_start = seed_start;
@@ -350,20 +357,44 @@ static PyObject* stripy_itrminer_as_list(stripy_ITRMiner *self) {
 
 					extend_end = build_left_matrix(self->seq, motif, j, matrix, extend_start, extend_maxlen, self->max_continuous_errors);
 					extend_len = backtrace_matrix(matrix, extend_end, &matches, &substitution, &insertion, &deletion);
+					extend_total += extend_len;
+					
+					tandem_start = extend_start - extend_len + 1;
 
+					//extend right flank
+					extend_start = seed_end;
+					extend_maxlen = self->size - extend_start - 1;
+					if (extend_maxlen > self->max_extend_length) {
+						extend_maxlen = self->max_extend_length;
+					}
 
+					extend_end = build_right_matrix(self->self, motif, j, matrix, extend_start, extend_maxlen, self->max_continuous_errors);
+					extend_len = backtrace_matrix(matrix, extend_end, &matches, &substitution, &insertion, &deletion);
+					extend_total += extend_len;
 
+					tandem_end = extend_start + extend_len + 1;
+					tandem_length = tandem_end - tandem_start + 1;
 
+					//calcuate the alignment rate of extended sequence
+					if (extend_total > 0) {
+						align_rate = (substitution*0.5 + insertion + deletion) / extend_total;
+					} else {
+						align_rate = 1;
+					}
+
+					if (align_rate >= 0.7) {
+						tmp = Py_BuildValue("Onniiiii", self->seqname, tandem_start, tandem_end, tandem_length, matches, substitution, insertion, deletion);
+						PyList_Append(itrs, tmp);
+						Py_DECREF(tmp);
+
+						i = tandem_end;
+						break;
+					}
 				}
 			}
-
-
-
-
+			i = seed_start;
 		}
 	}
-
-
 }
 
 static PyMethodDef stripy_itrminer_methods[] = {

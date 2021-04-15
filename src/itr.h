@@ -56,3 +56,5 @@ typedef struct {
 } stripy_ITRMiner;
 
 extern PyTypeObject stripy_ITRMinerType;
+
+#endif

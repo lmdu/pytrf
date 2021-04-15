@@ -1,6 +1,7 @@
 #include <Python.h>
 #include "tre.h"
 #include "ssr.h"
+#include "itr.h"
 #include "vntr.h"
 
 PyObject *test(PyObject *self, PyObject *args, PyObject *kwargs) {
@@ -48,6 +49,13 @@ static PyObject *strit_module_init(void) {
 	}
 	Py_INCREF((PyObject *)&stripy_VNTRMinerType);
 	PyModule_AddObject(module, "VNTRMiner", (PyObject *)&stripy_VNTRMinerType);
+
+	//ITR
+	if (PyType_Ready(&stripy_ITRMinerType) < 0) {
+		return NULL;
+	}
+	Py_INCREF((PyObject *)&stripy_ITRMinerType);
+	PyModule_AddObject(module, "ITRMiner", (PyObject *)&stripy_ITRMinerType);
 
 	return module;
 }
