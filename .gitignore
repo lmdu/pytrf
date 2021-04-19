@@ -20,3 +20,4 @@ build/temp.linux-x86_64-3.6/src/tre.o
 build/temp.linux-x86_64-3.6/src/vntr.o
 stripy.cpython-36m-x86_64-linux-gnu.so
 build/temp.linux-x86_64-3.8/src/tre.o
+build/temp.linux-x86_64-3.8/src/itr.o

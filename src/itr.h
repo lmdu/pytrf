@@ -27,19 +27,19 @@ typedef struct {
 	Py_ssize_t next_start;
 
 	//seed min repeats
-	unsigned int seed_minrep;
+	int seed_minrep;
 
 	//seed min length
-	unsigned int seed_minlen;
+	int seed_minlen;
 
 	//maximal continuous error
-	unsigned int max_errors;
+	int max_errors;
 
 	//min motif size
-	unsigned int min_motif;
+	int min_motif;
 
 	//max motif size
-	unsigned int max_motif;
+	int max_motif;
 
 	//mismatch penalty
 	//int mis_penalty;
@@ -51,7 +51,7 @@ typedef struct {
 	//int min_score;
 
 	//maximal extend length
-	unsigned int max_extend_length;
+	int extend_maxlen;
 
 } stripy_ITRMiner;
 
