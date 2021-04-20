@@ -1,5 +1,6 @@
 #define PY_SSIZE_T_CLEAN
 #include "vntr.h"
+#include "etr.h"
 #include "structmember.h"
 
 static PyObject* stripy_vntrminer_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
@@ -49,10 +50,10 @@ static PyObject* stripy_vntrminer_next(stripy_VNTRMiner *self) {
 	Py_ssize_t current_start;
 
 	//repeat length
-	unsigned int replen;
+	int replen;
 
 	//repeat number
-	unsigned int repeats;
+	int repeats;
 
 	//the motif is a right vntr motif
 	int is_vntr;
@@ -64,7 +65,7 @@ static PyObject* stripy_vntrminer_next(stripy_VNTRMiner *self) {
 		}
 
 		current_start = i;
-		for (unsigned int j = self->min_motif; j <= self->max_motif; ++j) {
+		for (int j = self->min_motif; j <= self->max_motif; ++j) {
 			while (self->seq[i] == self->seq[i+j]) {
 				++i;
 			}
@@ -76,7 +77,7 @@ static PyObject* stripy_vntrminer_next(stripy_VNTRMiner *self) {
 				//check motif is real motif with length >= min motif size
 				const char *p = self->seq+current_start;
 				is_vntr = 1;
-				for (unsigned int k = 1; k < self->min_motif; ++k) {
+				for (int k = 1; k < self->min_motif; ++k) {
 					int l = 0;
 					while ((p[l] == p[l+k]) && (l+k < j)) {
 						++l;
@@ -90,7 +91,7 @@ static PyObject* stripy_vntrminer_next(stripy_VNTRMiner *self) {
 				//otherwise we found a vntr
 				if (is_vntr) {
 					//stripy_VNTR *vntr = (stripy_VNTR *)PyObject_CallObject((PyObject *)&stripy_VNTRType, NULL);
-					stripy_TRE *vntr = PyObject_New(stripy_TRE, &stripy_TREType);
+					stripy_ETR *vntr = PyObject_New(stripy_ETR, &stripy_ETRType);
 					vntr->motif = (char *)malloc(j + 1);
 					memcpy(vntr->motif, self->seq+current_start, j);
 					vntr->motif[j] = '\0';
@@ -117,9 +118,9 @@ static PyObject* stripy_vntrminer_as_list(stripy_VNTRMiner *self) {
 	PyObject *vntrs = PyList_New(0);
 	PyObject *tmp;
 	Py_ssize_t current_start;
-	unsigned int replen;
-	unsigned int repeats;
-	unsigned int length;
+	int replen;
+	int repeats;
+	int length;
 	int is_vntr;
 
 	char* motif = (char *)malloc(self->max_motif + 1);
@@ -130,7 +131,7 @@ static PyObject* stripy_vntrminer_as_list(stripy_VNTRMiner *self) {
 		}
 
 		current_start = i;
-		for (unsigned int j = self->min_motif; j <= self->max_motif; ++j) {
+		for (int j = self->min_motif; j <= self->max_motif; ++j) {
 			while (self->seq[i] == self->seq[i+j]) {
 				++i;
 			}
@@ -142,8 +143,8 @@ static PyObject* stripy_vntrminer_as_list(stripy_VNTRMiner *self) {
 				//check motif is real motif with length >= min motif size
 				const char *p = self->seq+current_start;
 				is_vntr = 1;
-				for (unsigned int k = 1; k < self->min_motif; ++k) {
-					unsigned int l = 0;
+				for (int k = 1; k < self->min_motif; ++k) {
+					int l = 0;
 					while ((p[l] == p[l+k]) && (l+k < j)) {
 						++l;
 					}
@@ -157,7 +158,7 @@ static PyObject* stripy_vntrminer_as_list(stripy_VNTRMiner *self) {
 					memcpy(motif, self->seq+current_start, j);
 					motif[j] = '\0';
 					length = repeats * j;
-					tmp = Py_BuildValue("OnnsII", self->seqname, current_start+1, current_start+length, motif, repeats, length);
+					tmp = Py_BuildValue("Onnsiii", self->seqname, current_start+1, current_start+length, motif, j, repeats, length);
 					PyList_Append(vntrs, tmp);
 					Py_DECREF(tmp);
 
@@ -173,16 +174,6 @@ static PyObject* stripy_vntrminer_as_list(stripy_VNTRMiner *self) {
 	free(motif);
 	return vntrs;
 }
-
-/* methods for SSR object */
-/*void stripy_vntr_dealloc(stripy_VNTR *self) {
-	Py_DECREF(self->seqid);
-	Py_TYPE(self)->tp_free((PyObject *)self);
-}
-
-PyObject* stripy_vntr_repr(stripy_VNTR *self) {
-	return PyUnicode_FromFormat("<VNTR> (%s)%d @ %s:%zd-%zd", self->motif, self->repeats, PyUnicode_AsUTF8(self->seqid), self->start, self->end);
-}*/
 
 static PyMethodDef stripy_vntrminer_methods[] = {
 	{"as_list", (PyCFunction)stripy_vntrminer_as_list, METH_NOARGS, NULL},
@@ -229,89 +220,3 @@ PyTypeObject stripy_VNTRMinerType = {
     0,            /* tp_alloc */
     stripy_vntrminer_new,              /* tp_new */
 };
-
-/*PyObject* stripy_vntr_as_list(stripy_VNTR *self) {
-	return Py_BuildValue("OnnsII", self->seqid, self->start, self->end, self->motif, self->repeats, self->length);
-}
-
-PyObject* stripy_vntr_as_string(stripy_VNTR *self, PyObject *args, PyObject *kwargs) {
-	char *separator = "\t";
-	int terminator = 0;
-	static char* keywords[] = {"separator", "terminator", NULL};
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|si", keywords, &separator, &terminator)) {
-		return NULL;
-	}
-
-	return PyUnicode_FromFormat("%s%s%zd%s%zd%s%s%s%d%s%d%s", 
-		PyUnicode_AsUTF8(self->seqid),
-		separator,
-		self->start,
-		separator,
-		self->end,
-		separator,
-		self->motif,
-		separator,
-		self->repeats,
-		separator,
-		self->length,
-		terminator ? "\n" : ""
-	);
-}*/
-
-/* VNTR */
-/*static PyMethodDef stripy_vntr_methods[] = {
-	{"as_list", (PyCFunction)stripy_vntr_as_list, METH_NOARGS, NULL},
-	{"as_string", (PyCFunction)stripy_vntr_as_string, METH_VARARGS | METH_KEYWORDS, NULL},
-	{NULL, NULL, 0, NULL}
-};
-
-static PyMemberDef stripy_vntr_members[] = {
-	{"seqid", T_OBJECT, offsetof(stripy_VNTR, seqid), READONLY},
-	{"start", T_PYSSIZET, offsetof(stripy_VNTR, start), READONLY},
-	{"end", T_PYSSIZET, offsetof(stripy_VNTR, end), READONLY},
-	{"motif", T_STRING, offsetof(stripy_VNTR, motif), READONLY},
-	{"repeats", T_UINT, offsetof(stripy_VNTR, repeats), READONLY},
-	{"length", T_UINT, offsetof(stripy_VNTR, length), READONLY},
-	{NULL}
-};*/
-
-//PyTypeObject stripy_VNTRType = {
-//    PyVarObject_HEAD_INIT(NULL, 0)
-//    "VNTR",                        /* tp_name */
-//    sizeof(stripy_VNTR),          /* tp_basicsize */
-//    0,                              /* tp_itemsize */
-//    0,   /* tp_dealloc */
-//    0,                              /* tp_print */
-//    0,                              /* tp_getattr */
-//    0,                              /* tp_setattr */
-//    0,                              /* tp_reserved */
-//    0,                              /* tp_repr */
-//    0,                              /* tp_as_number */
-//    0,                   /* tp_as_sequence */
-//    0,                   /* tp_as_mapping */
-//    0,                              /* tp_hash */
-//    0,                              /* tp_call */
-//    0,                              /* tp_str */
-//    0,                              /* tp_getattro */
-//    0,                              /* tp_setattro */
-//    0,                              /* tp_as_buffer */
-//    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,             /* tp_flags */
-//    0,                              /* tp_doc */
-//    0,                              /* tp_traverse */
-//    0,                              /* tp_clear */
-//    0,                              /* tp_richcompare */
-//    0,                              /* tp_weaklistoffset */
-//    0,     /* tp_iter */
-//    0,    /* tp_iternext */
-//    0,          /* tp_methods */
-//    0,          /* tp_members */
-//    0,                               /* tp_getset */
-//    &stripy_TREType,                              /* tp_base */
-//    0,                              /* tp_dict */
-//    0,                              /* tp_descr_get */
-//    0,                              /* tp_descr_set */
-//    0,                              /* tp_dictoffset */
-//    0,                              /* tp_init */
-//    0,            /* tp_alloc */
-//    PyType_GenericNew,              /* tp_new */
-//};

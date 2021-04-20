@@ -41,20 +41,62 @@ typedef struct {
 	//max motif size
 	int max_motif;
 
-	//mismatch penalty
-	//int mis_penalty;
+	//substitution penalty
+	float sub_penalty;
 
-	//indel penalty
-	//int gap_penalty;
+	//insertion penalty
+	float ins_penalty;
 
-	//minimal score required to form a imperfect tandem repeat
-	//int min_score;
+	//deletion penalty
+	float del_penalty;
+
+	//min match ratio
+	float min_ratio;
 
 	//maximal extend length
 	int extend_maxlen;
 
 } stripy_ITRMiner;
 
+typedef struct {
+	PyObject_HEAD
+
+	//input sequence name
+	PyObject *seqid;
+
+	//imperfect tandem repeat start position
+	Py_ssize_t start;
+
+	//imperfect tandem repeat stop position
+	Py_ssize_t end;
+
+	//motif sequence
+	char *motif;
+
+	//motif length
+	int mlen;
+
+	//tandem length
+	int length;
+
+	//number of matches
+	int matches;
+
+	//number of substitutions
+	int substitutions;
+
+	//number of insertion
+	int insertions;
+
+	//number of deletion
+	int deletions;
+
+	//identity
+	float identity;
+
+} stripy_ITR;
+
 extern PyTypeObject stripy_ITRMinerType;
+extern PyTypeObject stripy_ITRType;
 
 #endif

@@ -1,13 +1,13 @@
 /* 
- * tre.h -- Tandem Repeat Element
+ * etr.h -- Exact Tandem Repeat
  *
- * define the base class for tandem repeats
+ * define the base class for exact tandem repeats
  * this class can be inherited by SSR and VNTR class
  *
  */
 
-#ifndef STRIPY_TRE_H
-#define STRIPY_TRE_H
+#ifndef STRIPY_ETR_H
+#define STRIPY_ETR_H
 #include "Python.h"
 
 typedef struct {
@@ -20,7 +20,7 @@ typedef struct {
 	char* motif;
 
 	//tandem repeat element motif length
-	unsigned int mlen;
+	int mlen;
 
 	//tandem repeat element start position
 	Py_ssize_t start;
@@ -29,13 +29,13 @@ typedef struct {
 	Py_ssize_t end;
 
 	//number of tandem repeats
-	unsigned int repeats;
+	int repeats;
 
 	//tandem repeat element length
-	unsigned int length;
+	int length;
 
-} stripy_TRE;
+} stripy_ETR;
 
-extern PyTypeObject stripy_TREType;
+extern PyTypeObject stripy_ETRType;
 
 #endif

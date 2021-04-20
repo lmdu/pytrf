@@ -2,7 +2,6 @@
 #ifndef STRIPY_VNTR_H
 #define STRIPY_VNTR_H
 #include "Python.h"
-#include "tre.h"
 
 typedef struct {
 	PyObject_HEAD
@@ -23,13 +22,13 @@ typedef struct {
 	Py_ssize_t next_start;
 
 	//minimal motif length
-	unsigned int min_motif;
+	int min_motif;
 
 	//max motif length
-	unsigned int max_motif;
+	int max_motif;
 
 	//min repeats
-	unsigned int min_repeats;
+	int min_repeats;
 
 } stripy_VNTRMiner;
 

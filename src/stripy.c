@@ -1,5 +1,5 @@
 #include <Python.h>
-#include "tre.h"
+#include "etr.h"
 #include "ssr.h"
 #include "itr.h"
 #include "vntr.h"
@@ -30,11 +30,11 @@ static PyObject *strit_module_init(void) {
 	}
 
 	//TRE
-	if (PyType_Ready(&stripy_TREType) < 0) {
+	if (PyType_Ready(&stripy_ETRType) < 0) {
 		return NULL;
 	}
-	Py_INCREF((PyObject *)&stripy_TREType);
-	PyModule_AddObject(module, "TRE", (PyObject *)&stripy_TREType);
+	Py_INCREF((PyObject *)&stripy_ETRType);
+	PyModule_AddObject(module, "ETR", (PyObject *)&stripy_ETRType);
 
 	//SSR
 	if (PyType_Ready(&stripy_SSRMinerType) < 0) {
@@ -51,6 +51,12 @@ static PyObject *strit_module_init(void) {
 	PyModule_AddObject(module, "VNTRMiner", (PyObject *)&stripy_VNTRMinerType);
 
 	//ITR
+	if (PyType_Ready(&stripy_ITRType) < 0) {
+		return NULL;
+	}
+	Py_INCREF((PyObject *)&stripy_ITRType);
+	PyModule_AddObject(module, "ITR", (PyObject *)&stripy_ITRType);
+
 	if (PyType_Ready(&stripy_ITRMinerType) < 0) {
 		return NULL;
 	}

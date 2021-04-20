@@ -5,6 +5,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include "itr.h"
+#include "math.h"
 #include "structmember.h"
 
 static int min_three(int a, int b, int c) {
@@ -235,7 +236,12 @@ static int backtrace_matrix(int **matrix, int *diagonal, int *mat, int *sub, int
 }
 
 static PyObject* stripy_itrminer_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
-	static char* keywords[] = {"name", "seq", "min_motif_size", "max_motif_size", "seed_min_repeats", "seed_min_length", "max_continuous_errors", "max_extend_length", NULL};
+	static char* keywords[] = {
+		"name", "seq", "min_motif_size", "max_motif_size", "seed_min_repeats",
+		"seed_min_length", "max_continuous_errors", "substitution_penalty",
+		"insertion_penalty", "deletion_penalty", "min_match_ratio", "max_extend_length",
+		NULL
+	};
 
 	stripy_ITRMiner *obj = (stripy_ITRMiner *)type->tp_alloc(type, 0);
 	if (!obj) return NULL;
@@ -243,13 +249,22 @@ static PyObject* stripy_itrminer_new(PyTypeObject *type, PyObject *args, PyObjec
 	//initialize parameters
 	obj->next_start = 0;
 	obj->seed_minrep = 3;
-	obj->seed_minlen = 8;
-	obj->max_errors = 3;
+	obj->seed_minlen = 10;
+	obj->max_errors = 2;
 	obj->min_motif = 1;
 	obj->max_motif = 6;
+	obj->sub_penalty = 0.5;
+	obj->ins_penalty = 1.0;
+	obj->del_penalty = 1.0;
+	obj->min_ratio = 0.7;
 	obj->extend_maxlen = 2000;
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iiiiiii", keywords, &obj->seqname, &obj->seqobj, &obj->min_motif, &obj->max_motif, &obj->seed_minrep, &obj->seed_minlen, &obj->max_errors, &obj->extend_maxlen)) {
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iiiiiifffi", keywords,
+									&obj->seqname, &obj->seqobj, &obj->min_motif,
+									&obj->max_motif, &obj->seed_minrep, &obj->seed_minlen,
+									&obj->max_errors, &obj->sub_penalty, &obj->ins_penalty,
+									&obj->del_penalty, &obj->min_ratio, &obj->extend_maxlen))
+	{
 		return NULL;
 	}
 
@@ -273,10 +288,174 @@ static PyObject* stripy_itrminer_repr(stripy_ITRMiner *self) {
 }
 
 static PyObject* stripy_itrminer_iter(stripy_ITRMiner *self) {
+	self->next_start = 0;
+	Py_INCREF(self);
 	return (PyObject *)self;
 }
 
 static PyObject* stripy_itrminer_next(stripy_ITRMiner *self) {
+	Py_ssize_t seed_start;
+	Py_ssize_t seed_end;
+	int seed_length;
+	int seed_repeat;
+	int seed_good;
+
+	//int matches;
+	int substitution;
+	int insertion;
+	int deletion;
+
+	Py_ssize_t extend_start;
+	int* extend_end;
+	int extend_maxlen;
+	int extend_len;
+
+	Py_ssize_t tandem_start;
+	Py_ssize_t tandem_end;
+	int tandem_length;
+	int tandem_match;
+	int tandem_substitute;
+	int tandem_insert;
+	int tandem_delete;
+	float tandem_identity;
+
+	float align_rate;
+
+	char* motif = (char *)malloc(self->max_motif + 1);
+
+	int **matrix = initial_matrix(self->extend_maxlen);
+
+	for (Py_ssize_t i = self->next_start; i <= self->size;  ++i) {
+		if (self->seq[i] == 78) {
+			continue;
+		}
+
+		seed_start = i;
+		for (int j = self->min_motif; j <= self->max_motif; ++j) {
+			while (self->seq[i] == self->seq[i+j]) {
+				++i;
+			}
+
+			seed_length = i + j - seed_start;
+			seed_repeat = seed_length/j;
+
+			//corrected length
+			seed_length = seed_repeat*j;
+
+			if (seed_repeat >= self->seed_minrep && seed_length >= self->seed_minlen) {
+				const char *p = self->seq + seed_start;
+				seed_good = 1;
+
+				for (int k = 1; k < self->min_motif; ++k) {
+					int l = 0;
+					while ((p[l] == p[l+k]) && (l+k < j)) {
+						++l;
+					}
+					if (l+k == j) {
+						seed_good = 0;
+						break;
+					}
+				}
+
+				if (seed_good) {
+					//get motif sequence
+					memcpy(motif, self->seq + seed_start, j);
+					motif[j] = '\0';
+
+					seed_end = seed_start + seed_length - 1;
+					tandem_match = seed_length;
+					insertion = 0;
+					deletion = 0;
+					substitution = 0;
+
+					//extend left flank
+					extend_start = seed_start;
+					extend_maxlen = extend_start;
+
+					if (extend_maxlen > self->extend_maxlen) {
+						extend_maxlen = self->extend_maxlen;
+					}
+
+					extend_end = build_left_matrix(self->seq, motif, j, matrix, extend_start,
+												   extend_maxlen, self->max_errors);
+					extend_len = backtrace_matrix(matrix, extend_end, &tandem_match, &substitution,
+												  &insertion, &deletion);
+					
+					if (extend_len > 0) {
+						align_rate = 1 - (substitution*self->sub_penalty + insertion*self->ins_penalty
+									 + deletion*self->del_penalty) / extend_len;
+					} else {
+						align_rate = 1;
+					}
+
+					//if left is ok, extend to right
+					if (align_rate >= self->min_ratio) {
+						tandem_start = extend_start - extend_len + 1;
+						tandem_substitute = substitution;
+						tandem_insert = insertion;
+						tandem_delete = deletion;
+
+						substitution = 0;
+						insertion = 0;
+						deletion = 0;
+
+						//extend right flank
+						extend_start = seed_end;
+						extend_maxlen = self->size - extend_start - 1;
+						if (extend_maxlen > self->extend_maxlen) {
+							extend_maxlen = self->extend_maxlen;
+						}
+
+						extend_end = build_right_matrix(self->seq, motif, j, matrix, extend_start,
+														extend_maxlen, self->max_errors);
+						extend_len = backtrace_matrix(matrix, extend_end, &tandem_match, &substitution,
+													  &insertion, &deletion);
+						
+						//calcuate the alignment rate of extended sequence
+						if (extend_len > 0) {
+							align_rate = 1 - (substitution*self->sub_penalty + insertion*self->ins_penalty
+										 + deletion*self->del_penalty) / extend_len;
+						} else {
+							align_rate = 1;
+						}
+
+						if (align_rate >= self->min_ratio) {
+							tandem_end = extend_start + extend_len + 1;
+							tandem_length = tandem_end - tandem_start + 1;
+							tandem_substitute += substitution;
+							tandem_insert += insertion;
+							tandem_delete += deletion;
+							tandem_identity = (tandem_match * 1.0 / tandem_length)*100;
+
+							//create new itr element object
+							stripy_ITR *itr = PyObject_New(stripy_ITR, &stripy_ITRType);
+							itr->motif = (char *)malloc(j + 1);
+							memcpy(itr->motif, motif, j);
+							itr->motif[j] = '\0';
+							itr->mlen = j;
+							itr->seqid = self->seqname;
+							Py_INCREF(itr->seqid);
+							itr->start = tandem_start;
+							itr->end = tandem_end;
+							itr->length = tandem_length;
+							itr->matches = tandem_match;
+							itr->substitutions = tandem_substitute;
+							itr->insertions = tandem_insert;
+							itr->deletions = tandem_delete;
+							itr->identity = tandem_identity;
+
+							self->next_start = tandem_end;
+							return (PyObject *)itr;
+						}
+					}
+				}
+			}
+			i = seed_start;
+		}
+	}
+
+	free(motif);
+	release_matrix(matrix, self->extend_maxlen);
 	return NULL;
 }
  
@@ -307,6 +486,7 @@ static PyObject* stripy_itrminer_as_list(stripy_ITRMiner *self) {
 	int tandem_substitute;
 	int tandem_insert;
 	int tandem_delete;
+	float tandem_identity;
 
 	float align_rate;
 	
@@ -365,17 +545,20 @@ static PyObject* stripy_itrminer_as_list(stripy_ITRMiner *self) {
 						extend_maxlen = self->extend_maxlen;
 					}
 
-					extend_end = build_left_matrix(self->seq, motif, j, matrix, extend_start, extend_maxlen, self->max_errors);
-					extend_len = backtrace_matrix(matrix, extend_end, &tandem_match, &substitution, &insertion, &deletion);
+					extend_end = build_left_matrix(self->seq, motif, j, matrix, extend_start,
+												   extend_maxlen, self->max_errors);
+					extend_len = backtrace_matrix(matrix, extend_end, &tandem_match, &substitution,
+												  &insertion, &deletion);
 					
 					if (extend_len > 0) {
-						align_rate = 1 - (substitution*0.5 + insertion + deletion) / extend_len;
+						align_rate = 1 - (substitution*self->sub_penalty + insertion*self->ins_penalty
+									 + deletion*self->del_penalty) / extend_len;
 					} else {
 						align_rate = 1;
 					}
 
 					//if left is ok, extend to right
-					if (align_rate >= 0.7) {
+					if (align_rate >= self->min_ratio) {
 						tandem_start = extend_start - extend_len + 1;
 						tandem_substitute = substitution;
 						tandem_insert = insertion;
@@ -392,24 +575,30 @@ static PyObject* stripy_itrminer_as_list(stripy_ITRMiner *self) {
 							extend_maxlen = self->extend_maxlen;
 						}
 
-						extend_end = build_right_matrix(self->seq, motif, j, matrix, extend_start, extend_maxlen, self->max_errors);
-						extend_len = backtrace_matrix(matrix, extend_end, &tandem_match, &substitution, &insertion, &deletion);
+						extend_end = build_right_matrix(self->seq, motif, j, matrix, extend_start,
+														extend_maxlen, self->max_errors);
+						extend_len = backtrace_matrix(matrix, extend_end, &tandem_match, &substitution,
+													  &insertion, &deletion);
 						
 						//calcuate the alignment rate of extended sequence
 						if (extend_len > 0) {
-							align_rate = 1 - (substitution*0.5 + insertion + deletion) / extend_len;
+							align_rate = 1 - (substitution*self->sub_penalty + insertion*self->ins_penalty
+										 + deletion*self->del_penalty) / extend_len;
 						} else {
 							align_rate = 1;
 						}
 
-						if (align_rate >= 0.7) {
+						if (align_rate >= self->min_ratio) {
 							tandem_end = extend_start + extend_len + 1;
 							tandem_length = tandem_end - tandem_start + 1;
 							tandem_substitute += substitution;
 							tandem_insert += insertion;
 							tandem_delete += deletion;
+							tandem_identity = (tandem_match * 1.0 / tandem_length)*100;
 
-							tmp = Py_BuildValue("Onniiiii", self->seqname, tandem_start, tandem_end, tandem_length, tandem_match, tandem_substitute, tandem_insert, tandem_delete);
+							tmp = Py_BuildValue("Onnsiiiiiif", self->seqname, tandem_start, tandem_end, motif, j,
+												tandem_length, tandem_match, tandem_substitute, tandem_insert,
+												tandem_delete, tandem_identity);
 							PyList_Append(itrs, tmp);
 							Py_DECREF(tmp);
 
@@ -472,4 +661,122 @@ PyTypeObject stripy_ITRMinerType = {
 	0,                              /* tp_init */
 	0,            /* tp_alloc */
 	stripy_itrminer_new,              /* tp_new */
+};
+
+/*
+ * ITR element
+ */
+
+void stripy_itr_dealloc(stripy_ITR *self) {
+	free(self->motif);
+	Py_DECREF(self->seqid);
+	Py_TYPE(self)->tp_free((PyObject *)self);
+}
+
+PyObject* stripy_itr_repr(stripy_ITR *self) {
+	return PyUnicode_FromFormat("<ITR> %s @ %s:%zd-%zd", self->motif,
+								PyUnicode_AsUTF8(self->seqid), self->start, self->end);
+}
+
+PyObject* stripy_itr_as_list(stripy_ITR *self) {
+	return Py_BuildValue("Onnsiiiiiif", self->seqid, self->start, self->end, self->motif, self->mlen,
+						self->length, self->matches, self->substitutions, self->insertions,
+						self->deletions, self->identity);
+}
+
+PyObject* stripy_itr_as_dict(stripy_ITR *self) {
+	return Py_BuildValue("{s:O,s:n,s:n,s:s,s:i,s:i,s:i,s:i,s:i,s:i,s:f}", "chrom", self->seqid,
+						 "start", self->start, "end", self->end, "motif", self->motif, "type", self->mlen,
+						 "length", self->length, "matches", self->matches, "substitutions", self->substitutions,
+						 "insertions", self->insertions, "deletions", self->deletions, "identity", self->identity);
+}
+
+PyObject* stripy_itr_as_string(stripy_ITR *self, PyObject *args, PyObject *kwargs) {
+	char *separator = "\t";
+	char *terminator = "";
+	static char* keywords[] = {"separator", "terminator", NULL};
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ss", keywords, &separator, &terminator)) {
+		return NULL;
+	}
+
+	return PyUnicode_FromFormat("%S%s%zd%s%zd%s%s%s%d%s%d%s%d%s%d%s%d%s%d%s%R%s", self->seqid, separator,
+								self->start, separator, self->end, separator, self->motif, separator,
+								self->mlen, separator, self->length, separator, self->matches, separator,
+								self->substitutions, separator, self->insertions, separator, self->deletions,
+								separator, PyFloat_FromDouble(self->identity), terminator);
+}
+
+PyObject *stripy_itr_get_seq(stripy_ITR *self, void* closure) {
+	PyObject* ret = PyUnicode_New(self->length, 127);
+	Py_UCS1* p = PyUnicode_1BYTE_DATA(ret);
+	memcpy(p, PyUnicode_AsUTF8(self->seqid)+self->start-1, self->length);
+	return ret;
+}
+
+static PyMethodDef stripy_itr_methods[] = {
+	{"as_list", (PyCFunction)stripy_itr_as_list, METH_NOARGS, NULL},
+	{"as_dict", (PyCFunction)stripy_itr_as_dict, METH_NOARGS, NULL},
+	{"as_string", (PyCFunction)stripy_itr_as_string, METH_VARARGS | METH_KEYWORDS, NULL},
+	{NULL, NULL, 0, NULL}
+};
+
+static PyGetSetDef stripy_itr_getsets[] = {
+	{"seq", (getter)stripy_itr_get_seq, NULL, NULL, NULL},
+	{NULL}
+};
+
+static PyMemberDef stripy_itr_members[] = {
+	{"seqid", T_OBJECT, offsetof(stripy_ITR, seqid), READONLY},
+	{"start", T_PYSSIZET, offsetof(stripy_ITR, start), READONLY},
+	{"end", T_PYSSIZET, offsetof(stripy_ITR, end), READONLY},
+	{"motif", T_STRING, offsetof(stripy_ITR, motif), READONLY},
+	{"type", T_INT, offsetof(stripy_ITR, mlen), READONLY},
+	{"length", T_INT, offsetof(stripy_ITR, length), READONLY},
+	{"matches", T_INT, offsetof(stripy_ITR, matches), READONLY},
+	{"substitutions", T_INT, offsetof(stripy_ITR, substitutions), READONLY},
+	{"insertions", T_INT, offsetof(stripy_ITR, insertions), READONLY},
+	{"deletions", T_INT, offsetof(stripy_ITR, deletions), READONLY},
+	{"identity", T_FLOAT, offsetof(stripy_ITR, identity), READONLY},
+	{NULL}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+};
+
+PyTypeObject stripy_ITRType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "IRE",                        /* tp_name */
+    sizeof(stripy_ITR),          /* tp_basicsize */
+    0,                              /* tp_itemsize */
+    (destructor)stripy_itr_dealloc,   /* tp_dealloc */
+    0,                              /* tp_print */
+    0,                              /* tp_getattr */
+    0,                              /* tp_setattr */
+    0,                              /* tp_reserved */
+    (reprfunc)stripy_itr_repr,                              /* tp_repr */
+    0,                              /* tp_as_number */
+    0,                   /* tp_as_sequence */
+    0,                   /* tp_as_mapping */
+    0,                              /* tp_hash */
+    0,                              /* tp_call */
+    0,                              /* tp_str */
+    0,                              /* tp_getattro */
+    0,                              /* tp_setattro */
+    0,                              /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT,             /* tp_flags */
+    "tandem repeat element",                              /* tp_doc */
+    0,                              /* tp_traverse */
+    0,                              /* tp_clear */
+    0,                              /* tp_richcompare */
+    0,                              /* tp_weaklistoffset */
+    0,     /* tp_iter */
+    0,    /* tp_iternext */
+    stripy_itr_methods,          /* tp_methods */
+    stripy_itr_members,          /* tp_members */
+    stripy_itr_getsets,                               /* tp_getset */
+    0,                              /* tp_base */
+    0,                              /* tp_dict */
+    0,                              /* tp_descr_get */
+    0,                              /* tp_descr_set */
+    0,                              /* tp_dictoffset */
+    0,                              /* tp_init */
+    0,            /* tp_alloc */
+    PyType_GenericNew,              /* tp_new */
 };

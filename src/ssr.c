@@ -1,6 +1,6 @@
 #define PY_SSIZE_T_CLEAN
 #include "ssr.h"
-#include "tre.h"
+#include "etr.h"
 #include "structmember.h"
 
 int stripy_ssrminer_set_min_repeats(stripy_SSRMiner *self, PyObject* minrep_obj) {
@@ -108,10 +108,10 @@ static PyObject* stripy_ssrminer_next(stripy_SSRMiner *self) {
 	Py_ssize_t current_start;
 
 	//motif length
-	unsigned int j;
+	int j;
 
 	//repeat length
-	unsigned int replen;
+	int replen;
 
 	for (i = self->next_start; i < self->size; ++i) {
 		//remove unkown base
@@ -128,7 +128,7 @@ static PyObject* stripy_ssrminer_next(stripy_SSRMiner *self) {
 			replen = i + j - current_start;
 
 			if (replen >= self->min_lens[j]) {
-				stripy_TRE *ssr = PyObject_New(stripy_TRE, &stripy_TREType);
+				stripy_ETR *ssr = PyObject_New(stripy_ETR, &stripy_ETRType);
 				ssr->motif = (char *)malloc(j + 1);
 				memcpy(ssr->motif, self->seq+self->next_start, j);
 				ssr->motif[j] = '\0';
@@ -169,9 +169,9 @@ static PyObject* stripy_ssrminer_as_list(stripy_SSRMiner *self) {
 	PyObject *ssrs = PyList_New(0);
 	PyObject *tmp;
 	Py_ssize_t start;
-	unsigned int replen;
-	unsigned int repeats;
-	unsigned int length;
+	int replen;
+	int repeats;
+	int length;
 	char motif[7];
 
 	for (Py_ssize_t i = 0; i < self->size; ++i) {
@@ -193,7 +193,7 @@ static PyObject* stripy_ssrminer_as_list(stripy_SSRMiner *self) {
 				repeats = replen/j;
 				length = repeats * j;
 
-				tmp = Py_BuildValue("OnnsII", self->seqname, start+1, start+length, motif, repeats, length);
+				tmp = Py_BuildValue("Onnsiii", self->seqname, start+1, start+length, motif, j, repeats, length);
 				PyList_Append(ssrs, tmp);
 				Py_DECREF(tmp);
 

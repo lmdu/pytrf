@@ -2,7 +2,7 @@ import time
 import stripy
 import pyfastx
 
-for name, seq, _ in pyfastx.Fastx('tests/data/chr1.fa.gz'):
-	vntrs = stripy.VNTRMiner(name, seq, 7, 100, 3)
+for name, seq in pyfastx.Fasta('tests/data/chr1.fa.gz', build_index=False, uppercase=True):
+	vntrs = stripy.ITRMiner(name, seq).as_list()
 	for vntr in vntrs:
-		print(vntr.as_string())
+		print("\t".join(map(str, vntr)))
