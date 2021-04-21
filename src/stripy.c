@@ -3,13 +3,75 @@
 #include "ssr.h"
 #include "itr.h"
 #include "vntr.h"
+#include "version.h"
 
 PyObject *test(PyObject *self, PyObject *args, PyObject *kwargs) {
-	return Py_BuildValue("s", "hello");
+	PyObject *ssrs = PyList_New(0);
+	PyObject *tmp;
+	PyObject *seqobj;
+	PyObject *seqname;
+
+	Py_ssize_t start;
+	Py_ssize_t size;
+
+	int replen;
+	int repeats;
+	int length;
+	char motif[7];
+	int min_lens[] = {0, 12, 14, 15, 16, 20, 24};
+
+	static char* keywords[] = {"name", "seq", NULL};
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO", keywords, &seqname, &seqobj)) {
+		return NULL;
+	}
+
+	size = PyObject_Length(seqobj);
+
+	Py_UCS1* seq = PyUnicode_1BYTE_DATA(seqobj);
+
+	for (Py_ssize_t i = 0; i < size; ++i) {
+		if (seq[i] == 78) {
+			continue;
+		}
+
+		start = i;
+		for (int j = 1; j < 7; ++j) {
+			while (seq[i] == seq[i+j]) {
+				++i;
+			}
+
+			replen = i + j - start;
+
+			if (replen >= min_lens[j]) {
+				memcpy(motif, seq+start, j);
+				motif[j] = '\0';
+				repeats = replen/j;
+				length = repeats * j;
+
+				tmp = Py_BuildValue("Onnsiii", seqname, start+1, start+length, motif, j, repeats, length);
+				PyList_Append(ssrs, tmp);
+				Py_DECREF(tmp);
+
+				i -= replen % j;
+
+				break;
+			} else {
+				i = start;
+			}
+		}
+	}
+
+	return ssrs;
+}
+
+PyObject *version(PyObject *self) {
+	return PyUnicode_FromString(STRIPY_VERSION);
 }
 
 static PyMethodDef module_methods[] = {
 	{"test", (PyCFunction)test, METH_VARARGS | METH_KEYWORDS, NULL},
+	{"version", (PyCFunction)version, METH_NOARGS, NULL},
 	{NULL, NULL, 0, NULL}
 };
 

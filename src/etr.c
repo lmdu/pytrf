@@ -25,6 +25,12 @@ PyObject* stripy_etr_as_list(stripy_ETR *self) {
 		self->mlen, self->repeats, self->length);
 }
 
+PyObject* stripy_etr_as_dict(stripy_ETR *self) {
+    return Py_BuildValue("{s:O,s:n,s:n,s:s,s:i,s:i,s:i}", "chrom", self->seqid,
+                         "start", self->start, "end", self->end, "motif", self->motif,
+                         "type", self->mlen, "repeats", self->repeats, "length", self->length);
+}
+
 PyObject* stripy_etr_as_string(stripy_ETR *self, PyObject *args, PyObject *kwargs) {
 	char *separator = "\t";
 	char *terminator = "";
@@ -48,6 +54,7 @@ PyObject *stripy_etr_get_seq(stripy_ETR *self, void* closure) {
 
 static PyMethodDef stripy_etr_methods[] = {
 	{"as_list", (PyCFunction)stripy_etr_as_list, METH_NOARGS, NULL},
+    {"as_dict", (PyCFunction)stripy_etr_as_dict, METH_NOARGS, NULL},
 	{"as_string", (PyCFunction)stripy_etr_as_string, METH_VARARGS | METH_KEYWORDS, NULL},
 	{NULL, NULL, 0, NULL}
 };

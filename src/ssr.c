@@ -130,7 +130,7 @@ static PyObject* stripy_ssrminer_next(stripy_SSRMiner *self) {
 			if (replen >= self->min_lens[j]) {
 				stripy_ETR *ssr = PyObject_New(stripy_ETR, &stripy_ETRType);
 				ssr->motif = (char *)malloc(j + 1);
-				memcpy(ssr->motif, self->seq+self->next_start, j);
+				memcpy(ssr->motif, self->seq+current_start, j);
 				ssr->motif[j] = '\0';
 				ssr->mlen = j;
 				ssr->seqid = self->seqname;
@@ -168,7 +168,7 @@ static PyObject* stripy_ssrminer_reset_min_repeats(stripy_SSRMiner *self, PyObje
 static PyObject* stripy_ssrminer_as_list(stripy_SSRMiner *self) {
 	PyObject *ssrs = PyList_New(0);
 	PyObject *tmp;
-	Py_ssize_t start;
+	Py_ssize_t current_start;
 	int replen;
 	int repeats;
 	int length;
@@ -179,21 +179,21 @@ static PyObject* stripy_ssrminer_as_list(stripy_SSRMiner *self) {
 			continue;
 		}
 
-		start = i;
+		current_start = i;
 		for (int j = 1; j < 7; ++j) {
 			while (self->seq[i] == self->seq[i+j]) {
 				++i;
 			}
 
-			replen = i + j - start;
+			replen = i + j - current_start;
 
 			if (replen >= self->min_lens[j]) {
-				memcpy(motif, self->seq+start, j);
+				memcpy(motif, self->seq+current_start, j);
 				motif[j] = '\0';
 				repeats = replen/j;
 				length = repeats * j;
 
-				tmp = Py_BuildValue("Onnsiii", self->seqname, start+1, start+length, motif, j, repeats, length);
+				tmp = Py_BuildValue("Onnsiii", self->seqname, current_start+1, current_start+length, motif, j, repeats, length);
 				PyList_Append(ssrs, tmp);
 				Py_DECREF(tmp);
 
@@ -201,7 +201,7 @@ static PyObject* stripy_ssrminer_as_list(stripy_SSRMiner *self) {
 
 				break;
 			} else {
-				i = start;
+				i = current_start;
 			}
 		}
 	}
