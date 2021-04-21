@@ -13,20 +13,21 @@ The ``stripy`` is a lightweight Python C extension for short tandem repeat ident
    :caption: Contents:
 
 Installation
-------------
+============
 
 
 Usage
------
+=====
 
 Command
--------
+=======
 
 Changelog
-----------
+=========
+
 
 API Reference
--------------
+=============
 
 
 Indices and tables
