@@ -691,6 +691,13 @@ PyObject* stripy_itr_as_dict(stripy_ITR *self) {
 						 "insertions", self->insertions, "deletions", self->deletions, "identity", self->identity);
 }
 
+PyObject* stripy_itr_as_gff(stripy_ITR *self) {
+	return PyUnicode_FromFormat("%S\tstripy\tITR\t%zd\t%zd\t.\t+\t.\tMotif=%s;Type=%d;Length=%d;Match=%d;"
+								"Substitutions=%d;Insertions=%d;Deletions=%dIdentity=%R\n", self->seqid, self->start,
+								self->end, self->motif, self->mlen, self->length, self->matches, self->substitutions, 
+								self->insertions, self->deletions, PyFloat_FromDouble(self->identity));
+}
+
 PyObject* stripy_itr_as_string(stripy_ITR *self, PyObject *args, PyObject *kwargs) {
 	char *separator = "\t";
 	char *terminator = "";
@@ -716,6 +723,7 @@ PyObject *stripy_itr_get_seq(stripy_ITR *self, void* closure) {
 static PyMethodDef stripy_itr_methods[] = {
 	{"as_list", (PyCFunction)stripy_itr_as_list, METH_NOARGS, NULL},
 	{"as_dict", (PyCFunction)stripy_itr_as_dict, METH_NOARGS, NULL},
+	{"as_gff", (PyCFunction)stripy_itr_as_gff, METH_NOARGS, NULL},
 	{"as_string", (PyCFunction)stripy_itr_as_string, METH_VARARGS | METH_KEYWORDS, NULL},
 	{NULL, NULL, 0, NULL}
 };
@@ -741,42 +749,42 @@ static PyMemberDef stripy_itr_members[] = {
 };
 
 PyTypeObject stripy_ITRType = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "IRE",                        /* tp_name */
-    sizeof(stripy_ITR),          /* tp_basicsize */
-    0,                              /* tp_itemsize */
-    (destructor)stripy_itr_dealloc,   /* tp_dealloc */
-    0,                              /* tp_print */
-    0,                              /* tp_getattr */
-    0,                              /* tp_setattr */
-    0,                              /* tp_reserved */
-    (reprfunc)stripy_itr_repr,                              /* tp_repr */
-    0,                              /* tp_as_number */
-    0,                   /* tp_as_sequence */
-    0,                   /* tp_as_mapping */
-    0,                              /* tp_hash */
-    0,                              /* tp_call */
-    0,                              /* tp_str */
-    0,                              /* tp_getattro */
-    0,                              /* tp_setattro */
-    0,                              /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,             /* tp_flags */
-    "tandem repeat element",                              /* tp_doc */
-    0,                              /* tp_traverse */
-    0,                              /* tp_clear */
-    0,                              /* tp_richcompare */
-    0,                              /* tp_weaklistoffset */
-    0,     /* tp_iter */
-    0,    /* tp_iternext */
-    stripy_itr_methods,          /* tp_methods */
-    stripy_itr_members,          /* tp_members */
-    stripy_itr_getsets,                               /* tp_getset */
-    0,                              /* tp_base */
-    0,                              /* tp_dict */
-    0,                              /* tp_descr_get */
-    0,                              /* tp_descr_set */
-    0,                              /* tp_dictoffset */
-    0,                              /* tp_init */
-    0,            /* tp_alloc */
-    PyType_GenericNew,              /* tp_new */
+	PyVarObject_HEAD_INIT(NULL, 0)
+	"IRE",                        /* tp_name */
+	sizeof(stripy_ITR),          /* tp_basicsize */
+	0,                              /* tp_itemsize */
+	(destructor)stripy_itr_dealloc,   /* tp_dealloc */
+	0,                              /* tp_print */
+	0,                              /* tp_getattr */
+	0,                              /* tp_setattr */
+	0,                              /* tp_reserved */
+	(reprfunc)stripy_itr_repr,                              /* tp_repr */
+	0,                              /* tp_as_number */
+	0,                   /* tp_as_sequence */
+	0,                   /* tp_as_mapping */
+	0,                              /* tp_hash */
+	0,                              /* tp_call */
+	0,                              /* tp_str */
+	0,                              /* tp_getattro */
+	0,                              /* tp_setattro */
+	0,                              /* tp_as_buffer */
+	Py_TPFLAGS_DEFAULT,             /* tp_flags */
+	"tandem repeat element",                              /* tp_doc */
+	0,                              /* tp_traverse */
+	0,                              /* tp_clear */
+	0,                              /* tp_richcompare */
+	0,                              /* tp_weaklistoffset */
+	0,     /* tp_iter */
+	0,    /* tp_iternext */
+	stripy_itr_methods,          /* tp_methods */
+	stripy_itr_members,          /* tp_members */
+	stripy_itr_getsets,                               /* tp_getset */
+	0,                              /* tp_base */
+	0,                              /* tp_dict */
+	0,                              /* tp_descr_get */
+	0,                              /* tp_descr_set */
+	0,                              /* tp_dictoffset */
+	0,                              /* tp_init */
+	0,            /* tp_alloc */
+	PyType_GenericNew,              /* tp_new */
 };

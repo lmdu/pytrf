@@ -26,9 +26,15 @@ PyObject* stripy_etr_as_list(stripy_ETR *self) {
 }
 
 PyObject* stripy_etr_as_dict(stripy_ETR *self) {
-    return Py_BuildValue("{s:O,s:n,s:n,s:s,s:i,s:i,s:i}", "chrom", self->seqid,
-                         "start", self->start, "end", self->end, "motif", self->motif,
-                         "type", self->mlen, "repeats", self->repeats, "length", self->length);
+	return Py_BuildValue("{s:O,s:n,s:n,s:s,s:i,s:i,s:i}", "chrom", self->seqid,
+						 "start", self->start, "end", self->end, "motif", self->motif,
+						 "type", self->mlen, "repeats", self->repeats, "length", self->length);
+}
+
+PyObject* stripy_etr_as_gff(stripy_ETR *self) {
+	return PyUnicode_FromFormat("%S\tstripy\tETR\t%zd\t%zd\t.\t+\t.\tMotif=%s;Type=%d;Repeats=%d;Length=%d\n",
+								self->seqid, self->start, self->end, self->motif, self->mlen, self->repeats,
+								self->length);
 }
 
 PyObject* stripy_etr_as_string(stripy_ETR *self, PyObject *args, PyObject *kwargs) {
@@ -54,7 +60,8 @@ PyObject *stripy_etr_get_seq(stripy_ETR *self, void* closure) {
 
 static PyMethodDef stripy_etr_methods[] = {
 	{"as_list", (PyCFunction)stripy_etr_as_list, METH_NOARGS, NULL},
-    {"as_dict", (PyCFunction)stripy_etr_as_dict, METH_NOARGS, NULL},
+	{"as_dict", (PyCFunction)stripy_etr_as_dict, METH_NOARGS, NULL},
+	{"as_gff", (PyCFunction)stripy_etr_as_gff, METH_NOARGS, NULL},
 	{"as_string", (PyCFunction)stripy_etr_as_string, METH_VARARGS | METH_KEYWORDS, NULL},
 	{NULL, NULL, 0, NULL}
 };
@@ -76,42 +83,42 @@ static PyMemberDef stripy_etr_members[] = {
 };
 
 PyTypeObject stripy_ETRType = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "ETR",                        /* tp_name */
-    sizeof(stripy_ETR),          /* tp_basicsize */
-    0,                              /* tp_itemsize */
-    (destructor)stripy_etr_dealloc,   /* tp_dealloc */
-    0,                              /* tp_print */
-    0,                              /* tp_getattr */
-    0,                              /* tp_setattr */
-    0,                              /* tp_reserved */
-    (reprfunc)stripy_etr_repr,                              /* tp_repr */
-    0,                              /* tp_as_number */
-    0,                   /* tp_as_sequence */
-    0,                   /* tp_as_mapping */
-    0,                              /* tp_hash */
-    0,                              /* tp_call */
-    0,                              /* tp_str */
-    0,                              /* tp_getattro */
-    0,                              /* tp_setattro */
-    0,                              /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,             /* tp_flags */
-    "tandem repeat element",                              /* tp_doc */
-    0,                              /* tp_traverse */
-    0,                              /* tp_clear */
-    0,                              /* tp_richcompare */
-    0,                              /* tp_weaklistoffset */
-    0,     /* tp_iter */
-    0,    /* tp_iternext */
-    stripy_etr_methods,          /* tp_methods */
-    stripy_etr_members,          /* tp_members */
-    stripy_etr_getsets,                               /* tp_getset */
-    0,                              /* tp_base */
-    0,                              /* tp_dict */
-    0,                              /* tp_descr_get */
-    0,                              /* tp_descr_set */
-    0,                              /* tp_dictoffset */
-    0,                              /* tp_init */
-    0,            /* tp_alloc */
-    PyType_GenericNew,              /* tp_new */
+	PyVarObject_HEAD_INIT(NULL, 0)
+	"ETR",                        /* tp_name */
+	sizeof(stripy_ETR),          /* tp_basicsize */
+	0,                              /* tp_itemsize */
+	(destructor)stripy_etr_dealloc,   /* tp_dealloc */
+	0,                              /* tp_print */
+	0,                              /* tp_getattr */
+	0,                              /* tp_setattr */
+	0,                              /* tp_reserved */
+	(reprfunc)stripy_etr_repr,                              /* tp_repr */
+	0,                              /* tp_as_number */
+	0,                   /* tp_as_sequence */
+	0,                   /* tp_as_mapping */
+	0,                              /* tp_hash */
+	0,                              /* tp_call */
+	0,                              /* tp_str */
+	0,                              /* tp_getattro */
+	0,                              /* tp_setattro */
+	0,                              /* tp_as_buffer */
+	Py_TPFLAGS_DEFAULT,             /* tp_flags */
+	"tandem repeat element",                              /* tp_doc */
+	0,                              /* tp_traverse */
+	0,                              /* tp_clear */
+	0,                              /* tp_richcompare */
+	0,                              /* tp_weaklistoffset */
+	0,     /* tp_iter */
+	0,    /* tp_iternext */
+	stripy_etr_methods,          /* tp_methods */
+	stripy_etr_members,          /* tp_members */
+	stripy_etr_getsets,                               /* tp_getset */
+	0,                              /* tp_base */
+	0,                              /* tp_dict */
+	0,                              /* tp_descr_get */
+	0,                              /* tp_descr_set */
+	0,                              /* tp_dictoffset */
+	0,                              /* tp_init */
+	0,            /* tp_alloc */
+	PyType_GenericNew,              /* tp_new */
 };
