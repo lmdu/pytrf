@@ -23,3 +23,4 @@ build/temp.linux-x86_64-3.8/src/tre.o
 build/temp.linux-x86_64-3.8/src/itr.o
 build/temp.linux-x86_64-3.8/src/etr.o
 itrs.txt
+tests/data/GCF_000001405.38_GRCh38.p12_genomic.fna.gz
