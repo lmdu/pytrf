@@ -34,7 +34,7 @@ typedef struct {
 	//tandem repeat element length
 	int length;
 
-} triapy_ETR;
+} stria_ETR;
 
 extern PyTypeObject stria_ETRType;
 

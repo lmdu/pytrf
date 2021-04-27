@@ -17,12 +17,12 @@ import os
 
 # -- Project information -----------------------------------------------------
 
-project = 'stripy'
+project = 'stria'
 copyright = '2021, Lianming Du'
 author = 'Lianming Du'
 
 # The full version, including alpha/beta/rc tags
-with open(os.path.join(os.path.abspath('..'), 'src', 'version.h')) as fh:
+with open(os.path.join(os.path.abspath('../..'), 'src', 'version.h')) as fh:
 	__version__ = fh.read().split()[2].strip('"')
 
 release = __version__
@@ -42,7 +42,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = []
 
 
 # -- Options for HTML output -------------------------------------------------
