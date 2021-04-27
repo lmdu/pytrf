@@ -21,7 +21,7 @@ Update to or install the latest version
 Install from source
 -------------------
 
-Clone stria using ``git`` or download latest `release <https://github.com/lmdu/stria/releases>`.
+Clone stria using ``git`` or download latest `release <https://github.com/lmdu/stria/releases>`_.
 
 ::
 

@@ -28,7 +28,7 @@ typedef struct {
 	int max_motif;
 
 	//min repeats
-	int min_repeats;
+	int min_repeat;
 
 } stria_VNTRMiner;
 

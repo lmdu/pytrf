@@ -4,19 +4,19 @@
 #include "structmember.h"
 
 static PyObject* stria_vntrminer_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
-	static char* keywords[] = {"name", "seq", "min_motif", "max_motif", "min_repeats", NULL};
+	static char* keywords[] = {"name", "seq", "min_motif_size", "max_motif_size", "min_repeat", NULL};
 
 	stria_VNTRMiner *obj = (stria_VNTRMiner *)type->tp_alloc(type, 0);
 	if (!obj) return NULL;
 
 	obj->min_motif = 7;
 	obj->max_motif = 30;
-	obj->min_repeats = 2;
+	obj->min_repeat = 2;
 
 	//initialize start search position
 	obj->next_start = 0;
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iii", keywords, &obj->seqname, &obj->seqobj, &obj->min_motif, &obj->max_motif, &obj->min_repeats)) {
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iii", keywords, &obj->seqname, &obj->seqobj, &obj->min_motif, &obj->max_motif, &obj->min_repeat)) {
 		return NULL;
 	}
 
@@ -73,7 +73,7 @@ static PyObject* stria_vntrminer_next(stria_VNTRMiner *self) {
 			replen = i + j - current_start;
 			repeats = replen/j;
 
-			if (repeats >= self->min_repeats) {
+			if (repeats >= self->min_repeat) {
 				//check motif is real motif with length >= min motif size
 				const char *p = self->seq+current_start;
 				is_vntr = 1;
@@ -139,7 +139,7 @@ static PyObject* stria_vntrminer_as_list(stria_VNTRMiner *self) {
 			replen = i + j - current_start;
 			repeats = replen/j;
 
-			if (repeats >= self->min_repeats) {
+			if (repeats >= self->min_repeat) {
 				//check motif is real motif with length >= min motif size
 				const char *p = self->seq+current_start;
 				is_vntr = 1;

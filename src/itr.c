@@ -237,7 +237,7 @@ static int backtrace_matrix(int **matrix, int *diagonal, int *mat, int *sub, int
 
 static PyObject* stria_itrminer_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 	static char* keywords[] = {
-		"name", "seq", "min_motif_size", "max_motif_size", "seed_min_repeats",
+		"name", "seq", "min_motif_size", "max_motif_size", "seed_min_repeat",
 		"seed_min_length", "max_continuous_errors", "substitution_penalty",
 		"insertion_penalty", "deletion_penalty", "min_match_ratio", "max_extend_length",
 		NULL
@@ -734,7 +734,7 @@ static PyGetSetDef stria_itr_getsets[] = {
 };
 
 static PyMemberDef stria_itr_members[] = {
-	{"seqid", T_OBJECT, offsetof(stria_ITR, seqid), READONLY},
+	{"chrom", T_OBJECT, offsetof(stria_ITR, seqid), READONLY},
 	{"start", T_PYSSIZET, offsetof(stria_ITR, start), READONLY},
 	{"end", T_PYSSIZET, offsetof(stria_ITR, end), READONLY},
 	{"motif", T_STRING, offsetof(stria_ITR, motif), READONLY},

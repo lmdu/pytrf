@@ -72,7 +72,7 @@ static PyGetSetDef stria_etr_getsets[] = {
 };
 
 static PyMemberDef stria_etr_members[] = {
-	{"seqid", T_OBJECT, offsetof(stria_ETR, seqid), READONLY},
+	{"chrom", T_OBJECT, offsetof(stria_ETR, seqid), READONLY},
 	{"start", T_PYSSIZET, offsetof(stria_ETR, start), READONLY},
 	{"end", T_PYSSIZET, offsetof(stria_ETR, end), READONLY},
 	{"motif", T_STRING, offsetof(stria_ETR, motif), READONLY},
