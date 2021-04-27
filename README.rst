@@ -28,6 +28,17 @@ The ``stria`` is a lightweight Python C extension for identification and analysi
 The ``stria`` enables to fastly identify both exact and imperfect SSRs and VNTRs from large numbers of DNA sequences.
 The ``stria`` also provides command line tools for users to extract tandem repeats from Fasta files.
 
+Usage
+=====
+
+.. code:: python
+
+	>>> import stria
+	>>> import pyfastx
+	>>> for name, seq, _ in pyfastx.Fastx('test.fa.gz'):
+	>>> 	for ssr in SSRMiner(name, seq):
+	>>> 		print(ssr.as_string())
+
 Documentation
 =============
 
