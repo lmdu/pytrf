@@ -37,8 +37,14 @@ Stria provide ``SSRMiner`` class to find all microsatellites from given sequence
 VNTR identification
 ===================
 
+Exact tandem repeat
+===================
+
 ITR identification
 ==================
+
+Imperfect tandem repeat
+=======================
 
 
 Commandline interface
