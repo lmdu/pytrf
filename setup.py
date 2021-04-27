@@ -18,14 +18,14 @@ with open(os.path.join('src', 'version.h')) as fh:
 	version = fh.read().split()[2].strip('"')
 
 setup(
-	name = 'stripy',
+	name = 'stria',
 	version = version,
 	ext_modules = [extension],
 	description = description,
 	long_description = long_description,
 	author = 'Lianming Du',
 	author_email = 'adullb@qq.com',
-	url = 'https://github.com/lmdu/stripy',
+	url = 'https://github.com/lmdu/stria',
 	license = 'MIT',
 	keywords = 'bioinformatics microsatellite tandem repeats',
 	classifiers = [

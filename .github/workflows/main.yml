@@ -1,4 +1,4 @@
-name: Build and upload to PyPI
+name: build
 
 on: [push, pull_request]
 
@@ -22,9 +22,14 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_SKIP: cp27-* pp27-*
+          CIBW_BUILD_VERBOSITY: 3
 
       - name: Display wheel
         run: ls -l wheelhouse
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
 
   build_sdist:
     name: Build source distribution
@@ -42,3 +47,23 @@ jobs:
 
       - name: Display dist
         run: ls -l dist
+
+      - name: actions/upload-artifact@v2
+        with:
+          path: dist/*.tar.gz
+  
+  upload_pypi:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_password }}
+          repository_url: https://test.pypi.org/legacy/
