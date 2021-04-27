@@ -1,11 +1,11 @@
-`Stria` is only responsible for mining tandem repeats from given DNA sequence. It can not directly extract TRs from Fasta files. So we used `pyfastx <https://github.com/lmdu/pyfastx>`_ to parse Fasta file and feed the sequence to `stria`.
+``Stria`` is only responsible for mining tandem repeats from given DNA sequence. It can not directly extract TRs from Fasta files. So we used `pyfastx <https://github.com/lmdu/pyfastx>`_ to parse Fasta file and feed the sequence to ``stria``.
 
 SSR identification
 ==================
 
 Stria provide ``SSRMiner`` class to find all microsatellites from given sequence.
 
-.. cod:: python
+.. code:: python
 
 	>>> import stria
 	>>> import pyfastx
