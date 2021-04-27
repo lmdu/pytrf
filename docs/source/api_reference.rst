@@ -23,7 +23,7 @@ stria.SSRMiner
 
 	:param str seq: the input sequence
 
-	:min_repeats list: minimum number of repeats for mono, di, tri, tetra, penta, hexa, default (12,7,5,4,4,4), corresponding to 12 for mono, 7 for di, 5 for tri and 4 for tetra, penta, hexa
+	:param list min_repeats: minimum number of repeats for mono, di, tri, tetra, penta, hexa, default (12,7,5,4,4,4), corresponding to 12 for mono, 7 for di, 5 for tri and 4 for tetra, penta, hexa
 
 	:return: SSRMiner object
 
