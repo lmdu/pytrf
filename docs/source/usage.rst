@@ -136,9 +136,96 @@ ETR is a readonly object and allows you to access the attributions and convert t
 ITR identification
 ------------------
 
+Stria provide ``ITRMiner`` class to find all imperfect tandem repeats including SSRs and VNTRs from given sequence.
+
+The fastest way to get all ITRs from sequence:
+
+.. code:: python
+
+	>>> # feed sequence to stria
+	>>> # the fastest way to get all ITRs from sequence
+	>>> itrs = stria.ITRMiner(name, seq).as_list()
+
+Iterate over itrminer object to get itr object
+
+.. code:: python
+
+	>>> for itr in stria.i=ITRMiner(name, seq):
+	>>> 	print(itr.chrom)
+	>>> 	print(itr.motif)
+	>>> 	print(itr.length)
+
+You can customize the motif size and seed parameters.
+
+.. code:: python
+
+	>>> itrs = stria.ITRMiner(name, seq, min_motif_size=1, max_motif_size=6, see_min_repeat=3, seed_min_length=10)
+
+A complete example, get all itrs and output csv format
+
+.. code:: python
+
+	>>> for name, seq, _ in pyfastx.Fastx('tests/data/test.fa', uppercase=True):
+	>>> 	for itr in stria.ITRMiner(name, seq, 10, 100, 2):
+	>>> 		print(itr.as_string(','))
+
 Imperfect tandem repeat
 -----------------------
 
+When iterating over ``ITRMiner`` object, a imperfect tandem repeat (ITR) object will be returned.
+ITR is a readonly object and allows you to access the attributions and convert to desired formats.
+
+.. code:: python
+
+	>>> itrs = ITRMiner(name, seq)
+	>>> # get one ITR
+	>>> itr = next(itrs)
+
+	>>> # get sequence name where ITR located on
+	>>> itr.name
+
+	>>> # get one-based start and end position
+	>>> itr.start
+	>>> itr.end
+
+	>>> # get motif sequence
+	>>> itr.motif
+
+	>>> # get length
+	>>> itr.length
+
+	>>> # get ITR sequence
+	>>> itr.seq
+
+	>>> # get number of matches
+	>>> itr.matches
+
+	>>> # get number of substitutions
+	>>> itr.substitutions
+
+	>>> # get number of insertions
+	>>> itr.insertions
+
+	>>> # get number of deletions
+	>>> itr.deletions
+
+	>>> # convert to a list
+	>>> itr.as_list()
+
+	>>> # convert to a dict
+	>>> itr.as_dict()
+
+	>>> # convert to a gff formatted string
+	>>> itr.as_gff()
+
+	>>> # convert to tsv string
+	>>> itr.as_string(separator='\t')
+
+	>>> # convert to csv string
+	>>> itr.as_string(separator=',')
+
+	>>> # added a terminator to the end
+	>>> itr.as_string(separator=',', terminator='\n')
 
 Commandline interface
 ---------------------
