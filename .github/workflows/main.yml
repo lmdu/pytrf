@@ -48,7 +48,7 @@ jobs:
       - name: Display dist
         run: ls -l dist
 
-      - name: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2
         with:
           path: dist/*.tar.gz
   
