@@ -3,8 +3,8 @@ import sys
 import csv
 import time
 import queue
+import stria
 import shutil
-import stripy
 import pyfastx
 import argparse
 import multiprocessing as mp
@@ -24,13 +24,13 @@ def format_and_write_to_file(args, out, tres):
 
 def find_tandem_repeats_by_type(name, seq, args):
 	if args.cmd == 'ssr':
-		tres = stripy.SSRMiner(name, seq, args.repeats)
+		tres = stria.SSRMiner(name, seq, args.repeats)
 
 	elif args.cmd == 'vntr':
-		tres = stripy.VNTRMiner(name, seq, args.min_motif_size, 
+		tres = stria.VNTRMiner(name, seq, args.min_motif_size, 
 								args.max_motif_size, args.min_repeats)
 	elif args.cmd == 'itr':
-		tres = stripy.ITRMiner(name, seq, args.min_motif_size, args.max_motif_size,
+		tres = stria.ITRMiner(name, seq, args.min_motif_size, args.max_motif_size,
 								args.seed_min_repeats, args.seed_min_length,
 								args.max_continuous_errors, args.substitution_penalty,
 								args.insertion_penalty, args.deletion_penalty,
@@ -100,26 +100,26 @@ def find_tandem_repeats(args):
 
 def main():
 	parser = argparse.ArgumentParser(
-		prog = 'stripy',
-		usage = 'stripy COMMAND [OPTIONS]',
-		description = "Short tandem repeat sequence identification",
+		prog = 'stria',
+		usage = 'stria COMMAND [OPTIONS]',
+		description = "short tandem repeat identification and analysis",
 		formatter_class = argparse.RawDescriptionHelpFormatter
 	)
 
 	parser.add_argument('-v', '--version',
 		action = 'version',
-		version = '%(prog)s {}'.format(stripy.version())
+		version = '%(prog)s {}'.format(stria.version())
 	)
 
 	subparsers = parser.add_subparsers(
 		title = 'Commands',
-		prog = 'stripy',
+		prog = 'stria',
 		metavar = ''
 	)
 
 	#ssr miner
 	parser_ssrminer = subparsers.add_parser('ssrminer',
-		help = "Find exact microsatellite or simple sequence repeat",
+		help = "Find exact microsatellites or simple sequence repeats",
 		formatter_class = argparse.ArgumentDefaultsHelpFormatter
 	)
 	parser_ssrminer.set_defaults(cmd='ssr')
@@ -134,7 +134,7 @@ def main():
 	)
 
 	parser_ssrminer.add_argument('-o', '--out-file',
-		default = 'stripy_ssrs.out',
+		default = 'stria_ssrs.out',
 		metavar = '',
 		type = lambda x: os.path.normcase(x),
 		help = "output file"
@@ -160,7 +160,7 @@ def main():
 
 	#vntr miner
 	parser_vntrminer = subparsers.add_parser('vntrminer',
-		help = "Find exact minisatellite or variable number tandem repeats",
+		help = "Find exact minisatellites or variable number tandem repeats",
 		formatter_class = argparse.ArgumentDefaultsHelpFormatter
 	)
 	parser_vntrminer.set_defaults(cmd='vntr')
@@ -188,7 +188,7 @@ def main():
 	)
 
 	parser_vntrminer.add_argument('-o', '--out-file',
-		default = 'stripy_vntrs.out',
+		default = 'stria_vntrs.out',
 		metavar = '',
 		type = lambda x: os.path.normcase(x),
 		help = "output file"
@@ -291,7 +291,7 @@ def main():
 	)
 
 	parser_itrminer.add_argument('-o', '--out-file',
-		default = 'stripy_itrs.out',
+		default = 'stria_itrs.out',
 		metavar = '',
 		type = lambda x: os.path.normcase(x),
 		help = "output file"
