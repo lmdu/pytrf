@@ -4,8 +4,8 @@
  */
 
 #define PY_SSIZE_T_CLEAN
-#ifndef STRIPY_ITR_H
-#define STRIPY_ITR_H
+#ifndef STRIA_ITR_H
+#define STRIA_ITR_H
 #include "Python.h"
 
 typedef struct {
@@ -56,7 +56,7 @@ typedef struct {
 	//maximal extend length
 	int extend_maxlen;
 
-} stripy_ITRMiner;
+} stria_ITRMiner;
 
 typedef struct {
 	PyObject_HEAD
@@ -94,9 +94,9 @@ typedef struct {
 	//identity
 	float identity;
 
-} stripy_ITR;
+} stria_ITR;
 
-extern PyTypeObject stripy_ITRMinerType;
-extern PyTypeObject stripy_ITRType;
+extern PyTypeObject stria_ITRMinerType;
+extern PyTypeObject stria_ITRType;
 
 #endif

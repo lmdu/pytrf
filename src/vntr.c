@@ -3,10 +3,10 @@
 #include "etr.h"
 #include "structmember.h"
 
-static PyObject* stripy_vntrminer_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
+static PyObject* stria_vntrminer_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 	static char* keywords[] = {"name", "seq", "min_motif", "max_motif", "min_repeats", NULL};
 
-	stripy_VNTRMiner *obj = (stripy_VNTRMiner *)type->tp_alloc(type, 0);
+	stria_VNTRMiner *obj = (stria_VNTRMiner *)type->tp_alloc(type, 0);
 	if (!obj) return NULL;
 
 	obj->min_motif = 7;
@@ -28,24 +28,24 @@ static PyObject* stripy_vntrminer_new(PyTypeObject *type, PyObject *args, PyObje
 	return (PyObject *)obj;
 }
 
-void stripy_vntrminer_dealloc(stripy_VNTRMiner *self) {
+void stria_vntrminer_dealloc(stria_VNTRMiner *self) {
 	Py_DECREF(self->seqname);
 	Py_DECREF(self->seqobj);
 	self->seq = NULL;
 	Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
-static PyObject* stripy_vntrminer_repr(stripy_VNTRMiner *self) {
+static PyObject* stria_vntrminer_repr(stria_VNTRMiner *self) {
 	return PyUnicode_FromFormat("<VNTRMiner> for sequence %s", PyUnicode_AsUTF8(self->seqname));
 }
 
-static PyObject* stripy_vntrminer_iter(stripy_VNTRMiner *self) {
+static PyObject* stria_vntrminer_iter(stria_VNTRMiner *self) {
 	self->next_start = 0;
 	Py_INCREF(self);
 	return (PyObject *)self;
 }
 
-static PyObject* stripy_vntrminer_next(stripy_VNTRMiner *self) {
+static PyObject* stria_vntrminer_next(stria_VNTRMiner *self) {
 	//current start position
 	Py_ssize_t current_start;
 
@@ -90,8 +90,8 @@ static PyObject* stripy_vntrminer_next(stripy_VNTRMiner *self) {
 
 				//otherwise we found a vntr
 				if (is_vntr) {
-					//stripy_VNTR *vntr = (stripy_VNTR *)PyObject_CallObject((PyObject *)&stripy_VNTRType, NULL);
-					stripy_ETR *vntr = PyObject_New(stripy_ETR, &stripy_ETRType);
+					//stria_VNTR *vntr = (stria_VNTR *)PyObject_CallObject((PyObject *)&stria_VNTRType, NULL);
+					stria_ETR *vntr = PyObject_New(stria_ETR, &stria_ETRType);
 					vntr->motif = (char *)malloc(j + 1);
 					memcpy(vntr->motif, self->seq+current_start, j);
 					vntr->motif[j] = '\0';
@@ -114,7 +114,7 @@ static PyObject* stripy_vntrminer_next(stripy_VNTRMiner *self) {
 	return NULL;
 }
 
-static PyObject* stripy_vntrminer_as_list(stripy_VNTRMiner *self) {
+static PyObject* stria_vntrminer_as_list(stria_VNTRMiner *self) {
 	PyObject *vntrs = PyList_New(0);
 	PyObject *tmp;
 	Py_ssize_t current_start;
@@ -175,22 +175,22 @@ static PyObject* stripy_vntrminer_as_list(stripy_VNTRMiner *self) {
 	return vntrs;
 }
 
-static PyMethodDef stripy_vntrminer_methods[] = {
-	{"as_list", (PyCFunction)stripy_vntrminer_as_list, METH_NOARGS, NULL},
+static PyMethodDef stria_vntrminer_methods[] = {
+	{"as_list", (PyCFunction)stria_vntrminer_as_list, METH_NOARGS, NULL},
 	{NULL, NULL, 0, NULL}
 };
 
-PyTypeObject stripy_VNTRMinerType = {
+PyTypeObject stria_VNTRMinerType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "VNTRMiner",                        /* tp_name */
-    sizeof(stripy_VNTRMiner),          /* tp_basicsize */
+    sizeof(stria_VNTRMiner),          /* tp_basicsize */
     0,                              /* tp_itemsize */
-    (destructor)stripy_vntrminer_dealloc,   /* tp_dealloc */
+    (destructor)stria_vntrminer_dealloc,   /* tp_dealloc */
     0,                              /* tp_print */
     0,                              /* tp_getattr */
     0,                              /* tp_setattr */
     0,                              /* tp_reserved */
-    (reprfunc)stripy_vntrminer_repr,                              /* tp_repr */
+    (reprfunc)stria_vntrminer_repr,                              /* tp_repr */
     0,                              /* tp_as_number */
     0,                   /* tp_as_sequence */
     0,                   /* tp_as_mapping */
@@ -206,9 +206,9 @@ PyTypeObject stripy_VNTRMinerType = {
     0,                              /* tp_clear */
     0,                              /* tp_richcompare */
     0,                              /* tp_weaklistoffset */
-    (getiterfunc)stripy_vntrminer_iter,     /* tp_iter */
-    (iternextfunc)stripy_vntrminer_next,    /* tp_iternext */
-    stripy_vntrminer_methods,          /* tp_methods */
+    (getiterfunc)stria_vntrminer_iter,     /* tp_iter */
+    (iternextfunc)stria_vntrminer_next,    /* tp_iternext */
+    stria_vntrminer_methods,          /* tp_methods */
     0,          /* tp_members */
     0,                               /* tp_getset */
     0,                              /* tp_base */
@@ -218,5 +218,5 @@ PyTypeObject stripy_VNTRMinerType = {
     0,                              /* tp_dictoffset */
     0,                              /* tp_init */
     0,            /* tp_alloc */
-    stripy_vntrminer_new,              /* tp_new */
+    stria_vntrminer_new,              /* tp_new */
 };

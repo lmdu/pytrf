@@ -1,6 +1,6 @@
 #define PY_SSIZE_T_CLEAN
-#ifndef STRIPY_VNTR_H
-#define STRIPY_VNTR_H
+#ifndef STRIA_VNTR_H
+#define STRIA_VNTR_H
 #include "Python.h"
 
 typedef struct {
@@ -30,8 +30,8 @@ typedef struct {
 	//min repeats
 	int min_repeats;
 
-} stripy_VNTRMiner;
+} stria_VNTRMiner;
 
-extern PyTypeObject stripy_VNTRMinerType;
+extern PyTypeObject stria_VNTRMinerType;
 
 #endif

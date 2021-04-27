@@ -66,7 +66,7 @@ PyObject *test(PyObject *self, PyObject *args, PyObject *kwargs) {
 }
 
 PyObject *version(PyObject *self) {
-	return PyUnicode_FromString(STRIPY_VERSION);
+	return PyUnicode_FromString(STRIA_VERSION);
 }
 
 static PyMethodDef module_methods[] = {
@@ -75,59 +75,59 @@ static PyMethodDef module_methods[] = {
 	{NULL, NULL, 0, NULL}
 };
 
-static struct PyModuleDef module_stripy = {
+static struct PyModuleDef module_stria = {
 	PyModuleDef_HEAD_INIT,
-	"stripy",
-	"A python package for short tandem repeat identification",
+	"stria",
+	"A python package for short tandem repeat identification and analysis",
 	-1,
 	module_methods,
 };
 
-static PyObject *strit_module_init(void) {
+static PyObject *stria_module_init(void) {
 	PyObject *module;
-	module = PyModule_Create(&module_stripy);
+	module = PyModule_Create(&module_stria);
 
 	if (module == NULL) {
 		return NULL;
 	}
 
 	//TRE
-	if (PyType_Ready(&stripy_ETRType) < 0) {
+	if (PyType_Ready(&stria_ETRType) < 0) {
 		return NULL;
 	}
-	Py_INCREF((PyObject *)&stripy_ETRType);
-	PyModule_AddObject(module, "ETR", (PyObject *)&stripy_ETRType);
+	Py_INCREF((PyObject *)&stria_ETRType);
+	PyModule_AddObject(module, "ETR", (PyObject *)&stria_ETRType);
 
 	//SSR
-	if (PyType_Ready(&stripy_SSRMinerType) < 0) {
+	if (PyType_Ready(&stria_SSRMinerType) < 0) {
 		return NULL;
 	}
-	Py_INCREF((PyObject *)&stripy_SSRMinerType);
-	PyModule_AddObject(module, "SSRMiner", (PyObject *)&stripy_SSRMinerType);
+	Py_INCREF((PyObject *)&stria_SSRMinerType);
+	PyModule_AddObject(module, "SSRMiner", (PyObject *)&stria_SSRMinerType);
 
 	//VNTR
-	if (PyType_Ready(&stripy_VNTRMinerType) < 0) {
+	if (PyType_Ready(&stria_VNTRMinerType) < 0) {
 		return NULL;
 	}
-	Py_INCREF((PyObject *)&stripy_VNTRMinerType);
-	PyModule_AddObject(module, "VNTRMiner", (PyObject *)&stripy_VNTRMinerType);
+	Py_INCREF((PyObject *)&stria_VNTRMinerType);
+	PyModule_AddObject(module, "VNTRMiner", (PyObject *)&stria_VNTRMinerType);
 
 	//ITR
-	if (PyType_Ready(&stripy_ITRType) < 0) {
+	if (PyType_Ready(&stria_ITRType) < 0) {
 		return NULL;
 	}
-	Py_INCREF((PyObject *)&stripy_ITRType);
-	PyModule_AddObject(module, "ITR", (PyObject *)&stripy_ITRType);
+	Py_INCREF((PyObject *)&stria_ITRType);
+	PyModule_AddObject(module, "ITR", (PyObject *)&stria_ITRType);
 
-	if (PyType_Ready(&stripy_ITRMinerType) < 0) {
+	if (PyType_Ready(&stria_ITRMinerType) < 0) {
 		return NULL;
 	}
-	Py_INCREF((PyObject *)&stripy_ITRMinerType);
-	PyModule_AddObject(module, "ITRMiner", (PyObject *)&stripy_ITRMinerType);
+	Py_INCREF((PyObject *)&stria_ITRMinerType);
+	PyModule_AddObject(module, "ITRMiner", (PyObject *)&stria_ITRMinerType);
 
 	return module;
 }
 
-PyMODINIT_FUNC PyInit_stripy() {
-	return strit_module_init();
+PyMODINIT_FUNC PyInit_stria() {
+	return stria_module_init();
 }

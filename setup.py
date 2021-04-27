@@ -1,19 +1,21 @@
+import os
 import glob
 from setuptools import setup, Extension
 
-extension = Extension('stripy',
+extension = Extension('stria',
 	sources = glob.glob('src/*.c'),
 )
 
 description = (
-	"strit (short tandem repeat identification tool) is a python "
-	"module for finding tandem repeats from DNA sequences"
+	"stria (short tandem repeat identification and analysis) is a "
+	"python package for finding tandem repeats from DNA sequences"
 )
 
 with open('README.rst') as fh:
 	long_description = fh.read()
 
-version = '0.0.1'
+with open(os.path.join('src', 'version.h')) as fh:
+	version = fh.read().split()[2].strip('"')
 
 setup(
 	name = 'stripy',
@@ -45,8 +47,8 @@ setup(
 			"Topic :: Scientific/Engineering :: Bio-Informatics"
 	],
 	entry_points = {
-		'console_scripts': ['stripy = stripycli:main']
+		'console_scripts': ['stria = striacli:main']
 	},
-	py_modules = ["stripycli"],
+	py_modules = ["striacli"],
 	test_suite = "tests"
 )

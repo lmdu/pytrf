@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to stripy's documentation!
+Welcome to stria's documentation!
 ==================================
 
 A Tandem repeat (TR) in genomic sequence is a set of adjacent short DNA sequence repeated consecutively.
@@ -12,8 +12,8 @@ can be classified as microsatellites and minisatellites. Microsatellites are als
 repeats (SSRs) or short tandem repeats (STRs) with motif length of 1-6 bp. Minisatellites are also sometimes
 referred to as variable number of tandem repeats (VNTRs) has longer motif length than micorsatellites.
 
-The ``stripy`` is a lightweight Python C extension for identification of short tandem repeats. The stripy
-enables to fastly identify both exact and imperfect SSRs and VNTRs from large numbers of DNA sequences.
+The ``stria`` is a lightweight Python C extension for identification and analysis of short tandem repeats.
+The stria enables to fastly identify both exact and imperfect SSRs and VNTRs from large numbers of DNA sequences.
 
 .. toctree::
    :maxdepth: 2

@@ -3,7 +3,7 @@
 #include "etr.h"
 #include "structmember.h"
 
-int stripy_ssrminer_set_min_repeats(stripy_SSRMiner *self, PyObject* minrep_obj) {
+int stria_ssrminer_set_min_repeats(stria_SSRMiner *self, PyObject* minrep_obj) {
 	if (minrep_obj) {
 		if (PyList_Check(minrep_obj)) {
 			minrep_obj = PyList_AsTuple(minrep_obj);
@@ -47,11 +47,11 @@ int stripy_ssrminer_set_min_repeats(stripy_SSRMiner *self, PyObject* minrep_obj)
 	return 1;
 }
 
-static PyObject* stripy_ssrminer_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
+static PyObject* stria_ssrminer_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 	PyObject *minrep_obj = NULL;
 	static char* keywords[] = {"name", "seq", "min_repeats", NULL};
 
-	stripy_SSRMiner *obj = (stripy_SSRMiner *)type->tp_alloc(type, 0);
+	stria_SSRMiner *obj = (stria_SSRMiner *)type->tp_alloc(type, 0);
 	if (!obj) return NULL;
 
 	//initialize start search position
@@ -76,31 +76,31 @@ static PyObject* stripy_ssrminer_new(PyTypeObject *type, PyObject *args, PyObjec
 	obj->seq = PyUnicode_AsUTF8AndSize(obj->seqobj, &obj->size);
 
 	//parse minimal repeats
-	if (!stripy_ssrminer_set_min_repeats(obj, minrep_obj)) {
+	if (!stria_ssrminer_set_min_repeats(obj, minrep_obj)) {
 		return NULL;
 	}
 
 	return (PyObject *)obj;
 }
 
-void stripy_ssrminer_dealloc(stripy_SSRMiner *self) {
+void stria_ssrminer_dealloc(stria_SSRMiner *self) {
 	Py_DECREF(self->seqname);
 	Py_DECREF(self->seqobj);
 	self->seq = NULL;
 	Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
-static PyObject* stripy_ssrminer_repr(stripy_SSRMiner *self) {
+static PyObject* stria_ssrminer_repr(stria_SSRMiner *self) {
 	return PyUnicode_FromFormat("<SSRMiner> for sequence %s", PyUnicode_AsUTF8(self->seqname));
 }
 
-static PyObject* stripy_ssrminer_iter(stripy_SSRMiner *self) {
+static PyObject* stria_ssrminer_iter(stria_SSRMiner *self) {
 	self->next_start = 0;
 	Py_INCREF(self);
 	return (PyObject *)self;
 }
 
-static PyObject* stripy_ssrminer_next(stripy_SSRMiner *self) {
+static PyObject* stria_ssrminer_next(stria_SSRMiner *self) {
 	//current slide position
 	Py_ssize_t i;
 
@@ -128,7 +128,7 @@ static PyObject* stripy_ssrminer_next(stripy_SSRMiner *self) {
 			replen = i + j - current_start;
 
 			if (replen >= self->min_lens[j]) {
-				stripy_ETR *ssr = PyObject_New(stripy_ETR, &stripy_ETRType);
+				stria_ETR *ssr = PyObject_New(stria_ETR, &stria_ETRType);
 				ssr->motif = (char *)malloc(j + 1);
 				memcpy(ssr->motif, self->seq+current_start, j);
 				ssr->motif[j] = '\0';
@@ -152,20 +152,20 @@ static PyObject* stripy_ssrminer_next(stripy_SSRMiner *self) {
 	return NULL;
 }
 
-static PyObject* stripy_ssrminer_reset_min_repeats(stripy_SSRMiner *self, PyObject *args, PyObject *kwargs) {
+static PyObject* stria_ssrminer_reset_min_repeats(stria_SSRMiner *self, PyObject *args, PyObject *kwargs) {
 	PyObject *minrep_obj = NULL;
 	static char* keywords[] = {"min_repeats", NULL};
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O", keywords, &minrep_obj)) {
 		return NULL;
 	}
 
-	if (!stripy_ssrminer_set_min_repeats(self, minrep_obj)) {
+	if (!stria_ssrminer_set_min_repeats(self, minrep_obj)) {
 		return NULL;
 	}
 	return NULL;
 }
 
-static PyObject* stripy_ssrminer_as_list(stripy_SSRMiner *self) {
+static PyObject* stria_ssrminer_as_list(stria_SSRMiner *self) {
 	PyObject *ssrs = PyList_New(0);
 	PyObject *tmp;
 	Py_ssize_t current_start;
@@ -209,23 +209,23 @@ static PyObject* stripy_ssrminer_as_list(stripy_SSRMiner *self) {
 	return ssrs;
 }
 
-static PyMethodDef stripy_ssrminer_methods[] = {
-	{"as_list", (PyCFunction)stripy_ssrminer_as_list, METH_NOARGS, NULL},
-	{"reset_min_repeats", (PyCFunction)stripy_ssrminer_reset_min_repeats, METH_VARARGS|METH_KEYWORDS, NULL},
+static PyMethodDef stria_ssrminer_methods[] = {
+	{"as_list", (PyCFunction)stria_ssrminer_as_list, METH_NOARGS, NULL},
+	{"reset_min_repeats", (PyCFunction)stria_ssrminer_reset_min_repeats, METH_VARARGS|METH_KEYWORDS, NULL},
 	{NULL, NULL, 0, NULL}
 };
 
-PyTypeObject stripy_SSRMinerType = {
+PyTypeObject stria_SSRMinerType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "SSRMiner",                        /* tp_name */
-    sizeof(stripy_SSRMiner),          /* tp_basicsize */
+    sizeof(stria_SSRMiner),          /* tp_basicsize */
     0,                              /* tp_itemsize */
-    (destructor)stripy_ssrminer_dealloc,   /* tp_dealloc */
+    (destructor)stria_ssrminer_dealloc,   /* tp_dealloc */
     0,                              /* tp_print */
     0,                              /* tp_getattr */
     0,                              /* tp_setattr */
     0,                              /* tp_reserved */
-    (reprfunc)stripy_ssrminer_repr,                              /* tp_repr */
+    (reprfunc)stria_ssrminer_repr,                              /* tp_repr */
     0,                              /* tp_as_number */
     0,                   /* tp_as_sequence */
     0,                   /* tp_as_mapping */
@@ -241,9 +241,9 @@ PyTypeObject stripy_SSRMinerType = {
     0,                              /* tp_clear */
     0,                              /* tp_richcompare */
     0,                              /* tp_weaklistoffset */
-    (getiterfunc)stripy_ssrminer_iter,     /* tp_iter */
-    (iternextfunc)stripy_ssrminer_next,    /* tp_iternext */
-    stripy_ssrminer_methods,          /* tp_methods */
+    (getiterfunc)stria_ssrminer_iter,     /* tp_iter */
+    (iternextfunc)stria_ssrminer_next,    /* tp_iternext */
+    stria_ssrminer_methods,          /* tp_methods */
     0,          /* tp_members */
     0,                               /* tp_getset */
     0,                              /* tp_base */
@@ -253,5 +253,5 @@ PyTypeObject stripy_SSRMinerType = {
     0,                              /* tp_dictoffset */
     0,                              /* tp_init */
     0,            /* tp_alloc */
-    stripy_ssrminer_new,              /* tp_new */
+    stria_ssrminer_new,              /* tp_new */
 };

@@ -235,7 +235,7 @@ static int backtrace_matrix(int **matrix, int *diagonal, int *mat, int *sub, int
 	return r;
 }
 
-static PyObject* stripy_itrminer_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
+static PyObject* stria_itrminer_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 	static char* keywords[] = {
 		"name", "seq", "min_motif_size", "max_motif_size", "seed_min_repeats",
 		"seed_min_length", "max_continuous_errors", "substitution_penalty",
@@ -243,7 +243,7 @@ static PyObject* stripy_itrminer_new(PyTypeObject *type, PyObject *args, PyObjec
 		NULL
 	};
 
-	stripy_ITRMiner *obj = (stripy_ITRMiner *)type->tp_alloc(type, 0);
+	stria_ITRMiner *obj = (stria_ITRMiner *)type->tp_alloc(type, 0);
 	if (!obj) return NULL;
 
 	//initialize parameters
@@ -276,24 +276,24 @@ static PyObject* stripy_itrminer_new(PyTypeObject *type, PyObject *args, PyObjec
 	return (PyObject *)obj;
 }
 
-void stripy_itrminer_dealloc(stripy_ITRMiner *self) {
+void stria_itrminer_dealloc(stria_ITRMiner *self) {
 	Py_DECREF(self->seqname);
 	Py_DECREF(self->seqobj);
 	self->seq = NULL;
 	Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
-static PyObject* stripy_itrminer_repr(stripy_ITRMiner *self) {
+static PyObject* stria_itrminer_repr(stria_ITRMiner *self) {
 	return PyUnicode_FromFormat("<ITRMiner> for sequence %s", PyUnicode_AsUTF8(self->seqname));
 }
 
-static PyObject* stripy_itrminer_iter(stripy_ITRMiner *self) {
+static PyObject* stria_itrminer_iter(stria_ITRMiner *self) {
 	self->next_start = 0;
 	Py_INCREF(self);
 	return (PyObject *)self;
 }
 
-static PyObject* stripy_itrminer_next(stripy_ITRMiner *self) {
+static PyObject* stria_itrminer_next(stria_ITRMiner *self) {
 	Py_ssize_t seed_start;
 	Py_ssize_t seed_end;
 	int seed_length;
@@ -428,7 +428,7 @@ static PyObject* stripy_itrminer_next(stripy_ITRMiner *self) {
 							tandem_identity = (tandem_match * 1.0 / tandem_length)*100;
 
 							//create new itr element object
-							stripy_ITR *itr = PyObject_New(stripy_ITR, &stripy_ITRType);
+							stria_ITR *itr = PyObject_New(stria_ITR, &stria_ITRType);
 							itr->motif = (char *)malloc(j + 1);
 							memcpy(itr->motif, motif, j);
 							itr->motif[j] = '\0';
@@ -459,7 +459,7 @@ static PyObject* stripy_itrminer_next(stripy_ITRMiner *self) {
 	return NULL;
 }
  
-static PyObject* stripy_itrminer_as_list(stripy_ITRMiner *self) {
+static PyObject* stria_itrminer_as_list(stria_ITRMiner *self) {
 	PyObject *itrs = PyList_New(0);
 	PyObject *tmp;
 	
@@ -617,22 +617,22 @@ static PyObject* stripy_itrminer_as_list(stripy_ITRMiner *self) {
 	return itrs;
 }
 
-static PyMethodDef stripy_itrminer_methods[] = {
-	{"as_list", (PyCFunction)stripy_itrminer_as_list, METH_NOARGS, NULL},
+static PyMethodDef stria_itrminer_methods[] = {
+	{"as_list", (PyCFunction)stria_itrminer_as_list, METH_NOARGS, NULL},
 	{NULL, NULL, 0, NULL}
 };
 
-PyTypeObject stripy_ITRMinerType = {
+PyTypeObject stria_ITRMinerType = {
 	PyVarObject_HEAD_INIT(NULL, 0)
 	"ITRMiner",                        /* tp_name */
-	sizeof(stripy_ITRMiner),          /* tp_basicsize */
+	sizeof(stria_ITRMiner),          /* tp_basicsize */
 	0,                              /* tp_itemsize */
-	(destructor)stripy_itrminer_dealloc,   /* tp_dealloc */
+	(destructor)stria_itrminer_dealloc,   /* tp_dealloc */
 	0,                              /* tp_print */
 	0,                              /* tp_getattr */
 	0,                              /* tp_setattr */
 	0,                              /* tp_reserved */
-	(reprfunc)stripy_itrminer_repr,                              /* tp_repr */
+	(reprfunc)stria_itrminer_repr,                              /* tp_repr */
 	0,                              /* tp_as_number */
 	0,                   /* tp_as_sequence */
 	0,                   /* tp_as_mapping */
@@ -648,9 +648,9 @@ PyTypeObject stripy_ITRMinerType = {
 	0,                              /* tp_clear */
 	0,                              /* tp_richcompare */
 	0,                              /* tp_weaklistoffset */
-	(getiterfunc)stripy_itrminer_iter,     /* tp_iter */
-	(iternextfunc)stripy_itrminer_next,    /* tp_iternext */
-	stripy_itrminer_methods,          /* tp_methods */
+	(getiterfunc)stria_itrminer_iter,     /* tp_iter */
+	(iternextfunc)stria_itrminer_next,    /* tp_iternext */
+	stria_itrminer_methods,          /* tp_methods */
 	0,          /* tp_members */
 	0,                               /* tp_getset */
 	0,                              /* tp_base */
@@ -660,45 +660,45 @@ PyTypeObject stripy_ITRMinerType = {
 	0,                              /* tp_dictoffset */
 	0,                              /* tp_init */
 	0,            /* tp_alloc */
-	stripy_itrminer_new,              /* tp_new */
+	stria_itrminer_new,              /* tp_new */
 };
 
 /*
  * ITR element
  */
 
-void stripy_itr_dealloc(stripy_ITR *self) {
+void stria_itr_dealloc(stria_ITR *self) {
 	free(self->motif);
 	Py_DECREF(self->seqid);
 	Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
-PyObject* stripy_itr_repr(stripy_ITR *self) {
+PyObject* stria_itr_repr(stria_ITR *self) {
 	return PyUnicode_FromFormat("<ITR> %s @ %s:%zd-%zd", self->motif,
 								PyUnicode_AsUTF8(self->seqid), self->start, self->end);
 }
 
-PyObject* stripy_itr_as_list(stripy_ITR *self) {
+PyObject* stria_itr_as_list(stria_ITR *self) {
 	return Py_BuildValue("Onnsiiiiiif", self->seqid, self->start, self->end, self->motif, self->mlen,
 						self->length, self->matches, self->substitutions, self->insertions,
 						self->deletions, self->identity);
 }
 
-PyObject* stripy_itr_as_dict(stripy_ITR *self) {
+PyObject* stria_itr_as_dict(stria_ITR *self) {
 	return Py_BuildValue("{s:O,s:n,s:n,s:s,s:i,s:i,s:i,s:i,s:i,s:i,s:f}", "chrom", self->seqid,
 						 "start", self->start, "end", self->end, "motif", self->motif, "type", self->mlen,
 						 "length", self->length, "matches", self->matches, "substitutions", self->substitutions,
 						 "insertions", self->insertions, "deletions", self->deletions, "identity", self->identity);
 }
 
-PyObject* stripy_itr_as_gff(stripy_ITR *self) {
-	return PyUnicode_FromFormat("%S\tstripy\tITR\t%zd\t%zd\t.\t+\t.\tMotif=%s;Type=%d;Length=%d;Match=%d;"
+PyObject* stria_itr_as_gff(stria_ITR *self) {
+	return PyUnicode_FromFormat("%S\tstria\tITR\t%zd\t%zd\t.\t+\t.\tMotif=%s;Type=%d;Length=%d;Match=%d;"
 								"Substitutions=%d;Insertions=%d;Deletions=%dIdentity=%R\n", self->seqid, self->start,
 								self->end, self->motif, self->mlen, self->length, self->matches, self->substitutions, 
 								self->insertions, self->deletions, PyFloat_FromDouble(self->identity));
 }
 
-PyObject* stripy_itr_as_string(stripy_ITR *self, PyObject *args, PyObject *kwargs) {
+PyObject* stria_itr_as_string(stria_ITR *self, PyObject *args, PyObject *kwargs) {
 	char *separator = "\t";
 	char *terminator = "";
 	static char* keywords[] = {"separator", "terminator", NULL};
@@ -713,52 +713,52 @@ PyObject* stripy_itr_as_string(stripy_ITR *self, PyObject *args, PyObject *kwarg
 								separator, PyFloat_FromDouble(self->identity), terminator);
 }
 
-PyObject *stripy_itr_get_seq(stripy_ITR *self, void* closure) {
+PyObject *stria_itr_get_seq(stria_ITR *self, void* closure) {
 	PyObject* ret = PyUnicode_New(self->length, 127);
 	Py_UCS1* p = PyUnicode_1BYTE_DATA(ret);
 	memcpy(p, PyUnicode_AsUTF8(self->seqid)+self->start-1, self->length);
 	return ret;
 }
 
-static PyMethodDef stripy_itr_methods[] = {
-	{"as_list", (PyCFunction)stripy_itr_as_list, METH_NOARGS, NULL},
-	{"as_dict", (PyCFunction)stripy_itr_as_dict, METH_NOARGS, NULL},
-	{"as_gff", (PyCFunction)stripy_itr_as_gff, METH_NOARGS, NULL},
-	{"as_string", (PyCFunction)stripy_itr_as_string, METH_VARARGS | METH_KEYWORDS, NULL},
+static PyMethodDef stria_itr_methods[] = {
+	{"as_list", (PyCFunction)stria_itr_as_list, METH_NOARGS, NULL},
+	{"as_dict", (PyCFunction)stria_itr_as_dict, METH_NOARGS, NULL},
+	{"as_gff", (PyCFunction)stria_itr_as_gff, METH_NOARGS, NULL},
+	{"as_string", (PyCFunction)stria_itr_as_string, METH_VARARGS | METH_KEYWORDS, NULL},
 	{NULL, NULL, 0, NULL}
 };
 
-static PyGetSetDef stripy_itr_getsets[] = {
-	{"seq", (getter)stripy_itr_get_seq, NULL, NULL, NULL},
+static PyGetSetDef stria_itr_getsets[] = {
+	{"seq", (getter)stria_itr_get_seq, NULL, NULL, NULL},
 	{NULL}
 };
 
-static PyMemberDef stripy_itr_members[] = {
-	{"seqid", T_OBJECT, offsetof(stripy_ITR, seqid), READONLY},
-	{"start", T_PYSSIZET, offsetof(stripy_ITR, start), READONLY},
-	{"end", T_PYSSIZET, offsetof(stripy_ITR, end), READONLY},
-	{"motif", T_STRING, offsetof(stripy_ITR, motif), READONLY},
-	{"type", T_INT, offsetof(stripy_ITR, mlen), READONLY},
-	{"length", T_INT, offsetof(stripy_ITR, length), READONLY},
-	{"matches", T_INT, offsetof(stripy_ITR, matches), READONLY},
-	{"substitutions", T_INT, offsetof(stripy_ITR, substitutions), READONLY},
-	{"insertions", T_INT, offsetof(stripy_ITR, insertions), READONLY},
-	{"deletions", T_INT, offsetof(stripy_ITR, deletions), READONLY},
-	{"identity", T_FLOAT, offsetof(stripy_ITR, identity), READONLY},
+static PyMemberDef stria_itr_members[] = {
+	{"seqid", T_OBJECT, offsetof(stria_ITR, seqid), READONLY},
+	{"start", T_PYSSIZET, offsetof(stria_ITR, start), READONLY},
+	{"end", T_PYSSIZET, offsetof(stria_ITR, end), READONLY},
+	{"motif", T_STRING, offsetof(stria_ITR, motif), READONLY},
+	{"type", T_INT, offsetof(stria_ITR, mlen), READONLY},
+	{"length", T_INT, offsetof(stria_ITR, length), READONLY},
+	{"matches", T_INT, offsetof(stria_ITR, matches), READONLY},
+	{"substitutions", T_INT, offsetof(stria_ITR, substitutions), READONLY},
+	{"insertions", T_INT, offsetof(stria_ITR, insertions), READONLY},
+	{"deletions", T_INT, offsetof(stria_ITR, deletions), READONLY},
+	{"identity", T_FLOAT, offsetof(stria_ITR, identity), READONLY},
 	{NULL}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
 };
 
-PyTypeObject stripy_ITRType = {
+PyTypeObject stria_ITRType = {
 	PyVarObject_HEAD_INIT(NULL, 0)
 	"IRE",                        /* tp_name */
-	sizeof(stripy_ITR),          /* tp_basicsize */
+	sizeof(stria_ITR),          /* tp_basicsize */
 	0,                              /* tp_itemsize */
-	(destructor)stripy_itr_dealloc,   /* tp_dealloc */
+	(destructor)stria_itr_dealloc,   /* tp_dealloc */
 	0,                              /* tp_print */
 	0,                              /* tp_getattr */
 	0,                              /* tp_setattr */
 	0,                              /* tp_reserved */
-	(reprfunc)stripy_itr_repr,                              /* tp_repr */
+	(reprfunc)stria_itr_repr,                              /* tp_repr */
 	0,                              /* tp_as_number */
 	0,                   /* tp_as_sequence */
 	0,                   /* tp_as_mapping */
@@ -776,9 +776,9 @@ PyTypeObject stripy_ITRType = {
 	0,                              /* tp_weaklistoffset */
 	0,     /* tp_iter */
 	0,    /* tp_iternext */
-	stripy_itr_methods,          /* tp_methods */
-	stripy_itr_members,          /* tp_members */
-	stripy_itr_getsets,                               /* tp_getset */
+	stria_itr_methods,          /* tp_methods */
+	stria_itr_members,          /* tp_members */
+	stria_itr_getsets,                               /* tp_getset */
 	0,                              /* tp_base */
 	0,                              /* tp_dict */
 	0,                              /* tp_descr_get */

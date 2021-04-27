@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef STRIPY_ETR_H
-#define STRIPY_ETR_H
+#ifndef STRIA_ETR_H
+#define STRIA_ETR_H
 #include "Python.h"
 
 typedef struct {
@@ -34,8 +34,8 @@ typedef struct {
 	//tandem repeat element length
 	int length;
 
-} stripy_ETR;
+} triapy_ETR;
 
-extern PyTypeObject stripy_ETRType;
+extern PyTypeObject stria_ETRType;
 
 #endif
