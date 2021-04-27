@@ -42,16 +42,16 @@ typedef struct {
 	int max_motif;
 
 	//substitution penalty
-	float sub_penalty;
+	double sub_penalty;
 
 	//insertion penalty
-	float ins_penalty;
+	double ins_penalty;
 
 	//deletion penalty
-	float del_penalty;
+	double del_penalty;
 
 	//min match ratio
-	float min_ratio;
+	double min_ratio;
 
 	//maximal extend length
 	int extend_maxlen;
@@ -92,7 +92,7 @@ typedef struct {
 	int deletions;
 
 	//identity
-	float identity;
+	double identity;
 
 } stria_ITR;
 
