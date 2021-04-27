@@ -20,7 +20,7 @@ jobs:
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
-        evn:
+        env:
           CIBW_SKIP: cp27-* pp27-*
 
       - name: Display wheel
