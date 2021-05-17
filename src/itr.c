@@ -259,7 +259,7 @@ static PyObject* stria_itrminer_new(PyTypeObject *type, PyObject *args, PyObject
 	obj->min_ratio = 0.7;
 	obj->extend_maxlen = 2000;
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iiiiiidddi", keywords,
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iiiiiddddi", keywords,
 									&obj->seqname, &obj->seqobj, &obj->min_motif,
 									&obj->max_motif, &obj->seed_minrep, &obj->seed_minlen,
 									&obj->max_errors, &obj->sub_penalty, &obj->ins_penalty,
