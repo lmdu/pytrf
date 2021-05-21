@@ -107,6 +107,8 @@ static PyObject* stria_ssrminer_next(stria_SSRMiner *self) {
 	//current start position
 	Py_ssize_t current_start;
 
+	Py_ssize_t boundary;
+
 	//motif length
 	int j;
 
@@ -121,7 +123,9 @@ static PyObject* stria_ssrminer_next(stria_SSRMiner *self) {
 
 		current_start = i;
 		for (j = 1; j <= 6; ++j) {
-			while (self->seq[i] == self->seq[i+j]) {
+			boundary = self->size - j;
+
+			while ((i < boundary) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
@@ -169,6 +173,8 @@ static PyObject* stria_ssrminer_as_list(stria_SSRMiner *self) {
 	PyObject *ssrs = PyList_New(0);
 	PyObject *tmp;
 	Py_ssize_t current_start;
+	Py_ssize_t ssr_end;
+	Py_ssize_t boundary;
 	int replen;
 	int repeats;
 	int length;
@@ -181,7 +187,9 @@ static PyObject* stria_ssrminer_as_list(stria_SSRMiner *self) {
 
 		current_start = i;
 		for (int j = 1; j < 7; ++j) {
-			while (self->seq[i] == self->seq[i+j]) {
+			boundary = self->size - j;
+
+			while ((i < boundary) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
@@ -192,13 +200,12 @@ static PyObject* stria_ssrminer_as_list(stria_SSRMiner *self) {
 				motif[j] = '\0';
 				repeats = replen/j;
 				length = repeats * j;
-
-				tmp = Py_BuildValue("Onnsiii", self->seqname, current_start+1, current_start+length, motif, j, repeats, length);
+				ssr_end = current_start+length;
+				tmp = Py_BuildValue("Onnsiii", self->seqname, current_start+1, ssr_end, motif, j, repeats, length);
 				PyList_Append(ssrs, tmp);
 				Py_DECREF(tmp);
 
-				i -= replen % j;
-
+				i = ssr_end;
 				break;
 			} else {
 				i = current_start;

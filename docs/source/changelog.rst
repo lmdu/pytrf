@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.1.2 (2021-05-21)
+--------------------------
+
+- Fixed error caused by no boundary limit
+
 Version 0.1.1 (2021-05-17)
 --------------------------
 

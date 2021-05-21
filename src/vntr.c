@@ -49,6 +49,9 @@ static PyObject* stria_vntrminer_next(stria_VNTRMiner *self) {
 	//current start position
 	Py_ssize_t current_start;
 
+	//boundary
+	Py_ssize_t boundary;
+
 	//repeat length
 	int replen;
 
@@ -66,7 +69,9 @@ static PyObject* stria_vntrminer_next(stria_VNTRMiner *self) {
 
 		current_start = i;
 		for (int j = self->min_motif; j <= self->max_motif; ++j) {
-			while (self->seq[i] == self->seq[i+j]) {
+			boundary = self->size - j;
+
+			while ((i < boundary) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
@@ -118,10 +123,10 @@ static PyObject* stria_vntrminer_as_list(stria_VNTRMiner *self) {
 	PyObject *vntrs = PyList_New(0);
 	PyObject *tmp;
 	Py_ssize_t current_start;
-	int replen;
+	Py_ssize_t vntr_end;
+	Py_ssize_t boundary;
 	int repeats;
 	int length;
-	int is_vntr;
 
 	char* motif = (char *)malloc(self->max_motif + 1);
 
@@ -132,19 +137,22 @@ static PyObject* stria_vntrminer_as_list(stria_VNTRMiner *self) {
 
 		current_start = i;
 		for (int j = self->min_motif; j <= self->max_motif; ++j) {
-			while (self->seq[i] == self->seq[i+j]) {
+			boundary = self->size - j;
+
+			while ((i < boundary) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
-			replen = i + j - current_start;
-			repeats = replen/j;
+			length = i + j - current_start;
+			repeats = length/j;
 
 			if (repeats >= self->min_repeat) {
 				//check motif is real motif with length >= min motif size
 				const char *p = self->seq+current_start;
-				is_vntr = 1;
+				int is_vntr = 1;
+				int l = 0;
+
 				for (int k = 1; k < self->min_motif; ++k) {
-					int l = 0;
 					while ((p[l] == p[l+k]) && (l+k < j)) {
 						++l;
 					}
@@ -158,12 +166,13 @@ static PyObject* stria_vntrminer_as_list(stria_VNTRMiner *self) {
 					memcpy(motif, self->seq+current_start, j);
 					motif[j] = '\0';
 					length = repeats * j;
-					tmp = Py_BuildValue("Onnsiii", self->seqname, current_start+1, current_start+length, motif, j, repeats, length);
+					vntr_end = current_start+length;
+					tmp = Py_BuildValue("Onnsiii", self->seqname, current_start+1, vntr_end,
+										motif, j, repeats, length);
 					PyList_Append(vntrs, tmp);
 					Py_DECREF(tmp);
 
-					i -= replen % j;
-
+					i = vntr_end;
 					break;
 				}
 			}
@@ -171,6 +180,7 @@ static PyObject* stria_vntrminer_as_list(stria_VNTRMiner *self) {
 			i = current_start;
 		}
 	}
+
 	free(motif);
 	return vntrs;
 }

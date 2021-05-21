@@ -318,21 +318,23 @@ static PyObject* stria_itrminer_next(stria_ITRMiner *self) {
 	int tandem_insert;
 	int tandem_delete;
 	double tandem_identity;
-
 	double align_rate;
 
 	char* motif = (char *)malloc(self->max_motif + 1);
-
 	int **matrix = initial_matrix(self->extend_maxlen);
 
-	for (Py_ssize_t i = self->next_start; i <= self->size;  ++i) {
+	Py_ssize_t boundary;
+
+	for (Py_ssize_t i = self->next_start; i < self->size;  ++i) {
 		if (self->seq[i] == 78) {
 			continue;
 		}
 
 		seed_start = i;
 		for (int j = self->min_motif; j <= self->max_motif; ++j) {
-			while (self->seq[i] == self->seq[i+j]) {
+			boundary = self->size - j;
+
+			while ((i < boundary) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
@@ -487,21 +489,23 @@ static PyObject* stria_itrminer_as_list(stria_ITRMiner *self) {
 	int tandem_insert;
 	int tandem_delete;
 	double tandem_identity;
-
 	double align_rate;
 	
 	char* motif = (char *)malloc(self->max_motif + 1);
-
 	int **matrix = initial_matrix(self->extend_maxlen);
 
-	for (Py_ssize_t i = 0; i <= self->size;  ++i) {
+	Py_ssize_t boundary;
+
+	for (Py_ssize_t i = 0; i < self->size; ++i) {
 		if (self->seq[i] == 78) {
 			continue;
 		}
 
 		seed_start = i;
 		for (int j = self->min_motif; j <= self->max_motif; ++j) {
-			while (self->seq[i] == self->seq[i+j]) {
+			boundary = self->size - j;
+
+			while ((i < boundary) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
