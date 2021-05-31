@@ -272,6 +272,8 @@ static PyObject* stria_itrminer_new(PyTypeObject *type, PyObject *args, PyObject
 	Py_INCREF(obj->seqobj);
 
 	obj->seq = PyUnicode_AsUTF8AndSize(obj->seqobj, &obj->size);
+	obj->motif = NULL;
+	obj->matrix = NULL;
 
 	return (PyObject *)obj;
 }
@@ -280,6 +282,15 @@ void stria_itrminer_dealloc(stria_ITRMiner *self) {
 	Py_DECREF(self->seqname);
 	Py_DECREF(self->seqobj);
 	self->seq = NULL;
+
+	if (self->motif) {
+		free(self->motif);
+	}
+
+	if (self->matrix) {
+		release_matrix(self->matrix, self->extend_maxlen);
+	}
+
 	Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -289,6 +300,15 @@ static PyObject* stria_itrminer_repr(stria_ITRMiner *self) {
 
 static PyObject* stria_itrminer_iter(stria_ITRMiner *self) {
 	self->next_start = 0;
+
+	if (!self->motif) {
+		self->motif = (char *)malloc(self->max_motif + 1);
+	}
+
+	if (!self->matrix) {
+		self->matrix = initial_matrix(self->extend_maxlen);
+	}
+
 	Py_INCREF(self);
 	return (PyObject *)self;
 }
@@ -319,9 +339,6 @@ static PyObject* stria_itrminer_next(stria_ITRMiner *self) {
 	int tandem_delete;
 	double tandem_identity;
 	double align_rate;
-
-	char* motif = (char *)malloc(self->max_motif + 1);
-	int **matrix = initial_matrix(self->extend_maxlen);
 
 	Py_ssize_t boundary;
 
@@ -361,8 +378,8 @@ static PyObject* stria_itrminer_next(stria_ITRMiner *self) {
 
 				if (seed_good) {
 					//get motif sequence
-					memcpy(motif, self->seq + seed_start, j);
-					motif[j] = '\0';
+					memcpy(self->motif, self->seq + seed_start, j);
+					self->motif[j] = '\0';
 
 					seed_end = seed_start + seed_length - 1;
 					tandem_match = seed_length;
@@ -378,9 +395,9 @@ static PyObject* stria_itrminer_next(stria_ITRMiner *self) {
 						extend_maxlen = self->extend_maxlen;
 					}
 
-					extend_end = build_left_matrix(self->seq, motif, j, matrix, extend_start,
+					extend_end = build_left_matrix(self->seq, self->motif, j, self->matrix, extend_start,
 												   extend_maxlen, self->max_errors);
-					extend_len = backtrace_matrix(matrix, extend_end, &tandem_match, &substitution,
+					extend_len = backtrace_matrix(self->matrix, extend_end, &tandem_match, &substitution,
 												  &insertion, &deletion);
 					
 					if (extend_len > 0) {
@@ -408,9 +425,9 @@ static PyObject* stria_itrminer_next(stria_ITRMiner *self) {
 							extend_maxlen = self->extend_maxlen;
 						}
 
-						extend_end = build_right_matrix(self->seq, motif, j, matrix, extend_start,
+						extend_end = build_right_matrix(self->seq, self->motif, j, self->matrix, extend_start,
 														extend_maxlen, self->max_errors);
-						extend_len = backtrace_matrix(matrix, extend_end, &tandem_match, &substitution,
+						extend_len = backtrace_matrix(self->matrix, extend_end, &tandem_match, &substitution,
 													  &insertion, &deletion);
 						
 						//calcuate the alignment rate of extended sequence
@@ -432,7 +449,7 @@ static PyObject* stria_itrminer_next(stria_ITRMiner *self) {
 							//create new itr element object
 							stria_ITR *itr = PyObject_New(stria_ITR, &stria_ITRType);
 							itr->motif = (char *)malloc(j + 1);
-							memcpy(itr->motif, motif, j);
+							memcpy(itr->motif, self->motif, j);
 							itr->motif[j] = '\0';
 							itr->mlen = j;
 							itr->seqid = self->seqname;
@@ -456,8 +473,10 @@ static PyObject* stria_itrminer_next(stria_ITRMiner *self) {
 		}
 	}
 
-	free(motif);
-	release_matrix(matrix, self->extend_maxlen);
+	free(self->motif);
+	release_matrix(self->matrix, self->extend_maxlen);
+	self->motif = NULL;
+	self->matrix = NULL;
 	return NULL;
 }
  
@@ -490,9 +509,14 @@ static PyObject* stria_itrminer_as_list(stria_ITRMiner *self) {
 	int tandem_delete;
 	double tandem_identity;
 	double align_rate;
-	
-	char* motif = (char *)malloc(self->max_motif + 1);
-	int **matrix = initial_matrix(self->extend_maxlen);
+
+	if (!self->motif) {
+		self->motif = (char *)malloc(self->max_motif + 1);
+	}
+
+	if (!self->matrix) {
+		self->matrix = initial_matrix(self->extend_maxlen);
+	}
 
 	Py_ssize_t boundary;
 
@@ -532,8 +556,8 @@ static PyObject* stria_itrminer_as_list(stria_ITRMiner *self) {
 
 				if (seed_good) {
 					//get motif sequence
-					memcpy(motif, self->seq + seed_start, j);
-					motif[j] = '\0';
+					memcpy(self->motif, self->seq + seed_start, j);
+					self->motif[j] = '\0';
 
 					seed_end = seed_start + seed_length - 1;
 					tandem_match = seed_length;
@@ -549,9 +573,9 @@ static PyObject* stria_itrminer_as_list(stria_ITRMiner *self) {
 						extend_maxlen = self->extend_maxlen;
 					}
 
-					extend_end = build_left_matrix(self->seq, motif, j, matrix, extend_start,
+					extend_end = build_left_matrix(self->seq, self->motif, j, self->matrix, extend_start,
 												   extend_maxlen, self->max_errors);
-					extend_len = backtrace_matrix(matrix, extend_end, &tandem_match, &substitution,
+					extend_len = backtrace_matrix(self->matrix, extend_end, &tandem_match, &substitution,
 												  &insertion, &deletion);
 					
 					if (extend_len > 0) {
@@ -579,9 +603,9 @@ static PyObject* stria_itrminer_as_list(stria_ITRMiner *self) {
 							extend_maxlen = self->extend_maxlen;
 						}
 
-						extend_end = build_right_matrix(self->seq, motif, j, matrix, extend_start,
+						extend_end = build_right_matrix(self->seq, self->motif, j, self->matrix, extend_start,
 														extend_maxlen, self->max_errors);
-						extend_len = backtrace_matrix(matrix, extend_end, &tandem_match, &substitution,
+						extend_len = backtrace_matrix(self->matrix, extend_end, &tandem_match, &substitution,
 													  &insertion, &deletion);
 						
 						//calcuate the alignment rate of extended sequence
@@ -600,7 +624,7 @@ static PyObject* stria_itrminer_as_list(stria_ITRMiner *self) {
 							tandem_delete += deletion;
 							tandem_identity = (tandem_match * 1.0 / tandem_length)*100;
 
-							tmp = Py_BuildValue("Onnsiiiiiif", self->seqname, tandem_start, tandem_end, motif, j,
+							tmp = Py_BuildValue("Onnsiiiiiif", self->seqname, tandem_start, tandem_end, self->motif, j,
 												tandem_length, tandem_match, tandem_substitute, tandem_insert,
 												tandem_delete, tandem_identity);
 							PyList_Append(itrs, tmp);
@@ -616,8 +640,8 @@ static PyObject* stria_itrminer_as_list(stria_ITRMiner *self) {
 		}
 	}
 
-	free(motif);
-	release_matrix(matrix, self->extend_maxlen);
+	free(self->motif);
+	release_matrix(self->matrix, self->extend_maxlen);
 	return itrs;
 }
 

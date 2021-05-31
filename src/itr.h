@@ -56,6 +56,12 @@ typedef struct {
 	//maximal extend length
 	int extend_maxlen;
 
+	//current motif sequence
+	char* motif;
+
+	//dynamic alignment matrix
+	int** matrix;
+
 } stria_ITRMiner;
 
 typedef struct {

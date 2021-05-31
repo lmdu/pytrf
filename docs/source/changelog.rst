@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.1.3 (2021-05-31)
+--------------------------
+
+- Fixed memory leak when iterating over ITRs
+
 Version 0.1.2 (2021-05-21)
 --------------------------
 

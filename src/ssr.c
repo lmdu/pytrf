@@ -178,7 +178,7 @@ static PyObject* stria_ssrminer_as_list(stria_SSRMiner *self) {
 	int replen;
 	int repeats;
 	int length;
-	char motif[7];
+	char *motif = (char *)malloc(7);
 
 	for (Py_ssize_t i = 0; i < self->size; ++i) {
 		if (self->seq[i] == 78) {
@@ -213,6 +213,7 @@ static PyObject* stria_ssrminer_as_list(stria_SSRMiner *self) {
 		}
 	}
 
+	free(motif);
 	return ssrs;
 }
 
