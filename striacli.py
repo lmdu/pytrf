@@ -115,7 +115,7 @@ def main():
 		title = 'Commands',
 		prog = 'stria',
 		metavar = ''
-	)
+	)                                                                                                                                   
 
 	parser_parent = argparse.ArgumentParser(add_help=False)
 
