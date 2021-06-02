@@ -117,10 +117,54 @@ def main():
 		metavar = ''
 	)
 
+	parser_parent = argparse.ArgumentParser(add_help=False)
+
+	parser_parent.add_argument('-f', '--out-format',
+		default = 'tsv',
+		choices = ('tsv', 'csv', 'gff'),
+		metavar = '',
+		help = 'output format, tsv, csv, or gff'
+	)
+
+	parser_parent.add_argument('-t', '--threads',
+		default = 1,
+		type = int,
+		metavar = '',
+		help = 'number of threads'
+	)
+
+	parser_parent.add_argument('--op', '--out-report',
+		default = False,
+		action = 'store_true',
+		help = 'output statistical report'
+	)
+
+	parser_parent.add_argument('--ef', '--extract-flank',
+		default = False,
+		action='store_true',
+		help = 'extract flank sequence'
+	)
+
+	parser_parent.add_argument('--fl', '--flank-length',
+		default = 50,
+		metavar = '',
+		type = int,
+		help = 'flank sequence length'
+	)
+
+	parser_parent.add_argument('fasta',
+		help = 'input fasta file, gzip support'
+	)
+
+	parser_parent.add_argument('output',
+		help = 'output file'
+	)
+
 	#ssr miner
 	parser_ssrminer = subparsers.add_parser('ssrminer',
 		help = "Find exact microsatellites or simple sequence repeats",
-		formatter_class = argparse.ArgumentDefaultsHelpFormatter
+		formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+		parents = [parser_parent]
 	)
 	parser_ssrminer.set_defaults(cmd='ssr')
 	parser_ssrminer.set_defaults(func=find_tandem_repeats)
@@ -133,35 +177,11 @@ def main():
 		help = "minimum repeats"
 	)
 
-	parser_ssrminer.add_argument('-o', '--out-file',
-		default = 'stria_ssrs.out',
-		metavar = '',
-		type = lambda x: os.path.normcase(x),
-		help = "output file"
-	)
-
-	parser_ssrminer.add_argument('-f', '--out-format',
-		default = 'tsv',
-		choices = ('tsv', 'csv', 'gff'),
-		metavar = '',
-		help = 'output format, tsv, csv, or gff'
-	)
-
-	parser_ssrminer.add_argument('-t', '--threads',
-		default = 1,
-		type = int,
-		metavar = '',
-		help = 'number of threads'
-	)
-
-	parser_ssrminer.add_argument('fasta',
-		help = 'input fasta file, gzip support'
-	)
-
 	#vntr miner
 	parser_vntrminer = subparsers.add_parser('vntrminer',
 		help = "Find exact minisatellites or variable number tandem repeats",
-		formatter_class = argparse.ArgumentDefaultsHelpFormatter
+		formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+		parents = [parser_parent]
 	)
 	parser_vntrminer.set_defaults(cmd='vntr')
 	parser_vntrminer.set_defaults(func=find_tandem_repeats)
@@ -187,35 +207,11 @@ def main():
 		help = "minimum repeat number"
 	)
 
-	parser_vntrminer.add_argument('-o', '--out-file',
-		default = 'stria_vntrs.out',
-		metavar = '',
-		type = lambda x: os.path.normcase(x),
-		help = "output file"
-	)
-
-	parser_vntrminer.add_argument('-f', '--out-format',
-		default = 'tsv',
-		choices = ('tsv', 'csv', 'gff'),
-		metavar = '',
-		help = 'output format, tsv, csv, or gff'
-	)
-
-	parser_vntrminer.add_argument('-t', '--threads',
-		default = 1,
-		type = int,
-		metavar = '',
-		help = 'number of threads'
-	)
-
-	parser_vntrminer.add_argument('fasta',
-		help = 'input fasta file, gzip support'
-	)
-
 	#itr miner
 	parser_itrminer = subparsers.add_parser('itrminer',
 		help = "Find imperfect tandem repeats",
-		formatter_class = argparse.ArgumentDefaultsHelpFormatter
+		formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+		parents = [parser_parent]
 	)
 	parser_itrminer.set_defaults(cmd='itr')
 	parser_itrminer.set_defaults(func=find_tandem_repeats)
@@ -288,31 +284,6 @@ def main():
 		metavar = '',
 		type = int,
 		help = "maximum length allowed to extend"
-	)
-
-	parser_itrminer.add_argument('-o', '--out-file',
-		default = 'stria_itrs.out',
-		metavar = '',
-		type = lambda x: os.path.normcase(x),
-		help = "output file"
-	)
-
-	parser_itrminer.add_argument('-f', '--out-format',
-		default = 'tsv',
-		choices = ('tsv', 'csv', 'gff'),
-		metavar = '',
-		help = 'output format, tsv, csv, or gff'
-	)
-
-	parser_itrminer.add_argument('-t', '--threads',
-		default = 1,
-		type = int,
-		metavar = '',
-		help = 'number of threads'
-	)
-
-	parser_itrminer.add_argument('fasta',
-		help = 'input fasta file, gzip support'
 	)
 
 	args = parser.parse_args()

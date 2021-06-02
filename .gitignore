@@ -27,3 +27,4 @@ tests/data/GCF_000001405.38_GRCh38.p12_genomic.fna.gz
 build/lib.linux-x86_64-3.8/stria.cpython-38-x86_64-linux-gnu.so
 build/temp.linux-x86_64-3.8/src/stria.o
 stria.cpython-38-x86_64-linux-gnu.so
+output.txt
