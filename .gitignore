@@ -28,3 +28,15 @@ build/lib.linux-x86_64-3.8/stria.cpython-38-x86_64-linux-gnu.so
 build/temp.linux-x86_64-3.8/src/stria.o
 stria.cpython-38-x86_64-linux-gnu.so
 output.txt
+build/lib.win-amd64-3.8/stria.cp38-win_amd64.pyd
+build/temp.win-amd64-3.8/Release/src/etr.obj
+build/temp.win-amd64-3.8/Release/src/itr.obj
+build/temp.win-amd64-3.8/Release/src/ssr.obj
+build/temp.win-amd64-3.8/Release/src/stria.cp38-win_amd64.exp
+build/temp.win-amd64-3.8/Release/src/stria.cp38-win_amd64.lib
+build/temp.win-amd64-3.8/Release/src/stria.obj
+build/temp.win-amd64-3.8/Release/src/vntr.obj
+chr20.fa
+chr20.fa.fxi
+hg19.fa
+stria.cp38-win_amd64.pyd
