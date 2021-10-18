@@ -1,19 +1,25 @@
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "etr.h"
 #include "ssr.h"
 #include "itr.h"
+#include "math.h"
 #include "vntr.h"
 #include "version.h"
 
 PyObject *test(PyObject *self, PyObject *args, PyObject *kwargs) {
 	PyObject *ssrs = PyList_New(0);
+	PyObject *name;
 	PyObject *tmp;
 	PyObject *seqobj;
-	PyObject *seqname;
 
-	Py_ssize_t start;
+	const char *seq;
+	Py_ssize_t current_start;
+	Py_ssize_t ssr_end;
 	Py_ssize_t size;
+	Py_ssize_t i;
 
+	int j;
 	int replen;
 	int repeats;
 	int length;
@@ -22,46 +28,167 @@ PyObject *test(PyObject *self, PyObject *args, PyObject *kwargs) {
 
 	static char* keywords[] = {"name", "seq", NULL};
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO", keywords, &seqname, &seqobj)) {
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO", keywords, &name, &seqobj)) {
 		return NULL;
 	}
 
-	size = PyObject_Length(seqobj);
+	Py_INCREF(seqobj);
+	seq = PyUnicode_AsUTF8AndSize(seqobj, &size);
 
-	Py_UCS1* seq = PyUnicode_1BYTE_DATA(seqobj);
+	//boundaries for each motif length
+	Py_ssize_t bs[7];
 
-	for (Py_ssize_t i = 0; i < size; ++i) {
+	for (j = 0; j < 7; ++j) {
+		bs[j] = size - j;
+	}
+
+	for (i = 0; i < size; ++i) {
 		if (seq[i] == 78) {
 			continue;
 		}
 
-		start = i;
-		for (int j = 1; j < 7; ++j) {
-			while (seq[i] == seq[i+j]) {
+		current_start = i;
+		j = 1;
+
+		while ((i < bs[1]) && (seq[i] == seq[i+1])) {
+			++i;
+		}
+
+		replen = i - current_start + 1;
+
+		if (replen < min_lens[j]) {
+			j = replen + 1;
+			i = current_start;
+
+			if (j > 6) {
+				i += replen - 6;
+				continue;
+			}
+		}
+
+		for (; j < 7; ++j) {
+
+			while ((i < bs[j]) && (seq[i] == seq[i+j])) {
 				++i;
 			}
 
-			replen = i + j - start;
+			replen = i + j - current_start;
 
 			if (replen >= min_lens[j]) {
-				memcpy(motif, seq+start, j);
+				memcpy(motif, seq+current_start, j);
 				motif[j] = '\0';
 				repeats = replen/j;
 				length = repeats * j;
-
-				tmp = Py_BuildValue("Onnsiii", seqname, start+1, start+length, motif, j, repeats, length);
+				ssr_end = current_start+length;
+				tmp = Py_BuildValue("snnsiii", name, current_start+1, ssr_end, motif, j, repeats, length);
 				PyList_Append(ssrs, tmp);
 				Py_DECREF(tmp);
 
-				i -= replen % j;
-
+				i = ssr_end;
 				break;
 			} else {
-				i = start;
+				i = current_start;
 			}
 		}
 	}
 
+	Py_DECREF(seqobj);
+	return ssrs;
+}
+
+PyObject *test_hash(PyObject *self, PyObject *args, PyObject *kwargs) {
+	PyObject *ssrs = PyList_New(0);
+	PyObject *name;
+	PyObject *tmp;
+	PyObject *seqobj;
+
+	const char *seq;
+	Py_ssize_t current_start;
+	Py_ssize_t ssr_end;
+	Py_ssize_t size;
+	Py_ssize_t i;
+
+	int j;
+	int h;
+	int replen;
+	int repeats;
+	int length;
+	char motif[7];
+	int min_lens[] = {0, 12, 14, 15, 16, 20, 24};
+	int hash[10] = {0};
+
+	static char* keywords[] = {"name", "seq", NULL};
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO", keywords, &name, &seqobj)) {
+		return NULL;
+	}
+
+	Py_INCREF(seqobj);
+	seq = PyUnicode_AsUTF8AndSize(seqobj, &size);
+
+	//boundaries for each motif length
+	Py_ssize_t bs[7];
+
+	for (j = 0; j < 7; ++j) {
+		bs[j] = size - j;
+	}
+
+	for (i = 0; i < size; ++i) {
+		if (seq[i] == 78) {
+			continue;
+		}
+
+		/*current_start = i;
+		j = 1;
+
+		while ((i < bs[1]) && (seq[i] == seq[i+1])) {
+			++i;
+		}
+
+		replen = i - current_start + 1;
+
+		if (replen < min_lens[j]) {
+			j = replen + 1;
+			i = current_start;
+
+			if (j > 6) {
+				i += replen - 6;
+				continue;
+			}
+		}*/
+
+		for (j=1; j < 7; ++j) {
+
+			//find candidate motif
+			hash[j] = hash[j]
+			
+
+
+			while ((i < bs[j]) && (seq[i] == seq[i+j])) {
+				++i;
+			}
+
+			replen = i + j - current_start;
+
+			if (replen >= min_lens[j]) {
+				memcpy(motif, seq+current_start, j);
+				motif[j] = '\0';
+				repeats = replen/j;
+				length = repeats * j;
+				ssr_end = current_start+length;
+				tmp = Py_BuildValue("snnsiii", name, current_start+1, ssr_end, motif, j, repeats, length);
+				PyList_Append(ssrs, tmp);
+				Py_DECREF(tmp);
+
+				i = ssr_end;
+				break;
+			} else {
+				i = current_start;
+			}
+		}
+	}
+
+	Py_DECREF(seqobj);
 	return ssrs;
 }
 
