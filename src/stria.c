@@ -96,6 +96,25 @@ PyObject *test(PyObject *self, PyObject *args, PyObject *kwargs) {
 	return ssrs;
 }
 
+int nt_table[256] = {
+	0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 1, 0, 2,  0, 0, 0, 3,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 0, 0, 0,  4, 4, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 1, 0, 2,  0, 0, 0, 3,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 0, 0, 0,  4, 4, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,
+	0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0
+};
+
 PyObject *test_hash(PyObject *self, PyObject *args, PyObject *kwargs) {
 	PyObject *ssrs = PyList_New(0);
 	PyObject *name;
@@ -109,7 +128,7 @@ PyObject *test_hash(PyObject *self, PyObject *args, PyObject *kwargs) {
 	Py_ssize_t i;
 
 	int j;
-	int h;
+	int k;
 	int replen;
 	int repeats;
 	int length;
@@ -127,10 +146,24 @@ PyObject *test_hash(PyObject *self, PyObject *args, PyObject *kwargs) {
 	seq = PyUnicode_AsUTF8AndSize(seqobj, &size);
 
 	//boundaries for each motif length
-	Py_ssize_t bs[7];
+	Py_ssize_t bs[7] = {0};
 
-	for (j = 0; j < 7; ++j) {
+	Py_ssize_t hash[7] = {0};
+
+	int ps[7] = {0, 0, 10, 100, 1000, 10000, 100000};
+
+	for (j = 1; j < 7; ++j) {
 		bs[j] = size - j;
+		
+		if (2*j <= size) {
+			for (k = 0; k < 2*j; ++k) {
+				hash[j] = hash[j]*10 + nt_table[seq[k]];
+			}
+		} else {
+			hash[j] = 123456;
+		}
+
+
 	}
 
 	for (i = 0; i < size; ++i) {
@@ -138,7 +171,7 @@ PyObject *test_hash(PyObject *self, PyObject *args, PyObject *kwargs) {
 			continue;
 		}
 
-		/*current_start = i;
+		current_start = i;
 		j = 1;
 
 		while ((i < bs[1]) && (seq[i] == seq[i+1])) {
@@ -155,14 +188,26 @@ PyObject *test_hash(PyObject *self, PyObject *args, PyObject *kwargs) {
 				i += replen - 6;
 				continue;
 			}
-		}*/
+		}
+
+		//rolling hash
+		if (i > 0) {
+			for (k = 1; k < 7; ++k) {
+				if (i < bs[k]) {
+					hash[k] = (hash[k] - ps[k]*nt_table[seq[i-1]])*10 + nt_table[seq[i]];
+				} else {
+					hash[k] = 123456;
+				}
+			}
+		}
 
 		for (j=1; j < 7; ++j) {
 
 			//find candidate motif
-			hash[j] = hash[j]
-			
 
+			if (hash[j]/ps[j] != hash[j]%ps[j]) {
+				continue;
+			}
 
 			while ((i < bs[j]) && (seq[i] == seq[i+j])) {
 				++i;
