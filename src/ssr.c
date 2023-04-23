@@ -217,8 +217,58 @@ static PyObject* stria_ssrminer_as_list(stria_SSRMiner *self) {
 	return ssrs;
 }
 
+static PyObject* stria_ssrminer_as_test(stria_SSRMiner *self) {
+	PyObject *ssrs = PyList_New(0);
+	PyObject *tmp;
+	Py_ssize_t current_start;
+	Py_ssize_t ssr_end;
+	Py_ssize_t boundary;
+	int replen;
+	int repeats;
+	int length;
+	//char *motif = (char *)malloc(7);
+	char motif[7];
+
+	for (Py_ssize_t i = 0; i < self->size; ++i) {
+		if (self->seq[i] == 78) {
+			continue;
+		}
+
+		current_start = i;
+		for (int j = 1; j < 7; ++j) {
+			boundary = self->size - j;
+
+			while ((i < boundary) && (self->seq[i] == self->seq[i+j])) {
+				++i;
+			}
+
+			replen = i + j - current_start;
+
+			if (replen >= self->min_lens[j]) {
+				memcpy(motif, self->seq+current_start, j);
+				motif[j] = '\0';
+				repeats = replen / j;
+				length = repeats * j;
+				ssr_end = current_start+length;
+				tmp = Py_BuildValue("Onnsiii", self->seqname, current_start+1, ssr_end, motif, j, repeats, length);
+				PyList_Append(ssrs, tmp);
+				Py_DECREF(tmp);
+
+				i = ssr_end;
+				break;
+			} else {
+				i = current_start;
+			}
+		}
+	}
+
+	//free(motif);
+	return ssrs;
+}
+
 static PyMethodDef stria_ssrminer_methods[] = {
 	{"as_list", (PyCFunction)stria_ssrminer_as_list, METH_NOARGS, NULL},
+	{"as_test", (PyCFunction)stria_ssrminer_as_test, METH_NOARGS, NULL},
 	{"reset_min_repeats", (PyCFunction)stria_ssrminer_reset_min_repeats, METH_VARARGS|METH_KEYWORDS, NULL},
 	{NULL, NULL, 0, NULL}
 };
