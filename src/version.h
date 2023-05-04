@@ -1,1 +1,1 @@
-#define STRIA_VERSION "0.1.3"
+#define STRIA_VERSION "0.1.4"

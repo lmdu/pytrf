@@ -84,41 +84,14 @@ static PyMemberDef stria_etr_members[] = {
 
 PyTypeObject stria_ETRType = {
 	PyVarObject_HEAD_INIT(NULL, 0)
-	"ETR",                        /* tp_name */
-	sizeof(stria_ETR),          /* tp_basicsize */
-	0,                              /* tp_itemsize */
-	(destructor)stria_etr_dealloc,   /* tp_dealloc */
-	0,                              /* tp_print */
-	0,                              /* tp_getattr */
-	0,                              /* tp_setattr */
-	0,                              /* tp_reserved */
-	(reprfunc)stria_etr_repr,                              /* tp_repr */
-	0,                              /* tp_as_number */
-	0,                   /* tp_as_sequence */
-	0,                   /* tp_as_mapping */
-	0,                              /* tp_hash */
-	0,                              /* tp_call */
-	0,                              /* tp_str */
-	0,                              /* tp_getattro */
-	0,                              /* tp_setattro */
-	0,                              /* tp_as_buffer */
-	Py_TPFLAGS_DEFAULT,             /* tp_flags */
-	"tandem repeat element",                              /* tp_doc */
-	0,                              /* tp_traverse */
-	0,                              /* tp_clear */
-	0,                              /* tp_richcompare */
-	0,                              /* tp_weaklistoffset */
-	0,     /* tp_iter */
-	0,    /* tp_iternext */
-	stria_etr_methods,          /* tp_methods */
-	stria_etr_members,          /* tp_members */
-	stria_etr_getsets,                               /* tp_getset */
-	0,                              /* tp_base */
-	0,                              /* tp_dict */
-	0,                              /* tp_descr_get */
-	0,                              /* tp_descr_set */
-	0,                              /* tp_dictoffset */
-	0,                              /* tp_init */
-	0,            /* tp_alloc */
-	PyType_GenericNew,              /* tp_new */
+	.tp_name = "ETR",
+	.tp_basicsize = sizeof(stria_ETR),
+	.tp_dealloc = (destructor)stria_etr_dealloc,
+	.tp_repr = (reprfunc)stria_etr_repr,
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_doc = "tandem repeat element",
+	.tp_methods = stria_etr_methods,
+	.tp_members = stria_etr_members,
+	.tp_getset = stria_etr_getsets,
+	.tp_new = PyType_GenericNew,
 };

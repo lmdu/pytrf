@@ -281,6 +281,9 @@ static PyObject *stria_module_init(void) {
 		return NULL;
 	}
 
+	//version
+	PyModule_AddStringConstant(module, "__version__", STRIA_VERSION);
+
 	//TRE
 	if (PyType_Ready(&stria_ETRType) < 0) {
 		return NULL;

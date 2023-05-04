@@ -192,41 +192,14 @@ static PyMethodDef stria_vntrminer_methods[] = {
 
 PyTypeObject stria_VNTRMinerType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "VNTRMiner",                        /* tp_name */
-    sizeof(stria_VNTRMiner),          /* tp_basicsize */
-    0,                              /* tp_itemsize */
-    (destructor)stria_vntrminer_dealloc,   /* tp_dealloc */
-    0,                              /* tp_print */
-    0,                              /* tp_getattr */
-    0,                              /* tp_setattr */
-    0,                              /* tp_reserved */
-    (reprfunc)stria_vntrminer_repr,                              /* tp_repr */
-    0,                              /* tp_as_number */
-    0,                   /* tp_as_sequence */
-    0,                   /* tp_as_mapping */
-    0,                              /* tp_hash */
-    0,                              /* tp_call */
-    0,                              /* tp_str */
-    0,                              /* tp_getattro */
-    0,                              /* tp_setattro */
-    0,                              /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,             /* tp_flags */
-    "find minisatellites from DNA sequence",                              /* tp_doc */
-    0,                              /* tp_traverse */
-    0,                              /* tp_clear */
-    0,                              /* tp_richcompare */
-    0,                              /* tp_weaklistoffset */
-    (getiterfunc)stria_vntrminer_iter,     /* tp_iter */
-    (iternextfunc)stria_vntrminer_next,    /* tp_iternext */
-    stria_vntrminer_methods,          /* tp_methods */
-    0,          /* tp_members */
-    0,                               /* tp_getset */
-    0,                              /* tp_base */
-    0,                              /* tp_dict */
-    0,                              /* tp_descr_get */
-    0,                              /* tp_descr_set */
-    0,                              /* tp_dictoffset */
-    0,                              /* tp_init */
-    0,            /* tp_alloc */
-    stria_vntrminer_new,              /* tp_new */
+    .tp_name = "VNTRMiner",
+    .tp_basicsize = sizeof(stria_VNTRMiner),
+    .tp_dealloc = (destructor)stria_vntrminer_dealloc,
+    .tp_repr = (reprfunc)stria_vntrminer_repr,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_doc = "find minisatellites from DNA sequence",
+    .tp_iter = (getiterfunc)stria_vntrminer_iter,
+    .tp_iternext = (iternextfunc)stria_vntrminer_next,
+    .tp_methods = stria_vntrminer_methods,
+    .tp_new = stria_vntrminer_new,
 };
