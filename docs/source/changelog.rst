@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Version 0.1.5 (2023-05-05)
+
+- Fixed ci wheel build
+
+Version 0.1.4 (2023-05-04)
+
+- Added support for Python 3.9-3.11
+- Updated the structure of objects
+
 Version 0.1.3 (2021-05-31)
 --------------------------
 
