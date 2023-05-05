@@ -1,8 +1,8 @@
 stria
 #####
 
-.. image:: https://github.com/lmdu/stria/actions/workflows/main.yml/badge.svg
-   :target: https://github.com/lmdu/stria/actions/workflows/main.yml
+.. image:: https://github.com/lmdu/stria/actions/workflows/wheel.yml/badge.svg
+   :target: https://github.com/lmdu/stria/actions/workflows/wheel.yml
    :alt: Github Action
 
 .. image:: https://readthedocs.org/projects/stria/badge/?version=latest
@@ -12,6 +12,13 @@ stria
 .. image:: https://img.shields.io/pypi/v/stria.svg
    :target: https://pypi.org/project/stria
    :alt: PyPI
+
+.. image:: https://img.shields.io/pypi/pyversions/stria
+	:target: https://pypi.org/project/stria
+	:alt: PyPI
+
+.. image:: https://app.codacy.com/project/badge/Grade/bbe59e55f686465ca5824c69583e9718
+	:target: https://app.codacy.com/gh/lmdu/stria/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
 
 *a fast Python package for identification and analysis of short tandem repeat sequences*
 
