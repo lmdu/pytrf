@@ -1,6 +1,13 @@
+/* 
+ * gtr.h -- Generic tandem repeat header
+ *
+ * define the finder class for generic tandem repeat
+ *
+ */
+
 #define PY_SSIZE_T_CLEAN
-#ifndef STRIA_VNTR_H
-#define STRIA_VNTR_H
+#ifndef PYTRF_GTR_H
+#define PYTRF_GTR_H
 #include "Python.h"
 
 typedef struct {
@@ -30,8 +37,8 @@ typedef struct {
 	//min repeats
 	int min_repeat;
 
-} stria_VNTRMiner;
+} pytrf_GTRFinder;
 
-extern PyTypeObject stria_VNTRMinerType;
+extern PyTypeObject pytrf_GTRFinderType;
 
 #endif

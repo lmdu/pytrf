@@ -1,6 +1,6 @@
 #define PY_SSIZE_T_CLEAN
-#ifndef STRIA_SSR_H
-#define STRIA_SSR_H
+#ifndef PYTRF_STR_H
+#define PYTRF_STR_H
 #include "Python.h"
 
 typedef struct {
@@ -24,8 +24,8 @@ typedef struct {
 	//minimal length for mono-, di-, tri-, tetra-, penta- and hexa- types
 	Py_ssize_t min_lens[7];
 
-} stria_SSRMiner;
+} pytrf_STRFinder;
 
-extern PyTypeObject stria_SSRMinerType;
+extern PyTypeObject pytrf_STRFinderType;
 
 #endif

@@ -1,13 +1,12 @@
 /* 
  * etr.h -- Exact Tandem Repeat
  *
- * define the base class for exact tandem repeats
- * this class can be inherited by SSR and VNTR class
+ * define the base class for exact tandem repeat element
  *
  */
 
-#ifndef STRIA_ETR_H
-#define STRIA_ETR_H
+#ifndef PYTRF_ETR_H
+#define PYTRF_ETR_H
 #include "Python.h"
 
 typedef struct {
@@ -34,8 +33,8 @@ typedef struct {
 	//tandem repeat element length
 	int length;
 
-} stria_ETR;
+} pytrf_ETR;
 
-extern PyTypeObject stria_ETRType;
+extern PyTypeObject pytrf_ETRType;
 
 #endif

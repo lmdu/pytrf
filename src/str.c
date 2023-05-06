@@ -1,9 +1,9 @@
 #define PY_SSIZE_T_CLEAN
-#include "ssr.h"
+#include "str.h"
 #include "etr.h"
 #include "structmember.h"
 
-int stria_ssrminer_set_min_repeats(stria_SSRMiner *self, PyObject* minrep_obj) {
+int pytrf_strfinder_set_min_repeats(pytrf_STRFinder *self, PyObject* minrep_obj) {
 	if (minrep_obj) {
 		if (PyList_Check(minrep_obj)) {
 			minrep_obj = PyList_AsTuple(minrep_obj);
@@ -47,11 +47,11 @@ int stria_ssrminer_set_min_repeats(stria_SSRMiner *self, PyObject* minrep_obj) {
 	return 1;
 }
 
-static PyObject* stria_ssrminer_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
+static PyObject* pytrf_strfinder_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 	PyObject *minrep_obj = NULL;
 	static char* keywords[] = {"name", "seq", "min_repeats", NULL};
 
-	stria_SSRMiner *obj = (stria_SSRMiner *)type->tp_alloc(type, 0);
+	pytrf_STRFinder *obj = (pytrf_STRFinder *)type->tp_alloc(type, 0);
 	if (!obj) return NULL;
 
 	//initialize start search position
@@ -76,31 +76,31 @@ static PyObject* stria_ssrminer_new(PyTypeObject *type, PyObject *args, PyObject
 	obj->seq = PyUnicode_AsUTF8AndSize(obj->seqobj, &obj->size);
 
 	//parse minimal repeats
-	if (!stria_ssrminer_set_min_repeats(obj, minrep_obj)) {
+	if (!pytrf_strfinder_set_min_repeats(obj, minrep_obj)) {
 		return NULL;
 	}
 
 	return (PyObject *)obj;
 }
 
-void stria_ssrminer_dealloc(stria_SSRMiner *self) {
+void pytrf_strfinder_dealloc(pytrf_STRFinder *self) {
 	Py_DECREF(self->seqname);
 	Py_DECREF(self->seqobj);
 	self->seq = NULL;
 	Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
-static PyObject* stria_ssrminer_repr(stria_SSRMiner *self) {
-	return PyUnicode_FromFormat("<SSRMiner> for sequence %s", PyUnicode_AsUTF8(self->seqname));
+static PyObject* pytrf_strfinder_repr(pytrf_STRFinder *self) {
+	return PyUnicode_FromFormat("<STRFinder> for sequence %s", PyUnicode_AsUTF8(self->seqname));
 }
 
-static PyObject* stria_ssrminer_iter(stria_SSRMiner *self) {
+static PyObject* pytrf_strfinder_iter(pytrf_STRFinder *self) {
 	self->next_start = 0;
 	Py_INCREF(self);
 	return (PyObject *)self;
 }
 
-static PyObject* stria_ssrminer_next(stria_SSRMiner *self) {
+static PyObject* pytrf_strfinder_next(pytrf_STRFinder *self) {
 	//current slide position
 	Py_ssize_t i;
 
@@ -132,7 +132,7 @@ static PyObject* stria_ssrminer_next(stria_SSRMiner *self) {
 			replen = i + j - current_start;
 
 			if (replen >= self->min_lens[j]) {
-				stria_ETR *ssr = PyObject_New(stria_ETR, &stria_ETRType);
+				pytrf_ETR *ssr = PyObject_New(pytrf_ETR, &pytrf_ETRType);
 				ssr->motif = (char *)malloc(j + 1);
 				memcpy(ssr->motif, self->seq+current_start, j);
 				ssr->motif[j] = '\0';
@@ -156,20 +156,20 @@ static PyObject* stria_ssrminer_next(stria_SSRMiner *self) {
 	return NULL;
 }
 
-static PyObject* stria_ssrminer_reset_min_repeats(stria_SSRMiner *self, PyObject *args, PyObject *kwargs) {
+static PyObject* pytrf_strfinder_reset_min_repeats(pytrf_STRFinder *self, PyObject *args, PyObject *kwargs) {
 	PyObject *minrep_obj = NULL;
 	static char* keywords[] = {"min_repeats", NULL};
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O", keywords, &minrep_obj)) {
 		return NULL;
 	}
 
-	if (!stria_ssrminer_set_min_repeats(self, minrep_obj)) {
+	if (!pytrf_strfinder_set_min_repeats(self, minrep_obj)) {
 		return NULL;
 	}
 	return NULL;
 }
 
-static PyObject* stria_ssrminer_as_list(stria_SSRMiner *self) {
+static PyObject* pytrf_strfinder_as_list(pytrf_STRFinder *self) {
 	PyObject *ssrs = PyList_New(0);
 	PyObject *tmp;
 	Py_ssize_t current_start;
@@ -217,7 +217,7 @@ static PyObject* stria_ssrminer_as_list(stria_SSRMiner *self) {
 	return ssrs;
 }
 
-static PyObject* stria_ssrminer_as_test(stria_SSRMiner *self) {
+static PyObject* pytrf_strfinder_as_test(pytrf_STRFinder *self) {
 	PyObject *ssrs = PyList_New(0);
 	PyObject *tmp;
 	Py_ssize_t current_start;
@@ -266,23 +266,23 @@ static PyObject* stria_ssrminer_as_test(stria_SSRMiner *self) {
 	return ssrs;
 }
 
-static PyMethodDef stria_ssrminer_methods[] = {
-	{"as_list", (PyCFunction)stria_ssrminer_as_list, METH_NOARGS, NULL},
-	{"as_test", (PyCFunction)stria_ssrminer_as_test, METH_NOARGS, NULL},
-	{"reset_min_repeats", (PyCFunction)stria_ssrminer_reset_min_repeats, METH_VARARGS|METH_KEYWORDS, NULL},
+static PyMethodDef pytrf_strfinder_methods[] = {
+	{"as_list", (PyCFunction)pytrf_strfinder_as_list, METH_NOARGS, NULL},
+	{"as_test", (PyCFunction)pytrf_strfinder_as_test, METH_NOARGS, NULL},
+	{"reset_min_repeats", (PyCFunction)pytrf_strfinder_reset_min_repeats, METH_VARARGS|METH_KEYWORDS, NULL},
 	{NULL, NULL, 0, NULL}
 };
 
-PyTypeObject stria_SSRMinerType = {
+PyTypeObject pytrf_STRFinderType = {
 	PyVarObject_HEAD_INIT(NULL, 0)
-	.tp_name = "SSRMiner",
-	.tp_basicsize = sizeof(stria_SSRMiner),
-	.tp_dealloc = (destructor)stria_ssrminer_dealloc,
-	.tp_repr = (reprfunc)stria_ssrminer_repr,
+	.tp_name = "STRFinder",
+	.tp_basicsize = sizeof(pytrf_STRFinder),
+	.tp_dealloc = (destructor)pytrf_strfinder_dealloc,
+	.tp_repr = (reprfunc)pytrf_strfinder_repr,
 	.tp_flags = Py_TPFLAGS_DEFAULT,
-	.tp_doc = "find microsatellites from DNA sequence",
-	.tp_iter = (getiterfunc)stria_ssrminer_iter,
-	.tp_iternext = (iternextfunc)stria_ssrminer_next,
-	.tp_methods = stria_ssrminer_methods,
-	.tp_new = stria_ssrminer_new,
+	.tp_doc = "short tandem repeat finder",
+	.tp_iter = (getiterfunc)pytrf_strfinder_iter,
+	.tp_iternext = (iternextfunc)pytrf_strfinder_next,
+	.tp_methods = pytrf_strfinder_methods,
+	.tp_new = pytrf_strfinder_new,
 };

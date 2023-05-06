@@ -2,8 +2,7 @@ import os
 import sys
 import csv
 import time
-import queue
-import stria
+import pytrf
 import shutil
 import pyfastx
 import argparse
@@ -24,13 +23,13 @@ def format_and_write_to_file(args, out, tres):
 
 def find_tandem_repeats_by_type(name, seq, args):
 	if args.cmd == 'ssr':
-		tres = stria.SSRMiner(name, seq, args.repeats)
+		tres = pytrf.STRFinder(name, seq, args.repeats)
 
-	elif args.cmd == 'vntr':
-		tres = stria.VNTRMiner(name, seq, args.min_motif_size, 
+	elif args.cmd == 'gtr':
+		tres = pytrf.GTRFinder(name, seq, args.min_motif_size, 
 								args.max_motif_size, args.min_repeats)
 	elif args.cmd == 'itr':
-		tres = stria.ITRMiner(name, seq, args.min_motif_size, args.max_motif_size,
+		tres = pytrf.ITRFinder(name, seq, args.min_motif_size, args.max_motif_size,
 								args.seed_min_repeats, args.seed_min_length,
 								args.max_continuous_errors, args.substitution_penalty,
 								args.insertion_penalty, args.deletion_penalty,
@@ -67,7 +66,7 @@ def find_tandem_repeats_with_multicore(args):
 		pool.apply_async(find_tandem_repeats_worker, (args, tasks, event, work_id))
 
 	#add tasks
-	for name, seq, _ in pyfastx.Fastx(args.fasta, uppercase=True):
+	for name, seq in pyfastx.Fastx(args.fasta, uppercase=True):
 		tasks.put((name, seq), block=True, timeout=None)
 
 	event.set()
@@ -100,22 +99,22 @@ def find_tandem_repeats(args):
 
 def main():
 	parser = argparse.ArgumentParser(
-		prog = 'stria',
-		usage = 'stria COMMAND [OPTIONS]',
-		description = "short tandem repeat identification and analysis",
+		prog = 'pytrf',
+		usage = 'pytrf COMMAND [OPTIONS]',
+		description = "a python package for finding tandem repeats from genomic sequences",
 		formatter_class = argparse.RawDescriptionHelpFormatter
 	)
 
 	parser.add_argument('-v', '--version',
 		action = 'version',
-		version = '%(prog)s {}'.format(stria.version())
+		version = '%(prog)s {}'.format(pytrf.__version__)
 	)
 
 	subparsers = parser.add_subparsers(
 		title = 'Commands',
-		prog = 'stria',
+		prog = 'pytrf',
 		metavar = ''
-	)                                                                                                                                   
+	)
 
 	parser_parent = argparse.ArgumentParser(add_help=False)
 
@@ -160,16 +159,16 @@ def main():
 		help = 'output file'
 	)
 
-	#ssr miner
-	parser_ssrminer = subparsers.add_parser('ssrminer',
+	#ssr finder
+	parser_ssrfinder = subparsers.add_parser('findssr',
 		help = "Find exact microsatellites or simple sequence repeats",
 		formatter_class = argparse.ArgumentDefaultsHelpFormatter,
 		parents = [parser_parent]
 	)
-	parser_ssrminer.set_defaults(cmd='ssr')
-	parser_ssrminer.set_defaults(func=find_tandem_repeats)
+	parser_ssrfinder.set_defaults(cmd='ssr')
+	parser_ssrfinder.set_defaults(func=find_tandem_repeats)
 
-	parser_ssrminer.add_argument('-r', '--repeats',
+	parser_ssrfinder.add_argument('-r', '--repeats',
 		nargs = 6,
 		default = [12, 7, 5, 4, 4, 4],
 		metavar = ('mono', 'di', 'tri', 'tetra', 'penta', 'hexa'),
@@ -177,109 +176,109 @@ def main():
 		help = "minimum repeats"
 	)
 
-	#vntr miner
-	parser_vntrminer = subparsers.add_parser('vntrminer',
+	#gtr finder
+	parser_gtrfinder = subparsers.add_parser('findgtr',
 		help = "Find exact minisatellites or variable number tandem repeats",
 		formatter_class = argparse.ArgumentDefaultsHelpFormatter,
 		parents = [parser_parent]
 	)
-	parser_vntrminer.set_defaults(cmd='vntr')
-	parser_vntrminer.set_defaults(func=find_tandem_repeats)
+	parser_gtrfinder.set_defaults(cmd='gtr')
+	parser_gtrfinder.set_defaults(func=find_tandem_repeats)
 
-	parser_vntrminer.add_argument('-m', '--min-motif-size',
+	parser_gtrfinder.add_argument('-m', '--min-motif-size',
 		default = 7,
 		metavar = '',
 		type = int,
 		help = "minimum motif length"
 	)
 
-	parser_vntrminer.add_argument('-M', '--max-motif-size',
+	parser_gtrfinder.add_argument('-M', '--max-motif-size',
 		default = 30,
 		metavar = '',
 		type = int,
 		help = "maximum motif length"
 	)
 
-	parser_vntrminer.add_argument('-r', '--min-repeats',
+	parser_gtrfinder.add_argument('-r', '--min-repeats',
 		default = 2,
 		metavar = '',
 		type = int,
 		help = "minimum repeat number"
 	)
 
-	#itr miner
-	parser_itrminer = subparsers.add_parser('itrminer',
+	#itr finder
+	parser_itrfinder = subparsers.add_parser('finditr',
 		help = "Find imperfect tandem repeats",
 		formatter_class = argparse.ArgumentDefaultsHelpFormatter,
 		parents = [parser_parent]
 	)
-	parser_itrminer.set_defaults(cmd='itr')
-	parser_itrminer.set_defaults(func=find_tandem_repeats)
+	parser_itrfinder.set_defaults(cmd='itr')
+	parser_itrfinder.set_defaults(func=find_tandem_repeats)
 
-	parser_itrminer.add_argument('-m', '--min-motif-size',
+	parser_itrfinder.add_argument('-m', '--min-motif-size',
 		default = 1,
 		metavar = '',
 		type = int,
 		help = "minimum motif length"
 	)
 
-	parser_itrminer.add_argument('-M', '--max-motif-size',
+	parser_itrfinder.add_argument('-M', '--max-motif-size',
 		default = 6,
 		metavar = '',
 		type = int,
 		help = "maximum motif length"
 	)
 
-	parser_itrminer.add_argument('-r', '--seed-min-repeats',
+	parser_itrfinder.add_argument('-r', '--seed-min-repeats',
 		default = 3,
 		metavar = '',
 		type = int,
 		help = "minimum repeat number for seed"
 	)
 
-	parser_itrminer.add_argument('-l', '--seed-min-length',
+	parser_itrfinder.add_argument('-l', '--seed-min-length',
 		default = 8,
 		metavar = '',
 		type = int,
 		help = "minimum length for seed"
 	)
 
-	parser_itrminer.add_argument('-e', '--max-continuous-errors',
+	parser_itrfinder.add_argument('-e', '--max-continuous-errors',
 		default = 2,
 		metavar = '',
 		type = int,
 		help = "maximum number of continuous alignment errors"
 	)
 
-	parser_itrminer.add_argument('-s', '--substitution-penalty',
+	parser_itrfinder.add_argument('-s', '--substitution-penalty',
 		default = 0.5,
 		metavar = '',
 		type = float,
 		help = "substitution penalty"
 	)
 
-	parser_itrminer.add_argument('-i', '--insertion-penalty',
+	parser_itrfinder.add_argument('-i', '--insertion-penalty',
 		default = 1.0,
 		metavar = '',
 		type = float,
 		help = "insertion penalty"
 	)
 
-	parser_itrminer.add_argument('-d', '--deletion-penalty',
+	parser_itrfinder.add_argument('-d', '--deletion-penalty',
 		default = 1.0,
 		metavar = '',
 		type = float,
 		help = "deletion penalty"
 	)
 
-	parser_itrminer.add_argument('-p', '--min-match-ratio',
+	parser_itrfinder.add_argument('-p', '--min-match-ratio',
 		default = 0.7,
 		metavar = '',
 		type = float,
 		help = "extending match ratio"
 	)
 
-	parser_itrminer.add_argument('-x', '--max-extend-size',
+	parser_itrfinder.add_argument('-x', '--max-extend-size',
 		default = 2000,
 		metavar = '',
 		type = int,

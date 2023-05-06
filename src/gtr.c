@@ -1,17 +1,24 @@
+/* 
+ * gtr.c -- Generic tandem repeat finder
+ *
+ * define the finder class for generic tandem repeat
+ *
+ */
+
 #define PY_SSIZE_T_CLEAN
-#include "vntr.h"
+#include "gtr.h"
 #include "etr.h"
 #include "structmember.h"
 
-static PyObject* stria_vntrminer_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
-	static char* keywords[] = {"name", "seq", "min_motif_size", "max_motif_size", "min_repeat", NULL};
+PyObject* pytrf_gtrfinder_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
+	static char* keywords[] = {"chrom", "seq", "min_motif_size", "max_motif_size", "min_repeat", NULL};
 
-	stria_VNTRMiner *obj = (stria_VNTRMiner *)type->tp_alloc(type, 0);
+	pytrf_GTRFinder *obj = (pytrf_GTRFinder *)type->tp_alloc(type, 0);
 	if (!obj) return NULL;
 
-	obj->min_motif = 7;
-	obj->max_motif = 30;
-	obj->min_repeat = 2;
+	obj->min_motif = 10;
+	obj->max_motif = 100;
+	obj->min_repeat = 3;
 
 	//initialize start search position
 	obj->next_start = 0;
@@ -28,24 +35,24 @@ static PyObject* stria_vntrminer_new(PyTypeObject *type, PyObject *args, PyObjec
 	return (PyObject *)obj;
 }
 
-void stria_vntrminer_dealloc(stria_VNTRMiner *self) {
+void pytrf_gtrfinder_dealloc(pytrf_GTRFinder *self) {
+	self->seq = NULL;
 	Py_DECREF(self->seqname);
 	Py_DECREF(self->seqobj);
-	self->seq = NULL;
 	Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
-static PyObject* stria_vntrminer_repr(stria_VNTRMiner *self) {
-	return PyUnicode_FromFormat("<VNTRMiner> for sequence %s", PyUnicode_AsUTF8(self->seqname));
+static PyObject* pytrf_gtrfinder_repr(pytrf_GTRFinder *self) {
+	return PyUnicode_FromFormat("<GTRFinder> for sequence %s", PyUnicode_AsUTF8(self->seqname));
 }
 
-static PyObject* stria_vntrminer_iter(stria_VNTRMiner *self) {
+static PyObject* pytrf_gtrfinder_iter(pytrf_GTRFinder *self) {
 	self->next_start = 0;
 	Py_INCREF(self);
 	return (PyObject *)self;
 }
 
-static PyObject* stria_vntrminer_next(stria_VNTRMiner *self) {
+static PyObject* pytrf_gtrfinder_next(pytrf_GTRFinder *self) {
 	//current start position
 	Py_ssize_t current_start;
 
@@ -58,8 +65,8 @@ static PyObject* stria_vntrminer_next(stria_VNTRMiner *self) {
 	//repeat number
 	int repeats;
 
-	//the motif is a right vntr motif
-	int is_vntr;
+	//the motif is a right gtr motif
+	int is_gtr;
 
 	for (Py_ssize_t i = self->next_start; i < self->size; ++i) {
 		//remove unkown base
@@ -81,34 +88,34 @@ static PyObject* stria_vntrminer_next(stria_VNTRMiner *self) {
 			if (repeats >= self->min_repeat) {
 				//check motif is real motif with length >= min motif size
 				const char *p = self->seq+current_start;
-				is_vntr = 1;
+				is_gtr = 1;
 				for (int k = 1; k < self->min_motif; ++k) {
 					int l = 0;
 					while ((p[l] == p[l+k]) && (l+k < j)) {
 						++l;
 					}
 					if (l + k == j) {
-						is_vntr = 0;
+						is_gtr = 0;
 						break;
 					}
 				}
 
-				//otherwise we found a vntr
-				if (is_vntr) {
-					//stria_VNTR *vntr = (stria_VNTR *)PyObject_CallObject((PyObject *)&stria_VNTRType, NULL);
-					stria_ETR *vntr = PyObject_New(stria_ETR, &stria_ETRType);
-					vntr->motif = (char *)malloc(j + 1);
-					memcpy(vntr->motif, self->seq+current_start, j);
-					vntr->motif[j] = '\0';
-					vntr->mlen = j;
-					vntr->seqid = self->seqname;
-					Py_INCREF(vntr->seqid);
-					vntr->repeats = repeats;
-					vntr->length = repeats * j;
-					vntr->start = current_start + 1;
-					vntr->end = current_start + vntr->length;
-					self->next_start = vntr->end;
-					return (PyObject *)vntr;
+				//otherwise we found a gtr
+				if (is_gtr) {
+					//stria_VNTR *gtr = (stria_VNTR *)PyObject_CallObject((PyObject *)&stria_VNTRType, NULL);
+					pytrf_ETR *gtr = PyObject_New(pytrf_ETR, &pytrf_ETRType);
+					gtr->motif = (char *)malloc(j + 1);
+					memcpy(gtr->motif, self->seq+current_start, j);
+					gtr->motif[j] = '\0';
+					gtr->mlen = j;
+					gtr->seqid = self->seqname;
+					Py_INCREF(gtr->seqid);
+					gtr->repeats = repeats;
+					gtr->length = repeats * j;
+					gtr->start = current_start + 1;
+					gtr->end = current_start + gtr->length;
+					self->next_start = gtr->end;
+					return (PyObject *)gtr;
 				}
 			}
 
@@ -119,11 +126,11 @@ static PyObject* stria_vntrminer_next(stria_VNTRMiner *self) {
 	return NULL;
 }
 
-static PyObject* stria_vntrminer_as_list(stria_VNTRMiner *self) {
-	PyObject *vntrs = PyList_New(0);
+static PyObject* pytrf_gtrfinder_as_list(pytrf_GTRFinder *self) {
+	PyObject *gtrs = PyList_New(0);
 	PyObject *tmp;
 	Py_ssize_t current_start;
-	Py_ssize_t vntr_end;
+	Py_ssize_t gtr_end;
 	Py_ssize_t boundary;
 	int repeats;
 	int length;
@@ -149,7 +156,7 @@ static PyObject* stria_vntrminer_as_list(stria_VNTRMiner *self) {
 			if (repeats >= self->min_repeat) {
 				//check motif is real motif with length >= min motif size
 				const char *p = self->seq+current_start;
-				int is_vntr = 1;
+				int is_gtr = 1;
 				int l = 0;
 
 				for (int k = 1; k < self->min_motif; ++k) {
@@ -157,22 +164,22 @@ static PyObject* stria_vntrminer_as_list(stria_VNTRMiner *self) {
 						++l;
 					}
 					if (l + k == j) {
-						is_vntr = 0;
+						is_gtr = 0;
 						break;
 					}
 				}
 
-				if (is_vntr) {
+				if (is_gtr) {
 					memcpy(motif, self->seq+current_start, j);
 					motif[j] = '\0';
 					length = repeats * j;
-					vntr_end = current_start+length;
-					tmp = Py_BuildValue("Onnsiii", self->seqname, current_start+1, vntr_end,
+					gtr_end = current_start+length;
+					tmp = Py_BuildValue("Onnsiii", self->seqname, current_start+1, gtr_end,
 										motif, j, repeats, length);
-					PyList_Append(vntrs, tmp);
+					PyList_Append(gtrs, tmp);
 					Py_DECREF(tmp);
 
-					i = vntr_end;
+					i = gtr_end;
 					break;
 				}
 			}
@@ -182,24 +189,24 @@ static PyObject* stria_vntrminer_as_list(stria_VNTRMiner *self) {
 	}
 
 	free(motif);
-	return vntrs;
+	return gtrs;
 }
 
-static PyMethodDef stria_vntrminer_methods[] = {
-	{"as_list", (PyCFunction)stria_vntrminer_as_list, METH_NOARGS, NULL},
+static PyMethodDef pytrf_gtrfinder_methods[] = {
+	{"as_list", (PyCFunction)pytrf_gtrfinder_as_list, METH_NOARGS, NULL},
 	{NULL, NULL, 0, NULL}
 };
 
-PyTypeObject stria_VNTRMinerType = {
+PyTypeObject pytrf_GTRFinderType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "VNTRMiner",
-    .tp_basicsize = sizeof(stria_VNTRMiner),
-    .tp_dealloc = (destructor)stria_vntrminer_dealloc,
-    .tp_repr = (reprfunc)stria_vntrminer_repr,
+    .tp_name = "GTRFinder",
+    .tp_basicsize = sizeof(pytrf_GTRFinder),
+    .tp_dealloc = (destructor)pytrf_gtrfinder_dealloc,
+    .tp_repr = (reprfunc)pytrf_gtrfinder_repr,
     .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_doc = "find minisatellites from DNA sequence",
-    .tp_iter = (getiterfunc)stria_vntrminer_iter,
-    .tp_iternext = (iternextfunc)stria_vntrminer_next,
-    .tp_methods = stria_vntrminer_methods,
-    .tp_new = stria_vntrminer_new,
+    .tp_doc = "generic tandem repeat finder",
+    .tp_iter = (getiterfunc)pytrf_gtrfinder_iter,
+    .tp_iternext = (iternextfunc)pytrf_gtrfinder_next,
+    .tp_methods = pytrf_gtrfinder_methods,
+    .tp_new = pytrf_gtrfinder_new,
 };

@@ -1,10 +1,11 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include "atr.h"
 #include "etr.h"
-#include "ssr.h"
+#include "str.h"
 #include "itr.h"
+#include "gtr.h"
 #include "math.h"
-#include "vntr.h"
 #include "version.h"
 
 int nt_code[128] = {
@@ -254,73 +255,74 @@ PyObject *test_hash(PyObject *self, PyObject *args, PyObject *kwargs) {
 	return ssrs;
 }
 
-PyObject *version(PyObject *self) {
+/*PyObject *version(PyObject *self) {
 	return PyUnicode_FromString(STRIA_VERSION);
-}
+}*/
 
-static PyMethodDef module_methods[] = {
+static PyMethodDef pytrf_methods[] = {
 	{"test", (PyCFunction)test, METH_VARARGS | METH_KEYWORDS, NULL},
 	{"test_hash", (PyCFunction)test_hash, METH_VARARGS | METH_KEYWORDS, NULL},
-	{"version", (PyCFunction)version, METH_NOARGS, NULL},
+	//{"version", (PyCFunction)version, METH_NOARGS, NULL},
 	{NULL, NULL, 0, NULL}
 };
 
-static struct PyModuleDef module_stria = {
+static struct PyModuleDef pytrf_module = {
 	PyModuleDef_HEAD_INIT,
-	"stria",
-	"A python package for short tandem repeat identification and analysis",
+	"pytrf",
+	"A python package for finding tandem repeat sequence",
 	-1,
-	module_methods,
+	pytrf_methods,
 };
 
-static PyObject *stria_module_init(void) {
+static PyObject *pytrf_module_init(void) {
 	PyObject *module;
-	module = PyModule_Create(&module_stria);
+	module = PyModule_Create(&pytrf_module);
 
 	if (module == NULL) {
 		return NULL;
 	}
 
 	//version
-	PyModule_AddStringConstant(module, "__version__", STRIA_VERSION);
+	PyModule_AddStringConstant(module, "__version__", PYTRF_VERSION);
 
-	//TRE
-	if (PyType_Ready(&stria_ETRType) < 0) {
+	//ETR
+	if (PyType_Ready(&pytrf_ETRType) < 0) {
 		return NULL;
 	}
-	Py_INCREF((PyObject *)&stria_ETRType);
-	PyModule_AddObject(module, "ETR", (PyObject *)&stria_ETRType);
+	Py_INCREF((PyObject *)&pytrf_ETRType);
+	PyModule_AddObject(module, "ETR", (PyObject *)&pytrf_ETRType);
 
-	//SSR
-	if (PyType_Ready(&stria_SSRMinerType) < 0) {
+	//ATR
+	if (PyType_Ready(&pytrf_ATRType) < 0) {
 		return NULL;
 	}
-	Py_INCREF((PyObject *)&stria_SSRMinerType);
-	PyModule_AddObject(module, "SSRMiner", (PyObject *)&stria_SSRMinerType);
+	Py_INCREF((PyObject *)&pytrf_ATRType);
+	PyModule_AddObject(module, "ATR", (PyObject *)&pytrf_ATRType);
 
-	//VNTR
-	if (PyType_Ready(&stria_VNTRMinerType) < 0) {
+	//STR
+	if (PyType_Ready(&pytrf_STRFinderType) < 0) {
 		return NULL;
 	}
-	Py_INCREF((PyObject *)&stria_VNTRMinerType);
-	PyModule_AddObject(module, "VNTRMiner", (PyObject *)&stria_VNTRMinerType);
+	Py_INCREF((PyObject *)&pytrf_STRFinderType);
+	PyModule_AddObject(module, "STRFinder", (PyObject *)&pytrf_STRFinderType);
+
+	//GTR
+	if (PyType_Ready(&pytrf_GTRFinderType) < 0) {
+		return NULL;
+	}
+	Py_INCREF((PyObject *)&pytrf_GTRFinderType);
+	PyModule_AddObject(module, "GTRFinder", (PyObject *)&pytrf_GTRFinderType);
 
 	//ITR
-	if (PyType_Ready(&stria_ITRType) < 0) {
+	if (PyType_Ready(&pytrf_ITRFinderType) < 0) {
 		return NULL;
 	}
-	Py_INCREF((PyObject *)&stria_ITRType);
-	PyModule_AddObject(module, "ITR", (PyObject *)&stria_ITRType);
-
-	if (PyType_Ready(&stria_ITRMinerType) < 0) {
-		return NULL;
-	}
-	Py_INCREF((PyObject *)&stria_ITRMinerType);
-	PyModule_AddObject(module, "ITRMiner", (PyObject *)&stria_ITRMinerType);
+	Py_INCREF((PyObject *)&pytrf_ITRFinderType);
+	PyModule_AddObject(module, "ITRFinder", (PyObject *)&pytrf_ITRFinderType);
 
 	return module;
 }
 
-PyMODINIT_FUNC PyInit_stria() {
-	return stria_module_init();
+PyMODINIT_FUNC PyInit_pytrf() {
+	return pytrf_module_init();
 }

@@ -2,13 +2,12 @@ import os
 import glob
 from setuptools import setup, Extension
 
-extension = Extension('stria',
+extension = Extension('pytrf',
 	sources = glob.glob('src/*.c'),
 )
 
 description = (
-	"stria (short tandem repeat identification and analysis) is a "
-	"python package for finding tandem repeats from DNA sequences"
+	"pytrf is a python package for finding tandem repeats from genomic sequences"
 )
 
 with open('README.rst') as fh:
@@ -18,14 +17,14 @@ with open(os.path.join('src', 'version.h')) as fh:
 	version = fh.read().split()[2].strip('"')
 
 setup(
-	name = 'stria',
+	name = 'pytrf',
 	version = version,
 	ext_modules = [extension],
 	description = description,
 	long_description = long_description,
 	author = 'Lianming Du',
 	author_email = 'adullb@qq.com',
-	url = 'https://github.com/lmdu/stria',
+	url = 'https://github.com/lmdu/pytrf',
 	license = 'MIT',
 	keywords = 'bioinformatics microsatellite tandem repeats',
 	classifiers = [
@@ -36,19 +35,20 @@ setup(
 			"Natural Language :: English",
 			"License :: OSI Approved :: MIT License",
 			"Programming Language :: C",
-			"Programming Language :: Python :: 3.5",
 			"Programming Language :: Python :: 3.6",
 			"Programming Language :: Python :: 3.7",
 			"Programming Language :: Python :: 3.8",
 			"Programming Language :: Python :: 3.9",
+			"Programming Language :: Python :: 3.10",
+			"Programming Language :: Python :: 3.11",
 			"Operating System :: Microsoft :: Windows",
 			"Operating System :: POSIX :: Linux",
 			"Operating System :: Unix",
 			"Topic :: Scientific/Engineering :: Bio-Informatics"
 	],
 	entry_points = {
-		'console_scripts': ['stria = striacli:main']
+		'console_scripts': ['pytrf = pytrfcli:main']
 	},
-	py_modules = ["striacli"],
+	py_modules = ["pytrfcli"],
 	test_suite = "tests"
 )

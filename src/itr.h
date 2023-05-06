@@ -4,8 +4,8 @@
  */
 
 #define PY_SSIZE_T_CLEAN
-#ifndef STRIA_ITR_H
-#define STRIA_ITR_H
+#ifndef PYTRF_ITR_H
+#define PYTRF_ITR_H
 #include "Python.h"
 
 typedef struct {
@@ -62,47 +62,8 @@ typedef struct {
 	//dynamic alignment matrix
 	int** matrix;
 
-} stria_ITRMiner;
+} pytrf_ITRFinder;
 
-typedef struct {
-	PyObject_HEAD
-
-	//input sequence name
-	PyObject *seqid;
-
-	//imperfect tandem repeat start position
-	Py_ssize_t start;
-
-	//imperfect tandem repeat stop position
-	Py_ssize_t end;
-
-	//motif sequence
-	char *motif;
-
-	//motif length
-	int mlen;
-
-	//tandem length
-	int length;
-
-	//number of matches
-	int matches;
-
-	//number of substitutions
-	int substitutions;
-
-	//number of insertion
-	int insertions;
-
-	//number of deletion
-	int deletions;
-
-	//identity
-	double identity;
-
-} stria_ITR;
-
-extern PyTypeObject stria_ITRMinerType;
-extern PyTypeObject stria_ITRType;
+extern PyTypeObject pytrf_ITRFinderType;
 
 #endif
