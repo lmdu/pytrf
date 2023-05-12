@@ -15,17 +15,27 @@ static int min_three(int a, int b, int c) {
 	return d < c ? d : c;
 }
 
-static int** initial_matrix(int size) {
+static int min_two(int a, int b) {
+	return a > b ? a : b;
+}
+
+static int** initial_matrix(int size, int mlen) {
 	int i;
-	int **matrix = (int **)malloc(sizeof(int *)*size);
+	int j;
+	int **matrix;
+
+	matrix = (int **)malloc(sizeof(int *)*size);
 
 	for (i = 0; i <= size; ++i) {
-		matrix[i] = (int *)malloc(sizeof(int)*size);
+		matrix[i] = (int *)malloc(sizeof(int)*mlen);
+	}
+
+	for (j = 0; j <= mlen; ++j) {
+		matrix[0][j] = j;
 	}
 
 	for (i = 0; i <= size; ++i) {
 		matrix[i][0] = i;
-		matrix[0][i] = i;
 	}
 
 	return matrix;
@@ -120,6 +130,44 @@ static int* build_left_matrix(const char *seq, char *motif, int mlen, int **matr
 	return res;
 }
 
+/*
+@param s, DNA sequence
+@param m, motif sequence
+@param l, motif length
+@param dp, wrap-around dynamic programming matrix
+@param st, start position on sequence
+@param n, max length allowed to extend
+@param me, max successive errors
+*/
+static int wrap_around_matrix(const char *s, char *m, int ml, int **dp, Py_ssize_t st, int n, int me) {
+	int i, j, e;
+
+	//edit distance cost
+	int d = 0;
+
+	char c;
+
+	for (i = 1; i <= n; ++i) {
+		//first pass
+		c = s[st+i];
+
+		d = c == m[0] ? 0 : 1;
+		dp[i][1] = min_three(dp[i-1][0]+d, dp[i-1][ml]+d, dp[i-1][1]+1);
+
+		for (j = 2; j <= ml; ++j) {
+			d = c == m[j-1] ? 0 : 1;
+			dp[i][j] = min_three(dp[i-1][j-1]+d, dp[i][j-1]+1, dp[i-1][j]+1);
+		}
+
+		//sencond pass
+		dp[i][1] = min_two(dp[i][1], dp[i][ml]+1);
+
+		for (j = 2; j <= ml; ++j) {
+			dp[i][j] = min_two(dp[i][j], dp[i][j-1]+1);
+		}
+	}
+}
+
 static int* build_right_matrix(const char *seq, char *motif, int mlen, int **matrix, Py_ssize_t start, int size, int max_error) {
 	char h; //horizantal base in sequence
 	char v; //vertical base
@@ -176,7 +224,7 @@ static int* build_right_matrix(const char *seq, char *motif, int mlen, int **mat
 			if (error > max_error) {
 				break;
 			}
-			
+
 			matrix[x][y] = min_three(matrix[x-1][y-1], matrix[x-1][y], matrix[x][y-1]) + 1;
 		}
 
@@ -200,6 +248,7 @@ static int* build_right_matrix(const char *seq, char *motif, int mlen, int **mat
 		res[1] = --y;
 	}
 	return res;
+
 }
 
 static int backtrace_matrix(int **matrix, int *diagonal, int *mat, int *sub, int *ins, int *del) {
