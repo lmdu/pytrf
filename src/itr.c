@@ -130,42 +130,101 @@ static int* build_left_matrix(const char *seq, char *motif, int mlen, int **matr
 	return res;
 }
 
-/*
-@param s, DNA sequence
-@param m, motif sequence
-@param l, motif length
-@param dp, wrap-around dynamic programming matrix
-@param st, start position on sequence
-@param n, max length allowed to extend
-@param me, max successive errors
-*/
-static int wrap_around_matrix(const char *s, char *m, int ml, int **dp, Py_ssize_t st, int n, int me) {
-	int i, j, e;
+static int wrap_around_edit(char base, char *motif, int mlen, int row, int **matrix) {
+	int col;
+	int cost;
+	int min_edits;
 
-	//edit distance cost
-	int d = 0;
+	//first pass
+	cost = base == motif[0] ? 0 : 1;
+	matrix[row][1] = min_three(matrix[row-1][0]+cost, matrix[row-1][mlen]+cost, matrix[row-1][1]+1);
 
-	char c;
+	for (col = 2; col <= mlen; ++col) {
+		cost = base == motif[col-1] ? 0 : 1;
+		matrix[row][col] = min_three(matrix[row-1][col-1]+cost, matrix[row][col-1]+1, matrix[row-1][col]+1);
+	}
 
-	for (i = 1; i <= n; ++i) {
-		//first pass
-		c = s[st+i];
+	//sencond pass
+	matrix[row][1] = min_two(matrix[row][1], matrix[row][mlen]+1);
+	min_edits = matrix[row][1];
 
-		d = c == m[0] ? 0 : 1;
-		dp[i][1] = min_three(dp[i-1][0]+d, dp[i-1][ml]+d, dp[i-1][1]+1);
+	for (col = 2; col < mlen; ++col) {
+		matrix[row][col] = min_two(matrix[row][col], matrix[row][col-1]+1);
 
-		for (j = 2; j <= ml; ++j) {
-			d = c == m[j-1] ? 0 : 1;
-			dp[i][j] = min_three(dp[i-1][j-1]+d, dp[i][j-1]+1, dp[i-1][j]+1);
-		}
-
-		//sencond pass
-		dp[i][1] = min_two(dp[i][1], dp[i][ml]+1);
-
-		for (j = 2; j <= ml; ++j) {
-			dp[i][j] = min_two(dp[i][j], dp[i][j-1]+1);
+		if (matrix[row][col] < cur_edits) {
+			min_edits = matrix[row][col];
 		}
 	}
+
+	return min_edits;
+}
+
+static int extend_to_left(const char *seq, char *motif, int mlen, int **matrix, Py_ssize_t start, int size, int max_error) {
+	int i, j;
+
+	//upper and current edits
+	int upper_edits = 0;
+	int cur_edits = 0;
+
+	//successive errors
+	int error = 0;
+
+	char base;
+
+	for (i = 1; i <= size; ++i) {
+		base = seq[start-i];
+		cur_edits = wrap_around_edit(base, motif, mlen, i, matrix);
+
+		if (cur_edits > upper_edits) {
+			++error;
+		} else {
+			error = 0;
+		}
+
+		if (error > max_error) {
+			break;
+		}
+
+		upper_edits = cur_edits;
+	}
+
+	return i - error;
+}
+
+static int extend_to_right(const char *seq, char *motif, int mlen, int **matrix, Py_ssize_t start, int size, int max_error) {
+	int i, j;
+
+	//upper and current edits
+	int upper_edits = 0;
+	int cur_edits = 0;
+
+	//successive errors
+	int error = 0;
+
+	char base;
+
+	for (i = 1; i <= size; ++i) {
+		base = seq[start+i];
+		cur_edits = wrap_around_edit(base, motif, mlen, i, matrix);
+
+		if (cur_edits > upper_edits) {
+			++error;
+		} else {
+			error = 0;
+		}
+
+		if (error > max_error) {
+			break;
+		}
+
+		upper_edits = cur_edits;
+	}
+
+	return i - error;
+}
+
+static int wrap_around_backtrace(int **matrix, int row, int mlen, int *mat, int *sub, int *ins, int *del) {
+	
 }
 
 static int* build_right_matrix(const char *seq, char *motif, int mlen, int **matrix, Py_ssize_t start, int size, int max_error) {
@@ -250,6 +309,7 @@ static int* build_right_matrix(const char *seq, char *motif, int mlen, int **mat
 	return res;
 
 }
+
 
 static int backtrace_matrix(int **matrix, int *diagonal, int *mat, int *sub, int *ins, int *del) {
 	int i = *diagonal;
