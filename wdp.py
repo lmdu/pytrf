@@ -1,5 +1,5 @@
-seq = "AAGCCGAGAAGGTAGATAG"
-motif = "AAG"
+seq = "ATGCACATCATAGCATGC"
+motif = "ATGC"
 dp = []
 
 n = len(seq)
@@ -28,6 +28,9 @@ for i in range(1, n+1):
 	for j in range(2, m):
 		dp[i][j] = min(dp[i][j], dp[i][j-1]+1)
 
+
+#backtrace
 for row in dp:
 	print(*row, sep='\t')
+	
 
