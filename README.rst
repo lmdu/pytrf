@@ -77,4 +77,4 @@ For example:
 Documentation
 =============
 
-For more detailed usage, see our documentation: `https://pytrf.readthedocs.io <https://pytrf.readthedocs.io>`_
+For more detailed usage, see our manual: `https://pytrf.readthedocs.io <https://pytrf.readthedocs.io>`_
