@@ -29,11 +29,18 @@ PyObject* pytrf_atr_as_dict(pytrf_ATR *self) {
 						 "insertions", self->insertions, "deletions", self->deletions, "identity", self->identity);
 }
 
-PyObject* pytrf_atr_as_gff(pytrf_ATR *self) {
+PyObject* pytrf_atr_as_gff(pytrf_ATR *self, PyObject *args, PyObject *kwargs) {
+	char *terminator = "";
+	static char* keywords[] = {"terminator", NULL};
+	
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|s", keywords, &terminator)) {
+		return NULL;
+	}
+
 	return PyUnicode_FromFormat("%S\tpytrf\tATR\t%zd\t%zd\t.\t+\t.\tMotif=%s;Type=%d;Length=%d;Match=%d;"
-								"Substitutions=%d;Insertions=%d;Deletions=%dIdentity=%R\n", self->seqid, self->start,
+								"Substitutions=%d;Insertions=%d;Deletions=%d;Identity=%R%s", self->seqid, self->start,
 								self->end, self->motif, self->mlen, self->length, self->matches, self->substitutions, 
-								self->insertions, self->deletions, PyFloat_FromDouble(self->identity));
+								self->insertions, self->deletions, PyFloat_FromDouble(self->identity), terminator);
 }
 
 PyObject* pytrf_atr_as_string(pytrf_ATR *self, PyObject *args, PyObject *kwargs) {

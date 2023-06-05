@@ -1,108 +1,108 @@
-import os
 import sys
 import csv
-import time
 import pytrf
-import shutil
 import pyfastx
 import argparse
-import multiprocessing as mp
+import functools
 
-def format_and_write_to_file(args, out, tres):
-	if args.out_format == 'tsv':
-		for tre in tres:
-			out.write(tre.as_string('\t', '\n'))
+def get_format_result(trs, outfmt, outfw):
+	if outfmt == 'tsv':
+		for tr in trs:
+			print(tr.as_string('\t'), file=outfw)
 
-	elif args.out_format == 'csv':
-		for tre in tres:
-			out.write(tre.as_string(',', '\n'))
+	elif outfmt == 'csv':
+		for tr in trs:
+			print(tr.as_string(','), file=outfw)
 
-	elif args.out_format == 'gff':
-		for tre in tres:
-			out.write(tre.as_gff())
+	elif outfmt == 'gff':
+		for tr in trs:
+			print(tr.as_gff(), file=outfw)
 
-def find_tandem_repeats_by_type(name, seq, args):
-	if args.cmd == 'ssr':
-		tres = pytrf.STRFinder(name, seq, args.repeats)
+def str_finder(seq, minrep, outfmt, outfw):
+	ssrs = pytrf.STRFinder(seq[0], seq[1], minrep)
+	get_format_result(ssrs, outfmt, outfw)
+
+def gtr_finder(seq, maxmotif, minrep, minlen, outfmt, outfw):
+	gtrs = pytrf.GTRFinder(seq[0], seq[1], maxmotif, minrep, minlen)
+	get_format_result(gtrs, outfmt, outfw)
+
+def atr_finder(seq, maxmotif, seedrep, seedlen, maxerror, minscore, maxextend, outfmt, outfw):
+	atrs = pytrf.ATRFinder(seq[0], seq[1], maxmotif, seedrep, seedlen, maxerror, minscore, maxextend)
+	get_format_result(atrs, outfmt, outfw)
+
+def tandem_repeat_finder(args):
+	if args.cmd == 'str':
+		return functools.partial(str_finder, 
+			minrep = args.repeats,
+			outfmt = args.out_format,
+			outfw = args.out_file
+		)
 
 	elif args.cmd == 'gtr':
-		tres = pytrf.GTRFinder(name, seq, args.min_motif_size, 
-								args.max_motif_size, args.min_repeats)
-	elif args.cmd == 'itr':
-		tres = pytrf.ITRFinder(name, seq, args.min_motif_size, args.max_motif_size,
-								args.seed_min_repeats, args.seed_min_length,
-								args.max_continuous_errors, args.substitution_penalty,
-								args.insertion_penalty, args.deletion_penalty,
-								args.min_match_ratio, args.max_extend_size)
+		return functools.partial(gtr_finder,
+			maxmotif = args.max_motif,
+			minrep = args.min_repeat,
+			minlen = args.min_length,
+			outfmt = args.out_format,
+			outfw = args.out_file
+		)
 
-	return tres
+	elif args.cmd == 'atr':
+		return functools.partial(atr_finder,
+			maxmotif = args.max_motif_size,
+			seedrep = args.min_seed_repeat,
+			seedlen = args.min_seed_length,
+			maxerror = args.max_continuous_error,
+			minscore = args.min_identity,
+			maxextend = args.max_extend_length,
+			outfmt = args.out_format,
+			outfw = args.out_file
+		)
 
+def extract_sequence(args):
+	fa = pyfastx.Fasta(args.fastx)
 
-def find_tandem_repeats_worker(args, tasks, event, worker_id):
-	with open("{}.{}".format(args.out_file, worker_id), 'w') as fw:
-		while 1:
-			if event.is_set() and tasks.empty():
-				break
+	#get input format
+	dialect = csv.Sniffer().sniff(args.repeat_file.read(1024))
+	args.repeat_file.seek(0)
+	reader = csv.reader(args.repeat_file, delimiter=dialect)
 
-			try:
-				name, seq = tasks.get_nowait()
-			except:
-				time.sleep(0.01)
-				continue
+	if args.out_format == 'fasta':
+		for row in reader:
+			chrom = row[0]
+			start = int(row[1])
+			end = int(row[2])
 
-			tres = find_tandem_repeats_by_type(name, seq, args)
-			format_and_write_to_file(args, fw, tres)
+			left, right = fa.flank(chrom, start, end, args.flank_length, True)
+			seq = fa.fetch(chrom, (start, end))
+			args.out_file.write(">{}:{}-{}\n{}{}{}".format(chrom, start, end, left, seq, right))
 
-def find_tandem_repeats_with_multicore(args):
-	pool = mp.Pool(args.threads)
-	manager = mp.Manager()
-	tasks = manager.Queue(args.threads*2)
-	event = manager.Event()
-
-	#add workers
-	l = len(str(args.threads))
-	for i in range(args.threads):
-		work_id = str(i).zfill(l)
-		pool.apply_async(find_tandem_repeats_worker, (args, tasks, event, work_id))
-
-	#add tasks
-	for name, seq in pyfastx.Fastx(args.fasta, uppercase=True):
-		tasks.put((name, seq), block=True, timeout=None)
-
-	event.set()
-	pool.close()
-	pool.join()
-
-	#merge results
-	with open(args.out_file, 'wb') as fw:
-		for i in range(args.threads):
-			temp_file = "{}.{}".format(args.out_file, str(i).zfill(l))
-
-			if os.path.isfile(temp_file):
-				with open(temp_file, 'rb') as fh:
-					shutil.copyfileobj(fh, fw)
-
-				#remove temp file
-				os.remove(temp_file)
-
-def find_tandem_repeats_with_singlecore(args):
-	with open(args.out_file, 'w') as fw:
-		for name, seq, _ in pyfastx.Fastx(args.fasta, uppercase=True):
-			tres = find_tandem_repeats_by_type(name, seq, args)
-			format_and_write_to_file(args, fw, tres)
-
-def find_tandem_repeats(args):
-	if args.threads > 1:
-		find_tandem_repeats_with_multicore(args)
 	else:
-		find_tandem_repeats_with_singlecore(args)
+		if args.out_format == 'csv':
+			dialect = ','
+		else:
+			dialect = '\t'
 
-def main():
+		writer = csv.writer(args.out_file, delimiter=dialect)
+
+		for row in reader:
+			chrom = row[0]
+			start = int(row[1])
+			end = int(row[2])
+
+			left, right = fa.flank(chrom, start, end, args.flank_length, True)
+			seq = fa.fetch(chrom, (start, end))
+
+			row.append(seq)
+			row.append(left)
+			row.append(right)
+			writer.writerow(row)
+	
+if __name__ == '__main__':
 	parser = argparse.ArgumentParser(
 		prog = 'pytrf',
-		usage = 'pytrf COMMAND [OPTIONS]',
-		description = "a python package for finding tandem repeats from genomic sequences",
-		formatter_class = argparse.RawDescriptionHelpFormatter
+		usage = 'pytrf command [options] fastx',
+		description = "a python package for finding tandem repeats from genomic sequences"
 	)
 
 	parser.add_argument('-v', '--version',
@@ -110,185 +110,179 @@ def main():
 		version = '%(prog)s {}'.format(pytrf.__version__)
 	)
 
+	parser.set_defaults(cmd=None)
+
 	subparsers = parser.add_subparsers(
-		title = 'Commands',
+		title = 'commands',
 		prog = 'pytrf',
 		metavar = ''
 	)
 
-	parser_parent = argparse.ArgumentParser(add_help=False)
+	parser_parent = argparse.ArgumentParser(add_help = False)
+
+	parser_parent.add_argument('fastx',
+		metavar = 'fastx',
+		help = "input fasta or fastq file (gzip support)"
+	)
+
+	parser_parent.add_argument('-o', '--out-file',
+		type = argparse.FileType('wt'),
+		default = sys.stdout,
+		metavar = '',
+		help = "output file (default: stdout)"
+	)
 
 	parser_parent.add_argument('-f', '--out-format',
 		default = 'tsv',
-		choices = ('tsv', 'csv', 'gff'),
 		metavar = '',
-		help = 'output format, tsv, csv, or gff'
-	)
-
-	parser_parent.add_argument('-t', '--threads',
-		default = 1,
-		type = int,
-		metavar = '',
-		help = 'number of threads'
-	)
-
-	parser_parent.add_argument('--op', '--out-report',
-		default = False,
-		action = 'store_true',
-		help = 'output statistical report'
-	)
-
-	parser_parent.add_argument('--ef', '--extract-flank',
-		default = False,
-		action='store_true',
-		help = 'extract flank sequence'
-	)
-
-	parser_parent.add_argument('--fl', '--flank-length',
-		default = 50,
-		metavar = '',
-		type = int,
-		help = 'flank sequence length'
-	)
-
-	parser_parent.add_argument('fasta',
-		help = 'input fasta file, gzip support'
-	)
-
-	parser_parent.add_argument('output',
-		help = 'output file'
+		help = "output format, tsv, csv or gff (default: tsv)"
 	)
 
 	#ssr finder
-	parser_ssrfinder = subparsers.add_parser('findssr',
-		help = "Find exact microsatellites or simple sequence repeats",
-		formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+	parser_ssrfinder = subparsers.add_parser('findstr',
+		help = "find exact or perfect short tandem repeats",
 		parents = [parser_parent]
 	)
-	parser_ssrfinder.set_defaults(cmd='ssr')
-	parser_ssrfinder.set_defaults(func=find_tandem_repeats)
+	parser_ssrfinder.set_defaults(cmd='str')
 
 	parser_ssrfinder.add_argument('-r', '--repeats',
 		nargs = 6,
 		default = [12, 7, 5, 4, 4, 4],
 		metavar = ('mono', 'di', 'tri', 'tetra', 'penta', 'hexa'),
 		type = int,
-		help = "minimum repeats"
+		help = "minimum repeats for each STR type (default: 12 7 5 4 4 4)"
 	)
 
 	#gtr finder
 	parser_gtrfinder = subparsers.add_parser('findgtr',
-		help = "Find exact minisatellites or variable number tandem repeats",
-		formatter_class = argparse.ArgumentDefaultsHelpFormatter,
+		help = "find exact or perfect generic tandem repeats",
 		parents = [parser_parent]
 	)
 	parser_gtrfinder.set_defaults(cmd='gtr')
-	parser_gtrfinder.set_defaults(func=find_tandem_repeats)
 
-	parser_gtrfinder.add_argument('-m', '--min-motif-size',
-		default = 7,
-		metavar = '',
-		type = int,
-		help = "minimum motif length"
-	)
-
-	parser_gtrfinder.add_argument('-M', '--max-motif-size',
+	parser_gtrfinder.add_argument('-m', '--max-motif',
 		default = 30,
 		metavar = '',
 		type = int,
-		help = "maximum motif length"
+		help = "maximum motif length (default: 30)"
 	)
 
-	parser_gtrfinder.add_argument('-r', '--min-repeats',
-		default = 2,
-		metavar = '',
-		type = int,
-		help = "minimum repeat number"
-	)
-
-	#itr finder
-	parser_itrfinder = subparsers.add_parser('finditr',
-		help = "Find imperfect tandem repeats",
-		formatter_class = argparse.ArgumentDefaultsHelpFormatter,
-		parents = [parser_parent]
-	)
-	parser_itrfinder.set_defaults(cmd='itr')
-	parser_itrfinder.set_defaults(func=find_tandem_repeats)
-
-	parser_itrfinder.add_argument('-m', '--min-motif-size',
-		default = 1,
-		metavar = '',
-		type = int,
-		help = "minimum motif length"
-	)
-
-	parser_itrfinder.add_argument('-M', '--max-motif-size',
-		default = 6,
-		metavar = '',
-		type = int,
-		help = "maximum motif length"
-	)
-
-	parser_itrfinder.add_argument('-r', '--seed-min-repeats',
+	parser_gtrfinder.add_argument('-r', '--min-repeat',
 		default = 3,
 		metavar = '',
 		type = int,
-		help = "minimum repeat number for seed"
+		help = "minimum repeat number (default: 3)"
 	)
 
-	parser_itrfinder.add_argument('-l', '--seed-min-length',
-		default = 8,
+	parser_gtrfinder.add_argument('-l', '--min-length',
+		default = 10,
 		metavar = '',
 		type = int,
-		help = "minimum length for seed"
+		help = "minimum repeat length (default: 10)"
 	)
 
-	parser_itrfinder.add_argument('-e', '--max-continuous-errors',
-		default = 2,
+	#atr finder
+	parser_atrfinder = subparsers.add_parser('findatr',
+		help = "find approximate or imperfect tandem repeats",
+		parents = [parser_parent]
+	)
+	parser_atrfinder.set_defaults(cmd='atr')
+
+	parser_atrfinder.add_argument('-m', '--max-motif-size',
+		default = 6,
 		metavar = '',
 		type = int,
-		help = "maximum number of continuous alignment errors"
+		help = "maximum motif length (default: 6)"
 	)
 
-	parser_itrfinder.add_argument('-s', '--substitution-penalty',
-		default = 0.5,
+	parser_atrfinder.add_argument('-r', '--min-seed-repeat',
+		default = 3,
+		metavar = '',
+		type = int,
+		help = "minimum repeat number for seed (default: 3)"
+	)
+
+	parser_atrfinder.add_argument('-l', '--min-seed-length',
+		default = 10,
+		metavar = '',
+		type = int,
+		help = "minimum length for seed (default: 10)"
+	)
+
+	parser_atrfinder.add_argument('-e', '--max-continuous-error',
+		default = 3,
+		metavar = '',
+		type = int,
+		help = "maximum number of continuous alignment errors (default: 3)"
+	)
+
+	parser_atrfinder.add_argument('-p', '--min-identity',
+		default = 70,
 		metavar = '',
 		type = float,
-		help = "substitution penalty"
+		help = "minimum identity from 0 to 100 (default: 70)"
 	)
 
-	parser_itrfinder.add_argument('-i', '--insertion-penalty',
-		default = 1.0,
-		metavar = '',
-		type = float,
-		help = "insertion penalty"
-	)
-
-	parser_itrfinder.add_argument('-d', '--deletion-penalty',
-		default = 1.0,
-		metavar = '',
-		type = float,
-		help = "deletion penalty"
-	)
-
-	parser_itrfinder.add_argument('-p', '--min-match-ratio',
-		default = 0.7,
-		metavar = '',
-		type = float,
-		help = "extending match ratio"
-	)
-
-	parser_itrfinder.add_argument('-x', '--max-extend-size',
+	parser_atrfinder.add_argument('-x', '--max-extend-length',
 		default = 2000,
 		metavar = '',
 		type = int,
-		help = "maximum length allowed to extend"
+		help = "maximum length allowed to extend (default: 2000)"
+	)
+
+	#extract sequence
+	parser_extract = subparsers.add_parser('extract',
+		help = "get tandem repeat sequence and flanking sequence",
+		#conflict_handler = 'resolve',
+		#parents = [parser_parent]
+	)
+	parser_extract.set_defaults(cmd='get')
+
+	parser_extract.add_argument('fastx',
+		metavar = 'fastx',
+		help = "input fasta or fastq file (gzip support)"
+	)
+
+	parser_extract.add_argument('-r', '--repeat-file',
+		metavar = '',
+		required = True,
+		type = argparse.FileType('rt'),
+		help = "the csv or tsv output file of findatr, findstr or findgtr"
+	)
+
+	parser_extract.add_argument('-o', '--out-file',
+		type = argparse.FileType('wt'),
+		default = sys.stdout,
+		metavar = '',
+		help = "output file (default: stdout)"
+	)
+
+	parser_extract.add_argument('-f', '--out-format',
+		default = 'tsv',
+		metavar = '',
+		help = "output format, tsv, csv or fasta (default: tsv)"
+	)
+
+	parser_extract.add_argument('-l', '--flank-length',
+		default = 100,
+		metavar = '',
+		type = int,
+		help = "flanking sequence length (default: 100)"
 	)
 
 	args = parser.parse_args()
-	args.func(args)
 
+	if args.cmd is None:
+		parser.print_help()
 
-if __name__ == '__main__':
-	#mp.freeze_support()
-	main()
+	elif args.cmd == 'get':
+		with args.out_file, args.repeat_file:
+			extract_sequence(args)
+
+	else:
+		with args.out_file:
+			func = tandem_repeat_finder(args)
+			seqs = pyfastx.Fastx(args.fastx)
+
+			for seq in seqs:
+				func(seq)

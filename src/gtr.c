@@ -11,19 +11,19 @@
 #include "structmember.h"
 
 PyObject* pytrf_gtrfinder_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
-	static char* keywords[] = {"chrom", "seq", "min_motif_size", "max_motif_size", "min_repeat", NULL};
+	static char* keywords[] = {"chrom", "seq", "max_motif", "min_repeat", "min_length", NULL};
 
 	pytrf_GTRFinder *obj = (pytrf_GTRFinder *)type->tp_alloc(type, 0);
 	if (!obj) return NULL;
 
-	obj->min_motif = 10;
-	obj->max_motif = 100;
+	obj->max_motif = 30;
 	obj->min_repeat = 3;
+	obj->min_length = 10;
 
 	//initialize start search position
 	obj->next_start = 0;
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iii", keywords, &obj->seqname, &obj->seqobj, &obj->min_motif, &obj->max_motif, &obj->min_repeat)) {
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iii", keywords, &obj->seqname, &obj->seqobj, &obj->max_motif, &obj->min_repeat, &obj->min_length)) {
 		return NULL;
 	}
 
@@ -53,73 +53,56 @@ static PyObject* pytrf_gtrfinder_iter(pytrf_GTRFinder *self) {
 }
 
 static PyObject* pytrf_gtrfinder_next(pytrf_GTRFinder *self) {
-	//current start position
-	Py_ssize_t current_start;
-
-	//boundary
-	Py_ssize_t boundary;
+	int j;
+	Py_ssize_t i;
 
 	//repeat length
-	int replen;
+	int rl;
 
 	//repeat number
-	int repeats;
+	int rn;
 
-	//the motif is a right gtr motif
-	int is_gtr;
+	//current start position
+	Py_ssize_t cs;
 
-	for (Py_ssize_t i = self->next_start; i < self->size; ++i) {
+	//end position
+	Py_ssize_t ep;
+
+	for (i = self->next_start; i < self->size; ++i) {
 		//remove unkown base
 		if (self->seq[i] == 78) {
 			continue;
 		}
 
-		current_start = i;
-		for (int j = self->min_motif; j <= self->max_motif; ++j) {
-			boundary = self->size - j;
+		cs = i;
+		for (j = 1; j <= self->max_motif; ++j) {
+			ep = self->size - j;
 
-			while ((i < boundary) && (self->seq[i] == self->seq[i+j])) {
+			while ((i < ep) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
-			replen = i + j - current_start;
-			repeats = replen/j;
+			rl = i + j - cs;
+			rn = rl/j;
+			rl = rn*j;
 
-			if (repeats >= self->min_repeat) {
-				//check motif is real motif with length >= min motif size
-				const char *p = self->seq+current_start;
-				is_gtr = 1;
-				for (int k = 1; k < self->min_motif; ++k) {
-					int l = 0;
-					while ((p[l] == p[l+k]) && (l+k < j)) {
-						++l;
-					}
-					if (l + k == j) {
-						is_gtr = 0;
-						break;
-					}
-				}
-
-				//otherwise we found a gtr
-				if (is_gtr) {
-					//stria_VNTR *gtr = (stria_VNTR *)PyObject_CallObject((PyObject *)&stria_VNTRType, NULL);
-					pytrf_ETR *gtr = PyObject_New(pytrf_ETR, &pytrf_ETRType);
-					gtr->motif = (char *)malloc(j + 1);
-					memcpy(gtr->motif, self->seq+current_start, j);
-					gtr->motif[j] = '\0';
-					gtr->mlen = j;
-					gtr->seqid = self->seqname;
-					Py_INCREF(gtr->seqid);
-					gtr->repeats = repeats;
-					gtr->length = repeats * j;
-					gtr->start = current_start + 1;
-					gtr->end = current_start + gtr->length;
-					self->next_start = gtr->end;
-					return (PyObject *)gtr;
-				}
+			if (rn >= self->min_repeat && rl >= self->min_length) {
+				pytrf_ETR *gtr = PyObject_New(pytrf_ETR, &pytrf_ETRType);
+				gtr->motif = (char *)malloc(j + 1);
+				memcpy(gtr->motif, self->seq+cs, j);
+				gtr->motif[j] = '\0';
+				gtr->mlen = j;
+				gtr->seqid = self->seqname;
+				Py_INCREF(gtr->seqid);
+				gtr->repeats = rn;
+				gtr->length = rl;
+				gtr->start = cs + 1;
+				gtr->end = cs + rl;
+				self->next_start = gtr->end;
+				return (PyObject *)gtr;
 			}
 
-			i = current_start;
+			i = cs;
 		}
 	}
 
@@ -127,64 +110,63 @@ static PyObject* pytrf_gtrfinder_next(pytrf_GTRFinder *self) {
 }
 
 static PyObject* pytrf_gtrfinder_as_list(pytrf_GTRFinder *self) {
+	int j;
+	Py_ssize_t i;
+
+	//repeat number
+	int rn;
+
+	//repeat length
+	int rl;
+
+	//current start position
+	Py_ssize_t cs;
+
+	//gtr start and end position
+	Py_ssize_t gs;
+	Py_ssize_t ge;
+
+	//end position
+	Py_ssize_t ep;
+
+	//motif cache
+	char *motif;
+
 	PyObject *gtrs = PyList_New(0);
 	PyObject *tmp;
-	Py_ssize_t current_start;
-	Py_ssize_t gtr_end;
-	Py_ssize_t boundary;
-	int repeats;
-	int length;
 
-	char* motif = (char *)malloc(self->max_motif + 1);
+	motif = (char *)malloc(self->max_motif + 1);
 
-	for (Py_ssize_t i = 0; i < self->size; ++i) {
+	for (i = 0; i < self->size; ++i) {
 		if (self->seq[i] == 78) {
 			continue;
 		}
 
-		current_start = i;
-		for (int j = self->min_motif; j <= self->max_motif; ++j) {
-			boundary = self->size - j;
+		cs = i;
+		for (j = 1; j <= self->max_motif; ++j) {
+			ep = self->size - j;
 
-			while ((i < boundary) && (self->seq[i] == self->seq[i+j])) {
+			while ((i < ep) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
-			length = i + j - current_start;
-			repeats = length/j;
+			rl = i + j - cs;
+			rn = rl / j;
+			rl = rn * j;
 
-			if (repeats >= self->min_repeat) {
-				//check motif is real motif with length >= min motif size
-				const char *p = self->seq+current_start;
-				int is_gtr = 1;
-				int l = 0;
-
-				for (int k = 1; k < self->min_motif; ++k) {
-					while ((p[l] == p[l+k]) && (l+k < j)) {
-						++l;
-					}
-					if (l + k == j) {
-						is_gtr = 0;
-						break;
-					}
-				}
-
-				if (is_gtr) {
-					memcpy(motif, self->seq+current_start, j);
-					motif[j] = '\0';
-					length = repeats * j;
-					gtr_end = current_start+length;
-					tmp = Py_BuildValue("Onnsiii", self->seqname, current_start+1, gtr_end,
-										motif, j, repeats, length);
-					PyList_Append(gtrs, tmp);
-					Py_DECREF(tmp);
-
-					i = gtr_end;
-					break;
-				}
+			if (rn >= self->min_repeat && rl >= self->min_length) {
+				memcpy(motif, self->seq+cs, j);
+				motif[j] = '\0';
+				gs = cs + 1;
+				ge = cs + rl;
+				tmp = Py_BuildValue("Onnsiii", self->seqname, gs, ge, motif, j, rn, rl);
+				PyList_Append(gtrs, tmp);
+				Py_DECREF(tmp);
+				i = ge;
+				break;
 			}
 
-			i = current_start;
+			i = cs;
 		}
 	}
 

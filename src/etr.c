@@ -31,10 +31,17 @@ PyObject* pytrf_etr_as_dict(pytrf_ETR *self) {
 						 "type", self->mlen, "repeats", self->repeats, "length", self->length);
 }
 
-PyObject* pytrf_etr_as_gff(pytrf_ETR *self) {
-	return PyUnicode_FromFormat("%S\tpytrf\tETR\t%zd\t%zd\t.\t+\t.\tMotif=%s;Type=%d;Repeats=%d;Length=%d\n",
+PyObject* pytrf_etr_as_gff(pytrf_ETR *self, PyObject *args, PyObject *kwargs) {
+	char *terminator = "";
+	static char* keywords[] = {"terminator", NULL};
+	
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|s", keywords, &terminator)) {
+		return NULL;
+	}
+
+	return PyUnicode_FromFormat("%S\tpytrf\tETR\t%zd\t%zd\t.\t+\t.\tMotif=%s;Type=%d;Repeats=%d;Length=%d%s",
 								self->seqid, self->start, self->end, self->motif, self->mlen, self->repeats,
-								self->length);
+								self->length, terminator);
 }
 
 PyObject* pytrf_etr_as_string(pytrf_ETR *self, PyObject *args, PyObject *kwargs) {

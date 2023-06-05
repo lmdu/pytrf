@@ -1,11 +1,20 @@
 Changelog
 =========
 
+Version 1.0.0 (2023-06-05)
+--------------------------
+
+- Changed the name from stria to pytrf
+- Optimized the command line interface
+- Used wraparound dynamic programming to identify approximate repeats
+
 Version 0.1.5 (2023-05-05)
+--------------------------
 
 - Fixed ci wheel build
 
 Version 0.1.4 (2023-05-04)
+--------------------------
 
 - Added support for Python 3.9-3.11
 - Updated the structure of objects

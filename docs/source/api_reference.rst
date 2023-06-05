@@ -1,31 +1,31 @@
 API Reference
 =============
 
-stria.version
+pytrf.version
 -------------
 
-.. py:function:: stria.version()
+.. py:function:: pytrf.version()
 
-	Get current version of stria
+	Get current version of pytrf
 
 	:return: version
 
 	:rtype: str
 
-stria.SSRMiner
---------------
+pytrf.STRFinder
+---------------
 
-.. py:class:: stria.SSRMiner(name, seq, min_repeats=[12,7,5,4,4,4])
+.. py:class:: pytrf.STRFinder(chrom, seq, min_repeats=[12,7,5,4,4,4])
 
-	Find all microsatellites or SSRs that meet the minimum repeats on the input sequence
+	Find all exact or perfect short tandem repeats (STRs), simple sequence repeats (SSRs) or microsatellites that meet the minimum repeats on the input sequence
 
-	:param str name: the sequence name
+	:param str chrom: the sequence name
 
-	:param str seq: the input sequence
+	:param str seq: the input DNA sequence
 
-	:param list min_repeats: minimum number of repeats for mono, di, tri, tetra, penta, hexa, default (12,7,5,4,4,4), corresponding to 12 for mono, 7 for di, 5 for tri and 4 for tetra, penta, hexa
+	:param list min_repeats: minimum number of repeats for mono, di, tri, tetra, penta, hexa, default (12,7,5,4,4,4), corresponding to 12 for mono, 7 for di, 5 for tri and 4 for tetra, penta and hexa
 
-	:return: SSRMiner object
+	:return: STRFinder object
 
 	.. py:method:: as_list()
 
@@ -35,45 +35,43 @@ stria.SSRMiner
 
 		:rtype: list
 
-stria.VNTRMiner
+pytrf.GTRFinder
 ---------------
 
-.. py:class:: stria.VNTRMiner(name, seq, min_motif_size=7, max_motif_size=30, min_repeat=2)
+.. py:class:: pytrf.GTRFinder(chrom, seq, max_motif=30, min_repeat=3, min_length=10)
 
-	Find all minisatellites or VNTRs that meet the minimum repeat on the input sequence
+	Find all exact or perfect generic tandem repeats (GTRs) that meet the minimum repeat and minimum length on the input sequence
 
-	:param str name: the sequence name
+	:param str chrom: the sequence name
 
-	:param str seq: the input sequence
+	:param str seq: the input DNA sequence
 
-	:param int min_motif_size: minimum length of motif
+	:param int max_motif: maximum length of motif sequence
 
-	:param int max_motif_size: maximum length of motif
+	:param int min_repeat: minimum number of tandem repeats
 
-	:param int min_repeat: minimum number of repeats
+	:param int min_length: minimum length of tandem repeats
 
-	:return: VNTRMiner object
+	:return: GTRFinder object
 
 	.. py:method:: as_list()
 
-		Put all VNTRs in a list and return, each VNTR in list has 7 columns including [sequence name, start position, end position, motif sequence, motif length, repeats, VNTR length]
+		Put all GTRs in a list and return, each GTR in list has 7 columns including [sequence name, start position, end position, motif sequence, motif length, repeats, GTR length]
 
-		:return: all VNTRs found
+		:return: all GTRs found
 
 		:rtype: list
 
-stria.ITRMiner
---------------
+pytrf.ATRFinder
+---------------
 
-.. py:class:: stria.ITRMiner(name, seq, min_motif_size=1, max_motif_size=6, seed_min_repeat=3, seed_min_length=10, max_continuous_errors=2, substitution_penalty=0.5, insertion_penalty=1.0, deletion_penalty=1.0, min_match_ratio=0.7, max_extend_length=2000)
+.. py:class:: pytrf.ATRFinder(chrom, seq, max_motif_size=6, seed_min_repeat=3, seed_min_length=10, max_continuous_error=3, min_identity=70, max_extend_length=2000)
 
-	Find all imperfect tandem repeats from the input sequence
+	Find all approximate or imperfect tandem repeats (ATRs) from the input sequence
 
-	:param str name: the sequence name
+	:param str chrom: the sequence name
 
-	:param str seq: the input sequence
-
-	:param int min_motif_size: minimum length of motif
+	:param str seq: the input DNA sequence
 
 	:param int max_motif_size: maximum length of motif
 
@@ -81,30 +79,24 @@ stria.ITRMiner
 
 	:param int seed_min_length: minimum length of seed
 
-	:param int max_continuous_errors: maximum number of continuous aligned errors allowed
+	:param int max_continuous_error: maximum number of allowed continuous aligned errors
 
-	:param float substitution_penalty: penaly for substitution
-
-	:param float insertion_penalty: penaly for insertion
-
-	:param float deletion_penalty: penalty for deletion
-
-	:param float min_match_ratio: minimum match ratio for extending alignment
+	:param float min_identity: minimum identity between ATR with its perfect counterpart (0~100)
 
 	:param int max_extend_length: maximum length allowed to extend
 
-	:return: ITRMiner object
+	:return: ATRFinder object
 
 	.. py:method:: as_list()
 
-		Put all ITRs in a list and return, each ITR in list has 11 columns including [sequence name, start position, end position, motif sequence, motif length, ITR length, matches, substitutions, insertions, deletions, identity]
+		Put all ATRs in a list and return, each ATR in list has 11 columns including [sequence name, start position, end position, motif sequence, motif length, ATR length, matches, substitutions, insertions, deletions, identity]
 
-stria.ETR
+pytrf.ETR
 ---------
 
-.. py:class:: stria.ETR
+.. py:class:: pytrf.ETR
 
-	Readonly exact tandem repeat (ETR) object generated by iterating over SSRMiner or VNTRMiner object
+	Readonly exact tandem repeat (ETR) object generated by iterating over STRFinder or GTRFinder object
 
 	.. py:attribute:: chrom
 
@@ -162,16 +154,16 @@ stria.ETR
 
 		:rtype: str
 
-stria.ITR
+pytrf.ATR
 ---------
 
-.. py:class:: stria.ITR
+.. py:class:: pytrf.ATR
 
-	Readonly imperfect tandem repeat (ITR) object generated by iterating over ITRMiner object
+	Readonly imperfect or approximate tandem repeat (ATR) object generated by iterating over ATRFinder object
 
 	.. py:attribute:: chrom
 
-		chromosome or sequence name where ITR located on
+		chromosome or sequence name where ATR located on
 
 	.. py:attribute:: start
 
@@ -215,23 +207,23 @@ stria.ITR
 
 	.. py:attribute:: seq
 
-		get the sequence of ITR
+		get the sequence of ATR
 
 	.. py:method:: as_list()
 
-		convert ITR object to a list
+		convert ATR object to a list
 
 	.. py:method:: as_dict()
 
-		convert ITR object to a dict
+		convert ATR object to a dict
 
 	.. py:method:: as_gff()
 
-		convert ITR object to a gff formatted string
+		convert ATR object to a gff formatted string
 
 	.. py:method:: as_string(separator='\t', terminator='')
 
-		convert ITR object to a TSV or CSV string by using separator and terminator
+		convert ATR object to a TSV or CSV string by using separator and terminator
 
 		:param str separator: a separator between columns
 

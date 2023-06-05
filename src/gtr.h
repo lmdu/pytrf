@@ -28,14 +28,14 @@ typedef struct {
 	//next start position for tandem repeat identification
 	Py_ssize_t next_start;
 
-	//minimal motif length
-	int min_motif;
-
 	//max motif length
 	int max_motif;
 
 	//min repeats
 	int min_repeat;
+
+	//min length
+	int min_length;
 
 } pytrf_GTRFinder;
 

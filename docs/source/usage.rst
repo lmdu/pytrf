@@ -3,12 +3,12 @@ Usage
 
 .. note::
 
-	``Stria`` is only responsible for mining tandem repeats from given DNA sequence. It can not directly extract TRs from Fasta files. So we used `pyfastx <https://github.com/lmdu/pyfastx>`_ to parse Fasta file and feed the sequence to ``stria``.
+	``Pytrf`` is only responsible for finding tandem repeats from given DNA sequence. It can not directly extract TRs from Fasta files. So we used `pyfastx <https://github.com/lmdu/pyfastx>`_ to parse Fasta file and feed the sequence to ``pytrf``.
 
-SSR identification
+STR identification
 ------------------
 
-Stria provide ``SSRMiner`` class to find all microsatellites or SSRs from given sequence.
+Pytrf provide ``STRFinder`` class to find all microsatellites or SSRs from given sequence.
 
 The fastest way to get all SSRs from sequence: 
 
@@ -17,18 +17,18 @@ The fastest way to get all SSRs from sequence:
 	>>> # parse input fasta sequence
 	>>> fa = pyfastx.Fastx('tests/data/test.fa.gz', uppercase=True)
 	>>> # get the first sequence from fasta
-	>>> name, seq, _ = next(fa)
+	>>> name, seq = next(fa)
 
-	>>> # feed sequence to stria
+	>>> # feed sequence to pytrf
 	>>> # the fastest way to get all SSRs from sequence
-	>>> ssrs = stria.SSRMiner(name, seq).as_list()
+	>>> ssrs = pytrf.STRFinder(name, seq).as_list()
 
-You can also iterate over SSRMiner object to get exact tandem repeat (ETR) object. ETR object allows you to access more information and format the information to tsv, csv or gff string.
+You can also iterate over STRFinder object to get exact tandem repeat (ETR) object. ETR object allows you to access more information and format the information to tsv, csv or gff string.
 
 .. code:: python
 
-	>>> # iterate over ssrminer object to get etr object
-	>>> for ssr in stria.SSRMiner(name, seq):
+	>>> # iterate over STRFinder object to get ETR object
+	>>> for ssr in pytrf.STRFinder(name, seq):
 	>>> 	print(ssr.chrom)
 	>>> 	print(ssr.motif)
 	>>> 	print(ssr.repeats)
@@ -38,66 +38,69 @@ You can define the minimum number of repeats required to determine a SSR.
 .. code:: python
 
 	>>> # change the minimum repeats for [mono,di,tri,tetra,penta,hexa]
-	>>> ssrs = stria.SSRMiner(name, seq, [12,6,4,3,3,3])
+	>>> ssrs = pytrf.STRFinder(name, seq, [12,6,4,3,3,3])
 
 A complete example, get all ssrs and output csv format
 
 .. code:: python
 
-	>>> for name, seq, _ in pyfastx.Fastx('tests/data/test.fa', uppercase=True):
-	>>> 	for ssr in stria.SSRMiner(name, seq, [12,7,5,4,4,4]):
+	>>> fa = pyfastx.Fastx('tests/data/test.fa', uppercase=True)
+	>>> for name, seq in fa:
+	>>> 	for ssr in pytrf.STRFinder(name, seq, [12,7,5,4,4,4]):
 	>>> 		print(ssr.as_string(','))
 
-VNTR identification
+GTR identification
 -------------------
 
-Stria provide ``VNTRMiner`` class to find all minisatellites or VNTRs from given sequence.
+Pytrf provide ``GTRFinder`` class to find all generic tandem repeats (GTRs) with
+any size of motif from given sequence.
 
-The fastest way to get all VNTRs from sequence: 
-
-.. code:: python
-
-	>>> # feed sequence to stria
-	>>> # the fastest way to get all VNTRs from sequence
-	>>> vntrs = stria.VNTRMiner(name, seq).as_list()
-
-Iterate over vntrminer object to get etr object
+The fastest way to get all GTRs from sequence:
 
 .. code:: python
 
-	>>> for vntr in stria.VNTRMiner(name, seq):
-	>>> 	print(vntr.chrom)
-	>>> 	print(vntr.motif)
-	>>> 	print(vntr.repeats)
+	>>> # feed sequence to pytrf
+	>>> # the fastest way to get all GTRs from sequence
+	>>> gtrs = pytrf.GTRFinder(name, seq).as_list()
 
-You can customize the motif size and minimum repeat.
-
-.. code:: python
-
-	>>> vntrs = stria.VNTRMiner(name, seq, min_motif_size=10, max_motif_size=100, min_repeat=3)
-
-A complete example, get all vntrs and output csv format
+Iterate over GTRFinder object to get ETR object
 
 .. code:: python
 
-	>>> for name, seq, _ in pyfastx.Fastx('tests/data/test.fa', uppercase=True):
-	>>> 	for vntr in stria.VNTRMiner(name, seq, 10, 100, 2):
+	>>> for gtr in pytrf.GTRMiner(name, seq):
+	>>> 	print(gtr.chrom)
+	>>> 	print(gtr.motif)
+	>>> 	print(gtr.repeats)
+
+You can customize the motif size, minimum repeat and minimum length.
+
+.. code:: python
+
+	>>> gtrs = pytrf.GTRFinder(name, seq, max_motif=100, min_repeat=3, min_length=10)
+
+A complete example, get all gtrs and output csv format
+
+.. code:: python
+
+	>>> fa = pyfastx.Fastx('tests/data/test.fa', uppercase=True):
+	>>> for name, seq in fa:
+	>>> 	for gtr in pytrf.GTRFinder(name, seq, 100, 2, 10):
 	>>> 		print(vntr.as_string(','))
 
 Exact tandem repeat
 -------------------
 
-When iterating over ``SSRMiner`` or ``VNTRMiner`` object, a exact tandem repeat (ETR) object will be returned.
-ETR is a readonly object and allows you to access the attributions and convert to desired formats.
+When iterating over ``STRFinder`` or ``GTRFinder`` object, an exact tandem repeat (ETR) object will be returned.
+ETR is a readonly object and allows you to access the attributes and convert to desired formats.
 
 .. code:: python
 
-	>>> ssrs = SSRMiner(name, seq)
+	>>> ssrs = STRFinder(name, seq)
 	>>> # get one ssr
 	>>> ssr = next(ssrs)
 
 	>>> # get sequence name where SSR located on
-	>>> ssr.name
+	>>> ssr.chrom
 
 	>>> # get one-based start and end position
 	>>> ssr.start
@@ -111,9 +114,6 @@ ETR is a readonly object and allows you to access the attributions and convert t
 
 	>>> # get length
 	>>> ssr.length
-
-	>>> # get SSR sequence
-	>>> ssr.seq
 
 	>>> # convert to a list
 	>>> ssr.as_list()
@@ -133,197 +133,200 @@ ETR is a readonly object and allows you to access the attributions and convert t
 	>>> # added a terminator to the end
 	>>> ssr.as_string(separator=',', terminator='\n')
 
-ITR identification
+ATR identification
 ------------------
 
-Stria provide ``ITRMiner`` class to find all imperfect tandem repeats including SSRs and VNTRs from given sequence.
+Pytrf provide ``ATRFinder`` class to find all imperfect or approximate tandem repeats from given sequence.
 
-The fastest way to get all ITRs from sequence:
-
-.. code:: python
-
-	>>> # feed sequence to stria
-	>>> # the fastest way to get all ITRs from sequence
-	>>> itrs = stria.ITRMiner(name, seq).as_list()
-
-Iterate over itrminer object to get itr object
+The fastest way to get all ATRs from sequence:
 
 .. code:: python
 
-	>>> for itr in stria.i=ITRMiner(name, seq):
-	>>> 	print(itr.chrom)
-	>>> 	print(itr.motif)
-	>>> 	print(itr.length)
+	>>> # feed sequence to pytrf
+	>>> # the fastest way to get all ATRs from sequence
+	>>> itrs = pytrf.ATRFinder(name, seq).as_list()
+
+Iterate over ATRFinder object to get atr object
+
+.. code:: python
+
+	>>> for atr in pytrf.ATRFinder(name, seq):
+	>>> 	print(atr.chrom)
+	>>> 	print(atr.motif)
+	>>> 	print(atr.length)
 
 You can customize the motif size and seed parameters.
 
 .. code:: python
 
-	>>> itrs = stria.ITRMiner(name, seq, min_motif_size=1, max_motif_size=6, see_min_repeat=3, seed_min_length=10)
+	>>> itrs = pytrf.ATRFinder(name, seq, max_motif_size=10, seed_min_repeat=3, seed_min_length=10)
 
-A complete example, get all itrs and output csv format
-
-.. code:: python
-
-	>>> for name, seq, _ in pyfastx.Fastx('tests/data/test.fa', uppercase=True):
-	>>> 	for itr in stria.ITRMiner(name, seq, 10, 100, 2):
-	>>> 		print(itr.as_string(','))
-
-Imperfect tandem repeat
------------------------
-
-When iterating over ``ITRMiner`` object, a imperfect tandem repeat (ITR) object will be returned.
-ITR is a readonly object and allows you to access the attributions and convert to desired formats.
+A complete example, get all atrs and output csv format
 
 .. code:: python
 
-	>>> itrs = ITRMiner(name, seq)
-	>>> # get one ITR
-	>>> itr = next(itrs)
+	>>> fa = pyfastx.Fastx('tests/data/test.fa', uppercase=True)
+	>>> for name, seq in fa:
+	>>> 	for atr in pytrf.ATRFinder(name, seq):
+	>>> 		print(atr.as_string(','))
 
-	>>> # get sequence name where ITR located on
-	>>> itr.name
+Approximate tandem repeat
+-------------------------
+
+When iterating over ``ATRFinder`` object, an imperfect or approximate tandem repeat (ATR) object will be returned.
+ATR is a readonly object and allows you to access the attributes and convert to desired formats.
+
+.. code:: python
+
+	>>> atrs = ATRFinder(name, seq)
+	>>> # get one ATR
+	>>> atr = next(atrs)
+
+	>>> # get sequence name where ATR located on
+	>>> atr.name
 
 	>>> # get one-based start and end position
-	>>> itr.start
-	>>> itr.end
+	>>> atr.start
+	>>> atr.end
 
 	>>> # get motif sequence
-	>>> itr.motif
+	>>> atr.motif
 
 	>>> # get length
-	>>> itr.length
-
-	>>> # get ITR sequence
-	>>> itr.seq
+	>>> atr.length
 
 	>>> # get number of matches
-	>>> itr.matches
+	>>> atr.matches
 
 	>>> # get number of substitutions
-	>>> itr.substitutions
+	>>> atr.substitutions
 
 	>>> # get number of insertions
-	>>> itr.insertions
+	>>> atr.insertions
 
 	>>> # get number of deletions
-	>>> itr.deletions
+	>>> atr.deletions
 
 	>>> # convert to a list
-	>>> itr.as_list()
+	>>> atr.as_list()
 
 	>>> # convert to a dict
-	>>> itr.as_dict()
+	>>> atr.as_dict()
 
 	>>> # convert to a gff formatted string
-	>>> itr.as_gff()
+	>>> atr.as_gff()
 
 	>>> # convert to tsv string
-	>>> itr.as_string(separator='\t')
+	>>> atr.as_string(separator='\t')
 
 	>>> # convert to csv string
-	>>> itr.as_string(separator=',')
+	>>> atr.as_string(separator=',')
 
 	>>> # added a terminator to the end
-	>>> itr.as_string(separator=',', terminator='\n')
+	>>> atr.as_string(separator=',', terminator='\n')
 
 Commandline interface
 ---------------------
 
-``Stria`` also provide commandline tools for users to find tandem repeats from fasta files.
+``Pytrf`` also provide command line tools for users to find tandem repeats from fasta or fastq files.
 
 .. code:: sh
 
-	stria -h
+	pytrf -h
 
-	usage: stria COMMAND [OPTIONS]
+	usage: pytrf command [options] fastx
 
-	short tandem repeat identification and analysis
+	a python package for finding tandem repeats from genomic sequences
 
-	optional arguments:
+	options:
 	  -h, --help     show this help message and exit
 	  -v, --version  show program's version number and exit
 
-	Commands:
+	commands:
 
-	    ssrminer     Find exact microsatellites or simple sequence repeats
-	    vntrminer    Find exact minisatellites or variable number tandem repeats
-	    itrminer     Find imperfect tandem repeats
+	    findstr      find exact or perfect short tandem repeats
+	    findgtr      find exact or perfect generic tandem repeats
+	    findatr      find approximate or imperfect tandem repeats
+	    extract      get tandem repeat sequence and flanking sequence
 
-Find exact microsatellites or simple sequence repeats (SSRs) from fasta file.
+Find exact microsatellites or simple sequence repeats (SSRs) from fasta/q file.
 
 .. code:: sh
 
-	stria ssrminer -h
+	pytrf findstr -h
 
-	usage: stria ssrminer [-h] [-r mono di tri tetra penta hexa] [-o] [-f] [-t] fasta
+	usage: pytrf findstr [-h] [-o] [-f] [-r mono di tri tetra penta hexa] fastx
 
 	positional arguments:
-	  fasta                 input fasta file, gzip support
+	  fastx                 input fasta or fastq file (gzip support)
 
-	optional arguments:
+	options:
 	  -h, --help            show this help message and exit
+	  -o , --out-file       output file (default: stdout)
+	  -f , --out-format     output format, tsv, csv or gff (default: tsv)
 	  -r mono di tri tetra penta hexa, --repeats mono di tri tetra penta hexa
-	                        minimum repeats (default: [12, 7, 5, 4, 4, 4])
-	  -o , --out-file       output file (default: stria_ssrs.out)
-	  -f , --out-format     output format, tsv, csv, or gff (default: tsv)
-	  -t , --threads        number of threads (default: 1)
+	                        minimum repeats for each STR type (default: 12 7 5 4 4 4)
 
-Find exact minisatellite or variable number tandem repeats (VNTRs) from fasta file.
+Find exact generic tandem repeats (GTRs) from fasta/q file.
 
 .. code:: sh
 
-	stria vntrminer -h
+	pytrf gtrfinder -h
 
-	usage: stria vntrminer [-h] [-m] [-M] [-r] [-o] [-f] [-t] fasta
+	usage: pytrf findgtr [-h] [-o] [-f] [-m] [-r] [-l] fastx
 
 	positional arguments:
-	  fasta                 input fasta file, gzip support
+	  fastx               input fasta or fastq file (gzip support)
 
-	optional arguments:
-	  -h, --help            show this help message and exit
-	  -m , --min-motif-size
-	                        minimum motif length (default: 7)
-	  -M , --max-motif-size
-	                        maximum motif length (default: 30)
-	  -r , --min-repeats    minimum repeat number (default: 2)
-	  -o , --out-file       output file (default: stria_vntrs.out)
-	  -f , --out-format     output format, tsv, csv, or gff (default: tsv)
-	  -t , --threads        number of threads (default: 1)
+	options:
+	  -h, --help          show this help message and exit
+	  -o , --out-file     output file (default: stdout)
+	  -f , --out-format   output format, tsv, csv or gff (default: tsv)
+	  -m , --max-motif    maximum motif length (default: 30)
+	  -r , --min-repeat   minimum repeat number (default: 3)
+	  -l , --min-length   minimum repeat length (default: 10)
 
-Find imperfect tandem repeats (ITRs)
+Find imperfect or approximate tandem repeats (ATRs)
 
 .. code:: sh
 
-	stria itrminer -h
+	pytrf atrfinder -h
 
-	usage: stria itrminer [-h] [-m] [-M] [-r] [-l] [-e] [-s] [-i] [-d] [-p] [-x] [-o] [-f] [-t] fasta
+	usage: pytrf findatr [-h] [-o] [-f] [-m] [-r] [-l] [-e] [-p] [-x] fastx
 
 	positional arguments:
-	  fasta                 input fasta file, gzip support
+	  fastx                 input fasta or fastq file (gzip support)
 
-	optional arguments:
+	options:
 	  -h, --help            show this help message and exit
-	  -m , --min-motif-size
-	                        minimum motif length (default: 1)
-	  -M , --max-motif-size
+	  -o , --out-file       output file (default: stdout)
+	  -f , --out-format     output format, tsv, csv or gff (default: tsv)
+	  -m , --max-motif-size
 	                        maximum motif length (default: 6)
-	  -r , --seed-min-repeats
+	  -r , --min-seed-repeat
 	                        minimum repeat number for seed (default: 3)
-	  -l , --seed-min-length
-	                        minimum length for seed (default: 8)
-	  -e , --max-continuous-errors
-	                        maximum number of continuous alignment errors (default: 2)
-	  -s , --substitution-penalty
-	                        substitution penalty (default: 0.5)
-	  -i , --insertion-penalty
-	                        insertion penalty (default: 1.0)
-	  -d , --deletion-penalty
-	                        deletion penalty (default: 1.0)
-	  -p , --min-match-ratio
-	                        extending match ratio (default: 0.7)
-	  -x , --max-extend-size
+	  -l , --min-seed-length
+	                        minimum length for seed (default: 10)
+	  -e , --max-continuous-error
+	                        maximum number of continuous alignment errors (default: 3)
+	  -p , --min-identity   minimum identity from 0 to 100 (default: 70)
+	  -x , --max-extend-length
 	                        maximum length allowed to extend (default: 2000)
-	  -o , --out-file       output file (default: stria_itrs.out)
-	  -f , --out-format     output format, tsv, csv, or gff (default: tsv)
-	  -t , --threads        number of threads (default: 1)
+
+Extract tandem repeat sequence and flanking sequence according results of findatr, findgtr or findstr.
+
+.. code:: sh
+
+	pytrf extract -h
+
+	usage: pytrf extract [-h] -r  [-o] [-f] [-l] fastx
+
+	positional arguments:
+	  fastx                 input fasta or fastq file (gzip support)
+
+	options:
+	  -h, --help            show this help message and exit
+	  -r , --repeat-file    the csv or tsv output file of findatr, findstr or findgtr
+	  -o , --out-file       output file (default: stdout)
+	  -f , --out-format     output format, tsv, csv or fasta (default: tsv)
+	  -l , --flank-length   flanking sequence length (default: 100)
