@@ -1,52 +1,80 @@
-stria
+Pytrf
 #####
 
-.. image:: https://github.com/lmdu/stria/actions/workflows/wheel.yml/badge.svg
-   :target: https://github.com/lmdu/stria/actions/workflows/wheel.yml
+.. image:: https://github.com/lmdu/pytrf/actions/workflows/wheel.yml/badge.svg
+   :target: https://github.com/lmdu/pytrf/actions/workflows/wheel.yml
    :alt: Github Action
 
-.. image:: https://readthedocs.org/projects/stria/badge/?version=latest
-   :target: https://stria.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/pytrf/badge/?version=latest
+   :target: https://pytrf.readthedocs.io/en/latest/?badge=latest
    :alt: Readthedocs
 
-.. image:: https://img.shields.io/pypi/v/stria.svg
-   :target: https://pypi.org/project/stria
+.. image:: https://img.shields.io/pypi/v/pytrf.svg
+   :target: https://pypi.org/project/pytrf
    :alt: PyPI
 
-.. image:: https://img.shields.io/pypi/pyversions/stria
-	:target: https://pypi.org/project/stria
+.. image:: https://img.shields.io/pypi/pyversions/pytrf
+	:target: https://pypi.org/project/pytrf
 	:alt: PyPI
 
 .. image:: https://app.codacy.com/project/badge/Grade/bbe59e55f686465ca5824c69583e9718
-	:target: https://app.codacy.com/gh/lmdu/stria/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
+	:target: https://app.codacy.com/gh/lmdu/pytrf/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
 
-*a fast Python package for identification and analysis of short tandem repeat sequences*
+*a fast Python package for finding tandem repeat sequences*
 
 Introduction
 ============
 
-A Tandem repeat (TR) in genomic sequence is a set of adjacent short DNA sequence repeated consecutively.
-The core sequence or repeat unit is generally called motif. According to the motif length, tandem repeats
-can be classified as microsatellites and minisatellites. Microsatellites are also known as simple sequence
-repeats (SSRs) or short tandem repeats (STRs) with motif length of 1-6 bp. Minisatellites are also sometimes
-referred to as variable number of tandem repeats (VNTRs) has longer motif length than micorsatellites.
-
-The ``stria`` is a lightweight Python C extension for identification and analysis of short tandem repeats.
-The ``stria`` enables to fastly identify both exact and imperfect SSRs and VNTRs from large numbers of DNA sequences.
-The ``stria`` also provides command line tools for users to extract tandem repeats from Fasta files.
+A Tandem repeat (TR) in genomic sequence is a set of adjacent short DNA
+sequence repeated consecutively. The pytrf is a lightweight Python C extension for identification of tandem repeats. The pytrf enables to fastly identify both exact
+or perfect SSRs. It also can find generic tandem repeats with any size of motif,
+such as with maximum motif length of 100 bp. Additionally, it has capability of finding approximate or imperfect tandem repeats. Furthermore, the pytrf not only can be used as Python package but also provides command line interface for users to facilitate the identification of tandem repeats.
 
 Usage
 =====
 
+The pytrf can be used as Python package. It requires `pyfastx <https://github.com/lmdu/pyfastx>`_ to parse FASTA or FASTQ file.
+
 .. code:: python
 
-	>>> import stria
+	>>> import pytrf
 	>>> import pyfastx
-	>>> for name, seq, _ in pyfastx.Fastx('test.fa.gz'):
-	>>> 	for ssr in SSRMiner(name, seq):
+	>>> fa = pyfastx.Fastx('test.fa', uppercase=True):
+	>>> for name, seq in fa:
+	>>> 	for ssr in STRFinder(name, seq):
 	>>> 		print(ssr.as_string())
+
+Command line
+============
+
+The pytrf also provides command line tools for you to find tandem repeats from given FASTA or FASTQ file.
+
+.. code:: sh
+
+	pytrf -h
+
+	usage: pytrf command [options] fastx
+
+	a python package for finding tandem repeats from genomic sequences
+
+	options:
+	  -h, --help     show this help message and exit
+	  -v, --version  show program's version number and exit
+
+	commands:
+
+	    findstr      find exact or perfect short tandem repeats
+	    findgtr      find exact or perfect generic tandem repeats
+	    findatr      find approximate or imperfect tandem repeats
+	    extract      get tandem repeat sequence and flanking sequence
+
+For example:
+
+.. code:: sh
+
+	pytrf findstr test.fa
 
 Documentation
 =============
 
-`https://stria.readthedocs.io/ <https://stria.readthedocs.io/>`_
+For more detailed usage, see our documentation: `https://pytrf.readthedocs.io <https://pytrf.readthedocs.io>`_
