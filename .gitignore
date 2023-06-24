@@ -43,3 +43,4 @@ stria.cp38-win_amd64.pyd
 Homo_sapiens.GRCh38.dna.toplevel.fa.gz.fxi
 Homo_sapiens.GRCh38.dna.toplevel.fa.gz
 stria.cpython-310-x86_64-linux-gnu.so
+benchmark/*

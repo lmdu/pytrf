@@ -97,8 +97,8 @@ def extract_sequence(args):
 			row.append(left)
 			row.append(right)
 			writer.writerow(row)
-	
-if __name__ == '__main__':
+
+def main():
 	parser = argparse.ArgumentParser(
 		prog = 'pytrf',
 		usage = 'pytrf command [options] fastx',

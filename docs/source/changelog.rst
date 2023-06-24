@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 1.0.1 (2023-06-24)
+--------------------------
+
+- Fixed command line interface errors
+
 Version 1.0.0 (2023-06-05)
 --------------------------
 
