@@ -1,89 +1,47 @@
 #define PY_SSIZE_T_CLEAN
 #include "str.h"
 #include "etr.h"
+#include "compat.h"
 #include "structmember.h"
 
-int pytrf_strfinder_set_min_repeats(pytrf_STRFinder *self, PyObject* minrep_obj) {
-	if (minrep_obj) {
-		if (PyList_Check(minrep_obj)) {
-			minrep_obj = PyList_AsTuple(minrep_obj);
-		}
-
-		if (PyTuple_Check(minrep_obj)) {
-			Py_ssize_t len = PyTuple_Size(minrep_obj);
-
-			if (len != 6) {
-				PyErr_SetString(PyExc_ValueError, "min_repeats list or tuple must contain six numbers");
-				return 0;
-			}
-
-			for (Py_ssize_t i = 1; i < 7; ++i) {
-				PyObject *p = PyTuple_GetItem(minrep_obj, i-1);
-				if (PyLong_Check(p)) {
-					self->min_lens[i] = PyLong_AsSsize_t(p) * i;
-				} else {
-					PyErr_SetString(PyExc_ValueError, "six number needed for min_repeats");
-					return 0;
-				}
-			}
-		} else if (PyDict_Check(minrep_obj)) {
-			PyObject *key, *value;
-			Py_ssize_t pos = 0;
-
-			while (PyDict_Next(minrep_obj, &pos, &key, &value)) {
-				if (PyLong_Check(value) || PyLong_Check(key)) {
-					self->min_lens[PyLong_AsSsize_t(key)] = PyLong_AsSsize_t(value) * PyLong_AsSsize_t(key);
-				} else {
-					PyErr_SetString(PyExc_ValueError, "the key and value in min_repeats dict must be number");
-					return 0;
-				}
-			}
-		} else {
-			PyErr_SetString(PyExc_TypeError, "min_repeats must be list, tuple or dict");
-			return 0;
-		}
-	}
-
-	return 1;
-}
-
 static PyObject* pytrf_strfinder_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
-	PyObject *minrep_obj = NULL;
-	static char* keywords[] = {"name", "seq", "min_repeats", NULL};
+	int mono = 12;
+	int di = 7;
+	int tri = 5;
+	int tetra = 4;
+	int penta = 4;
+	int hexa = 4;
 
 	pytrf_STRFinder *obj = (pytrf_STRFinder *)type->tp_alloc(type, 0);
 	if (!obj) return NULL;
+	
+	static char* keywords[] = {"name", "seq", "mono", "di", "tri", "tetra", "penta", "hexa", NULL};
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iiiiii", keywords, &obj->seqname, &obj->seqobj, &mono, &di, &tri, &tetra, &penta, &hexa)) {
+		return NULL;
+	}
 
 	//initialize start search position
 	obj->next_start = 0;
 
 	//initialize minimal repeats
 	obj->min_lens[0] = 0;
-	obj->min_lens[1] = 12 * 1;
-	obj->min_lens[2] = 7 * 2;
-	obj->min_lens[3] = 5 * 3;
-	obj->min_lens[4] = 4 * 4;
-	obj->min_lens[5] = 4 * 5;
-	obj->min_lens[6] = 4 * 6;
-
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|O", keywords, &obj->seqname, &obj->seqobj, &minrep_obj)) {
-		return NULL;
-	}
+	obj->min_lens[1] = mono * 1;
+	obj->min_lens[2] = di * 2;
+	obj->min_lens[3] = tri * 3;
+	obj->min_lens[4] = tetra * 4;
+	obj->min_lens[5] = penta * 5;
+	obj->min_lens[6] = hexa * 6;
 
 	Py_INCREF(obj->seqname);
 	Py_INCREF(obj->seqobj);
 
 	obj->seq = PyUnicode_AsUTF8AndSize(obj->seqobj, &obj->size);
 
-	//parse minimal repeats
-	if (!pytrf_strfinder_set_min_repeats(obj, minrep_obj)) {
-		return NULL;
-	}
-
 	return (PyObject *)obj;
 }
 
-void pytrf_strfinder_dealloc(pytrf_STRFinder *self) {
+static void pytrf_strfinder_dealloc(pytrf_STRFinder *self) {
 	Py_DECREF(self->seqname);
 	Py_DECREF(self->seqobj);
 	self->seq = NULL;
@@ -91,7 +49,7 @@ void pytrf_strfinder_dealloc(pytrf_STRFinder *self) {
 }
 
 static PyObject* pytrf_strfinder_repr(pytrf_STRFinder *self) {
-	return PyUnicode_FromFormat("<STRFinder> for sequence %s", PyUnicode_AsUTF8(self->seqname));
+	return PyUnicode_FromFormat("<STRFinder> for sequence %S", self->seqname);
 }
 
 static PyObject* pytrf_strfinder_iter(pytrf_STRFinder *self) {
@@ -105,15 +63,16 @@ static PyObject* pytrf_strfinder_next(pytrf_STRFinder *self) {
 	Py_ssize_t i;
 
 	//current start position
-	Py_ssize_t current_start;
+	Py_ssize_t cs;
 
-	Py_ssize_t boundary;
+	//end boundary position
+	Py_ssize_t eb;
 
 	//motif length
 	int j;
 
 	//repeat length
-	int replen;
+	int rl;
 
 	for (i = self->next_start; i < self->size; ++i) {
 		//remove unkown base
@@ -121,94 +80,84 @@ static PyObject* pytrf_strfinder_next(pytrf_STRFinder *self) {
 			continue;
 		}
 
-		current_start = i;
+		cs = i;
 		for (j = 1; j <= 6; ++j) {
-			boundary = self->size - j;
+			eb = self->size - j;
 
-			while ((i < boundary) && (self->seq[i] == self->seq[i+j])) {
+			while ((i < eb) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
-			replen = i + j - current_start;
+			rl = i + j - cs;
 
-			if (replen >= self->min_lens[j]) {
+			if (rl >= self->min_lens[j]) {
 				pytrf_ETR *ssr = PyObject_New(pytrf_ETR, &pytrf_ETRType);
-				ssr->motif = (char *)malloc(j + 1);
-				memcpy(ssr->motif, self->seq+current_start, j);
-				ssr->motif[j] = '\0';
+
 				ssr->mlen = j;
-				ssr->seqid = self->seqname;
-				Py_INCREF(ssr->seqid);
-				ssr->repeats = replen/j;
+				ssr->repeats = rl/j;
 				ssr->length = ssr->repeats * j;
-				ssr->start = current_start + 1;
-				ssr->end = current_start + ssr->length;
+				ssr->start = cs + 1;
+				ssr->end = cs + ssr->length;
+				ssr->seqid = Py_NewRef(self->seqname);
+				ssr->seqobj = Py_NewRef(self->seqobj);
+				ssr->motif = PyUnicode_Substring(self->seqobj, cs, cs + j);
 
 				self->next_start = ssr->end;
-
 				return (PyObject *)ssr;
 			}
 			
-			i = current_start;
+			i = cs;
 		}
 	}
 
-	return NULL;
-}
-
-static PyObject* pytrf_strfinder_reset_min_repeats(pytrf_STRFinder *self, PyObject *args, PyObject *kwargs) {
-	PyObject *minrep_obj = NULL;
-	static char* keywords[] = {"min_repeats", NULL};
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O", keywords, &minrep_obj)) {
-		return NULL;
-	}
-
-	if (!pytrf_strfinder_set_min_repeats(self, minrep_obj)) {
-		return NULL;
-	}
 	return NULL;
 }
 
 static PyObject* pytrf_strfinder_as_list(pytrf_STRFinder *self) {
-	PyObject *ssrs = PyList_New(0);
-	PyObject *tmp;
-	Py_ssize_t current_start;
-	Py_ssize_t ssr_end;
-	Py_ssize_t boundary;
+	int j;
 	int replen;
 	int repeats;
 	int length;
+	
 	char *motif = (char *)malloc(7);
 
-	for (Py_ssize_t i = 0; i < self->size; ++i) {
+	Py_ssize_t i;
+	Py_ssize_t cs;
+	Py_ssize_t se;
+	Py_ssize_t eb;
+
+	PyObject *ssrs = PyList_New(0);
+	PyObject *tmp;
+
+	for (i = 0; i < self->size; ++i) {
 		if (self->seq[i] == 78) {
 			continue;
 		}
 
-		current_start = i;
-		for (int j = 1; j < 7; ++j) {
-			boundary = self->size - j;
+		cs = i;
+		for (j = 1; j < 7; ++j) {
+			eb = self->size - j;
 
-			while ((i < boundary) && (self->seq[i] == self->seq[i+j])) {
+			while ((i < eb) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
-			replen = i + j - current_start;
+			replen = i + j - cs;
 
 			if (replen >= self->min_lens[j]) {
-				memcpy(motif, self->seq+current_start, j);
+				memcpy(motif, self->seq+cs, j);
 				motif[j] = '\0';
 				repeats = replen/j;
 				length = repeats * j;
-				ssr_end = current_start+length;
-				tmp = Py_BuildValue("Onnsiii", self->seqname, current_start+1, ssr_end, motif, j, repeats, length);
+				se = cs+length;
+				tmp = Py_BuildValue("Onnsiii", self->seqname, cs+1, se, motif, j, repeats, length);
 				PyList_Append(ssrs, tmp);
 				Py_DECREF(tmp);
 
-				i = ssr_end;
+				i = se;
 				break;
 			} else {
-				i = current_start;
+				i = cs;
 			}
 		}
 	}
@@ -217,59 +166,8 @@ static PyObject* pytrf_strfinder_as_list(pytrf_STRFinder *self) {
 	return ssrs;
 }
 
-static PyObject* pytrf_strfinder_as_test(pytrf_STRFinder *self) {
-	PyObject *ssrs = PyList_New(0);
-	PyObject *tmp;
-	Py_ssize_t current_start;
-	Py_ssize_t ssr_end;
-	Py_ssize_t boundary;
-	int replen;
-	int repeats;
-	int length;
-	//char *motif = (char *)malloc(7);
-	char motif[7];
-
-	for (Py_ssize_t i = 0; i < self->size; ++i) {
-		if (self->seq[i] == 78) {
-			continue;
-		}
-
-		current_start = i;
-		for (int j = 1; j < 7; ++j) {
-			boundary = self->size - j;
-
-			while ((i < boundary) && (self->seq[i] == self->seq[i+j])) {
-				++i;
-			}
-
-			replen = i + j - current_start;
-
-			if (replen >= self->min_lens[j]) {
-				memcpy(motif, self->seq+current_start, j);
-				motif[j] = '\0';
-				repeats = replen / j;
-				length = repeats * j;
-				ssr_end = current_start+length;
-				tmp = Py_BuildValue("Onnsiii", self->seqname, current_start+1, ssr_end, motif, j, repeats, length);
-				PyList_Append(ssrs, tmp);
-				Py_DECREF(tmp);
-
-				i = ssr_end;
-				break;
-			} else {
-				i = current_start;
-			}
-		}
-	}
-
-	//free(motif);
-	return ssrs;
-}
-
 static PyMethodDef pytrf_strfinder_methods[] = {
 	{"as_list", (PyCFunction)pytrf_strfinder_as_list, METH_NOARGS, NULL},
-	{"as_test", (PyCFunction)pytrf_strfinder_as_test, METH_NOARGS, NULL},
-	{"reset_min_repeats", (PyCFunction)pytrf_strfinder_reset_min_repeats, METH_VARARGS|METH_KEYWORDS, NULL},
 	{NULL, NULL, 0, NULL}
 };
 

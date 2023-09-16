@@ -8,7 +8,7 @@
 #define PY_SSIZE_T_CLEAN
 #ifndef PYTRF_GTR_H
 #define PYTRF_GTR_H
-#include "Python.h"
+#include <Python.h>
 
 typedef struct {
 	PyObject_HEAD

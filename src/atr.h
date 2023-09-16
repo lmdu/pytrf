@@ -14,14 +14,17 @@ typedef struct {
 	//input sequence name
 	PyObject *seqid;
 
+	//input sequence obj
+	PyObject *seqobj;
+
+	//motif sequence
+	PyObject *motif;
+
 	//imperfect tandem repeat start position
 	Py_ssize_t start;
 
 	//imperfect tandem repeat stop position
 	Py_ssize_t end;
-
-	//motif sequence
-	char *motif;
 
 	//motif length
 	int mlen;

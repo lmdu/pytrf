@@ -7,7 +7,7 @@
 
 #ifndef PYTRF_ETR_H
 #define PYTRF_ETR_H
-#include "Python.h"
+#include <Python.h>
 
 typedef struct {
 	PyObject_HEAD
@@ -15,8 +15,11 @@ typedef struct {
 	//sequence name or identifier
 	PyObject* seqid;
 
+	//sequence object
+	PyObject* seqobj;
+
 	//tandem repeat element motif sequence
-	char* motif;
+	PyObject* motif;
 
 	//tandem repeat element motif length
 	int mlen;

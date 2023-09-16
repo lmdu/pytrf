@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 1.1.0 (2023-09-16)
+--------------------------
+
+- Added seq attribute to ATR and ETR object
+
 Version 1.0.1 (2023-06-24)
 --------------------------
 

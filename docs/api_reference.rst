@@ -15,7 +15,7 @@ pytrf.version
 pytrf.STRFinder
 ---------------
 
-.. py:class:: pytrf.STRFinder(chrom, seq, min_repeats=[12,7,5,4,4,4])
+.. py:class:: pytrf.STRFinder(chrom, seq, mono=12, di=7, tri=5, tetra=4, penta=4, hexa=4)
 
 	Find all exact or perfect short tandem repeats (STRs), simple sequence repeats (SSRs) or microsatellites that meet the minimum repeats on the input sequence
 
@@ -23,7 +23,17 @@ pytrf.STRFinder
 
 	:param str seq: the input DNA sequence
 
-	:param list min_repeats: minimum number of repeats for mono, di, tri, tetra, penta, hexa, default (12,7,5,4,4,4), corresponding to 12 for mono, 7 for di, 5 for tri and 4 for tetra, penta and hexa
+	:param int mono: the minimum tandem repeats for mono-nucleotide repeats
+
+	:param int di: the minimum tandem repeats for di-nucleotide repeats
+
+	:param int tri: the minimum tandem repeats for tri-nucleotide repeats
+
+	:param int tetra: the minimum tandem repeats for tetra-nucleotide repeats
+
+	:param int penta: the minimum tandem repeats for penta-nucleotide repeats
+
+	:param int hexa: the minimum tandem repeats for hexa-nucleotide repeats
 
 	:return: STRFinder object
 
@@ -138,7 +148,7 @@ pytrf.ETR
 
 		convert ETR object to a dict
 
-	.. py:method:: as_gff()
+	.. py:method:: as_gff(terminator='')
 
 		convert ETR object to a gff formatted string
 
@@ -217,7 +227,7 @@ pytrf.ATR
 
 		convert ATR object to a dict
 
-	.. py:method:: as_gff()
+	.. py:method:: as_gff(terminator='')
 
 		convert ATR object to a gff formatted string
 

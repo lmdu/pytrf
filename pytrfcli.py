@@ -4,6 +4,7 @@ import pytrf
 import pyfastx
 import argparse
 import functools
+import multiprocessing
 
 def get_format_result(trs, outfmt, outfw):
 	if outfmt == 'tsv':
@@ -19,7 +20,7 @@ def get_format_result(trs, outfmt, outfw):
 			print(tr.as_gff(), file=outfw)
 
 def str_finder(seq, minrep, outfmt, outfw):
-	ssrs = pytrf.STRFinder(seq[0], seq[1], minrep)
+	ssrs = pytrf.STRFinder(seq[0], seq[1], *minrep)
 	get_format_result(ssrs, outfmt, outfw)
 
 def gtr_finder(seq, maxmotif, minrep, minlen, outfmt, outfw):

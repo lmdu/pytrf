@@ -7,6 +7,7 @@
 #include "atr.h"
 #include "itr.h"
 #include "math.h"
+#include "compat.h"
 #include "structmember.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -288,7 +289,7 @@ void pytrf_itrfinder_dealloc(pytrf_ITRFinder *self) {
 }
 
 static PyObject* pytrf_itrfinder_repr(pytrf_ITRFinder *self) {
-	return PyUnicode_FromFormat("<ITRFinder> for sequence %s", PyUnicode_AsUTF8(self->seqname));
+	return PyUnicode_FromFormat("<ATRFinder> for sequence %S", self->seqname);
 }
 
 static PyObject* pytrf_itrfinder_iter(pytrf_ITRFinder *self) {
@@ -399,12 +400,10 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 
 					//create new atr element object
 					pytrf_ATR *atr = PyObject_New(pytrf_ATR, &pytrf_ATRType);
-					atr->motif = (char *)malloc(j + 1);
-					memcpy(atr->motif, self->motif, j);
-					atr->motif[j] = '\0';
+					atr->motif = PyUnicode_FromString(self->motif);
 					atr->mlen = j;
-					atr->seqid = self->seqname;
-					Py_INCREF(atr->seqid);
+					atr->seqid = Py_NewRef(self->seqname);
+					atr->seqobj = Py_NewRef(self->seqobj);
 					atr->start = tandem_start;
 					atr->end = tandem_end;
 					atr->length = tandem_length;
@@ -555,12 +554,12 @@ static PyMethodDef pytrf_itrfinder_methods[] = {
 
 PyTypeObject pytrf_ITRFinderType = {
 	PyVarObject_HEAD_INIT(NULL, 0)
-	.tp_name = "ITRFinder",
+	.tp_name = "ATRFinder",
 	.tp_basicsize = sizeof(pytrf_ITRFinder),
 	.tp_dealloc = (destructor)pytrf_itrfinder_dealloc,
 	.tp_repr = (reprfunc)pytrf_itrfinder_repr,
 	.tp_flags = Py_TPFLAGS_DEFAULT,
-	.tp_doc = "imperfect or approximate tandem repeat finder",
+	.tp_doc = "approximate tandem repeat finder",
 	.tp_iter = (getiterfunc)pytrf_itrfinder_iter,
 	.tp_iternext = (iternextfunc)pytrf_itrfinder_next,
 	.tp_methods = pytrf_itrfinder_methods,

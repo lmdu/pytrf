@@ -8,9 +8,10 @@
 #define PY_SSIZE_T_CLEAN
 #include "gtr.h"
 #include "etr.h"
+#include "compat.h"
 #include "structmember.h"
 
-PyObject* pytrf_gtrfinder_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
+static PyObject* pytrf_gtrfinder_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 	static char* keywords[] = {"chrom", "seq", "max_motif", "min_repeat", "min_length", NULL};
 
 	pytrf_GTRFinder *obj = (pytrf_GTRFinder *)type->tp_alloc(type, 0);
@@ -35,7 +36,7 @@ PyObject* pytrf_gtrfinder_new(PyTypeObject *type, PyObject *args, PyObject *kwar
 	return (PyObject *)obj;
 }
 
-void pytrf_gtrfinder_dealloc(pytrf_GTRFinder *self) {
+static void pytrf_gtrfinder_dealloc(pytrf_GTRFinder *self) {
 	self->seq = NULL;
 	Py_DECREF(self->seqname);
 	Py_DECREF(self->seqobj);
@@ -43,7 +44,7 @@ void pytrf_gtrfinder_dealloc(pytrf_GTRFinder *self) {
 }
 
 static PyObject* pytrf_gtrfinder_repr(pytrf_GTRFinder *self) {
-	return PyUnicode_FromFormat("<GTRFinder> for sequence %s", PyUnicode_AsUTF8(self->seqname));
+	return PyUnicode_FromFormat("<GTRFinder> for sequence %S", self->seqname);
 }
 
 static PyObject* pytrf_gtrfinder_iter(pytrf_GTRFinder *self) {
@@ -88,16 +89,15 @@ static PyObject* pytrf_gtrfinder_next(pytrf_GTRFinder *self) {
 
 			if (rn >= self->min_repeat && rl >= self->min_length) {
 				pytrf_ETR *gtr = PyObject_New(pytrf_ETR, &pytrf_ETRType);
-				gtr->motif = (char *)malloc(j + 1);
-				memcpy(gtr->motif, self->seq+cs, j);
-				gtr->motif[j] = '\0';
 				gtr->mlen = j;
-				gtr->seqid = self->seqname;
-				Py_INCREF(gtr->seqid);
 				gtr->repeats = rn;
 				gtr->length = rl;
 				gtr->start = cs + 1;
 				gtr->end = cs + rl;
+				gtr->seqid = Py_NewRef(self->seqname);
+				gtr->seqobj = Py_NewRef(self->seqobj);
+				gtr->motif = PyUnicode_Substring(self->seqobj, cs, cs + j);
+
 				self->next_start = gtr->end;
 				return (PyObject *)gtr;
 			}

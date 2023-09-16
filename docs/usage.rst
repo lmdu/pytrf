@@ -37,8 +37,8 @@ You can define the minimum number of repeats required to determine a SSR.
 
 .. code:: python
 
-	>>> # change the minimum repeats for [mono,di,tri,tetra,penta,hexa]
-	>>> ssrs = pytrf.STRFinder(name, seq, [12,6,4,3,3,3])
+	>>> # change the minimum repeats for mono-, di-, tri-, tetra-, penta-, hexa-nucleotide repeat
+	>>> ssrs = pytrf.STRFinder(name, seq, 10, 6, 4, 3, 3, 3)
 
 A complete example, get all ssrs and output csv format
 
@@ -46,7 +46,7 @@ A complete example, get all ssrs and output csv format
 
 	>>> fa = pyfastx.Fastx('tests/data/test.fa', uppercase=True)
 	>>> for name, seq in fa:
-	>>> 	for ssr in pytrf.STRFinder(name, seq, [12,7,5,4,4,4]):
+	>>> 	for ssr in pytrf.STRFinder(name, seq, 12, 7, 5, 4, 4, 4):
 	>>> 		print(ssr.as_string(','))
 
 GTR identification
@@ -106,13 +106,16 @@ ETR is a readonly object and allows you to access the attributes and convert to 
 	>>> ssr.start
 	>>> ssr.end
 
+	>>> # get repeat sequence
+	>>> ssr.seq
+
 	>>> # get motif sequence
 	>>> ssr.motif
 
 	>>> # get number of repeats
 	>>> ssr.repeats
 
-	>>> # get length
+	>>> # get repeat length
 	>>> ssr.length
 
 	>>> # convert to a list
@@ -189,6 +192,9 @@ ATR is a readonly object and allows you to access the attributes and convert to 
 	>>> atr.start
 	>>> atr.end
 
+	>>> # get repeat sequence
+	>>> atr.seq
+
 	>>> # get motif sequence
 	>>> atr.motif
 
@@ -240,7 +246,7 @@ Commandline interface
 
 	options:
 	  -h, --help     show this help message and exit
-	  -v, --version  show program's version number and exit
+	  -v, --version  show program version number and exit
 
 	commands:
 

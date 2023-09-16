@@ -1,7 +1,7 @@
 #define PY_SSIZE_T_CLEAN
 #ifndef PYTRF_STR_H
 #define PYTRF_STR_H
-#include "Python.h"
+#include <Python.h>
 
 typedef struct {
 	PyObject_HEAD
