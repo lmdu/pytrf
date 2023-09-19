@@ -21,14 +21,14 @@ typedef struct {
 	//tandem repeat element motif sequence
 	PyObject* motif;
 
-	//tandem repeat element motif length
-	int mlen;
-
 	//tandem repeat element start position
 	Py_ssize_t start;
 
 	//tandem repeat element stop position
 	Py_ssize_t end;
+
+	//tandem repeat element motif length
+	int mlen;
 
 	//number of tandem repeats
 	int repeats;

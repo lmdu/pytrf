@@ -1,1 +1,1 @@
-pyfastx==1.1.0
+pyfastx==2.0.1

@@ -19,14 +19,14 @@ typedef struct {
 	//input sequence object
 	PyObject *seqobj;
 
-	//pointer to sequence object
-	const char *seq;
-
 	//sequence length
 	Py_ssize_t size;
 
 	//next start position for tandem repeat identification
 	Py_ssize_t next_start;
+
+	//pointer to sequence object
+	const char *seq;
 
 	//max motif length
 	int max_motif;

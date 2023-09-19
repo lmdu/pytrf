@@ -18,7 +18,7 @@ static PyObject* pytrf_atr_repr(pytrf_ATR *self) {
 }
 
 static PyObject* pytrf_atr_as_list(pytrf_ATR *self) {
-	return Py_BuildValue("OnnOiiiiiif", self->seqid, self->start, self->end, self->motif, self->mlen,
+	return Py_BuildValue("OnnOiiiiiid", self->seqid, self->start, self->end, self->motif, self->mlen,
 						self->length, self->matches, self->substitutions, self->insertions,
 						self->deletions, self->identity);
 }
