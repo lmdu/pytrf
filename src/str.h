@@ -22,7 +22,10 @@ typedef struct {
 	Py_ssize_t next_start;
 
 	//minimal length for mono-, di-, tri-, tetra-, penta- and hexa- types
-	Py_ssize_t min_lens[7];
+	int min_lens[7];
+
+	//boundary
+	Py_ssize_t boundary[7];
 
 } pytrf_STRFinder;
 

@@ -6,7 +6,7 @@
 #define PY_SSIZE_T_CLEAN
 #ifndef PYTRF_ITR_H
 #define PYTRF_ITR_H
-#include "Python.h"
+#include <Python.h>
 
 typedef struct {
 	PyObject_HEAD
@@ -49,6 +49,9 @@ typedef struct {
 
 	//dynamic alignment matrix
 	int** matrix;
+
+	//boundary
+	Py_ssize_t* boundary;
 
 } pytrf_ITRFinder;
 

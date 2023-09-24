@@ -37,6 +37,9 @@ typedef struct {
 	//min length
 	int min_length;
 
+	//boundary
+	Py_ssize_t *boundary;
+
 } pytrf_GTRFinder;
 
 extern PyTypeObject pytrf_GTRFinderType;

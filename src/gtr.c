@@ -12,6 +12,8 @@
 #include "structmember.h"
 
 static PyObject* pytrf_gtrfinder_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
+	int i;
+
 	static char* keywords[] = {"chrom", "seq", "max_motif", "min_repeat", "min_length", NULL};
 
 	pytrf_GTRFinder *obj = (pytrf_GTRFinder *)type->tp_alloc(type, 0);
@@ -28,15 +30,24 @@ static PyObject* pytrf_gtrfinder_new(PyTypeObject *type, PyObject *args, PyObjec
 		return NULL;
 	}
 
+	obj->seq = PyUnicode_AsUTF8AndSize(obj->seqobj, &obj->size);
+
+	obj->boundary = (Py_ssize_t *)malloc(sizeof(Py_ssize_t) * (obj->max_motif+1));
+	for (i = 0; i <= obj->max_motif; ++i) {
+		obj->boundary[i] = obj->size - i;
+	}
+
 	Py_INCREF(obj->seqname);
 	Py_INCREF(obj->seqobj);
-
-	obj->seq = PyUnicode_AsUTF8AndSize(obj->seqobj, &obj->size);
 
 	return (PyObject *)obj;
 }
 
 static void pytrf_gtrfinder_dealloc(pytrf_GTRFinder *self) {
+	if (self->boundary) {
+		free(self->boundary);
+	}
+
 	self->seq = NULL;
 	Py_DECREF(self->seqname);
 	Py_DECREF(self->seqobj);
@@ -66,8 +77,8 @@ static PyObject* pytrf_gtrfinder_next(pytrf_GTRFinder *self) {
 	//current start position
 	Py_ssize_t cs;
 
-	//end position
-	Py_ssize_t ep;
+	//boundary
+	Py_ssize_t b;
 
 	for (i = self->next_start; i < self->size; ++i) {
 		//remove unkown base
@@ -77,18 +88,19 @@ static PyObject* pytrf_gtrfinder_next(pytrf_GTRFinder *self) {
 
 		cs = i;
 		for (j = 1; j <= self->max_motif; ++j) {
-			ep = self->size - j;
+			b = self->boundary[j];
 
-			while ((i < ep) && (self->seq[i] == self->seq[i+j])) {
+			while ((i < b) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
 			rl = i + j - cs;
-			rn = rl/j;
-			rl = rn*j;
+			rn = rl / j;
+			rl = rn * j;
 
 			if (rn >= self->min_repeat && rl >= self->min_length) {
 				pytrf_ETR *gtr = PyObject_New(pytrf_ETR, &pytrf_ETRType);
+
 				gtr->mlen = j;
 				gtr->repeats = rn;
 				gtr->length = rl;
@@ -126,8 +138,8 @@ static PyObject* pytrf_gtrfinder_as_list(pytrf_GTRFinder *self) {
 	Py_ssize_t gs;
 	Py_ssize_t ge;
 
-	//end position
-	Py_ssize_t ep;
+	//boundary
+	Py_ssize_t b;
 
 	//motif cache
 	char *motif;
@@ -144,9 +156,9 @@ static PyObject* pytrf_gtrfinder_as_list(pytrf_GTRFinder *self) {
 
 		cs = i;
 		for (j = 1; j <= self->max_motif; ++j) {
-			ep = self->size - j;
+			b = self->boundary[j];
 
-			while ((i < ep) && (self->seq[i] == self->seq[i+j])) {
+			while ((i < b) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
@@ -159,10 +171,12 @@ static PyObject* pytrf_gtrfinder_as_list(pytrf_GTRFinder *self) {
 				motif[j] = '\0';
 				gs = cs + 1;
 				ge = cs + rl;
+				
 				tmp = Py_BuildValue("Onnsiii", self->seqname, gs, ge, motif, j, rn, rl);
 				PyList_Append(gtrs, tmp);
 				Py_DECREF(tmp);
-				i = ge;
+				
+				i = ge - 1;
 				break;
 			}
 

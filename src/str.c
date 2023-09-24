@@ -5,6 +5,7 @@
 #include "structmember.h"
 
 static PyObject* pytrf_strfinder_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
+	int i;
 	int mono = 12;
 	int di = 7;
 	int tri = 5;
@@ -33,15 +34,23 @@ static PyObject* pytrf_strfinder_new(PyTypeObject *type, PyObject *args, PyObjec
 	obj->min_lens[5] = penta * 5;
 	obj->min_lens[6] = hexa * 6;
 
+	obj->seq = PyUnicode_AsUTF8AndSize(obj->seqobj, &obj->size);
+
+	for (i = 0; i < 7; ++i) {
+		obj->boundary[i] = obj->size - i;
+	}
+
 	Py_INCREF(obj->seqname);
 	Py_INCREF(obj->seqobj);
-
-	obj->seq = PyUnicode_AsUTF8AndSize(obj->seqobj, &obj->size);
 
 	return (PyObject *)obj;
 }
 
 static void pytrf_strfinder_dealloc(pytrf_STRFinder *self) {
+	if (self->boundary) {
+		free(self->boundary);
+	}
+
 	Py_DECREF(self->seqname);
 	Py_DECREF(self->seqobj);
 	self->seq = NULL;
@@ -65,8 +74,8 @@ static PyObject* pytrf_strfinder_next(pytrf_STRFinder *self) {
 	//current start position
 	Py_ssize_t cs;
 
-	//end boundary position
-	Py_ssize_t eb;
+	//boundary position
+	Py_ssize_t b;
 
 	//motif length
 	int j;
@@ -82,9 +91,9 @@ static PyObject* pytrf_strfinder_next(pytrf_STRFinder *self) {
 
 		cs = i;
 		for (j = 1; j <= 6; ++j) {
-			eb = self->size - j;
+			b = self->boundary[j];
 
-			while ((i < eb) && (self->seq[i] == self->seq[i+j])) {
+			while ((i < b) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
@@ -105,7 +114,7 @@ static PyObject* pytrf_strfinder_next(pytrf_STRFinder *self) {
 				self->next_start = ssr->end;
 				return (PyObject *)ssr;
 			}
-			
+
 			i = cs;
 		}
 	}
@@ -115,16 +124,28 @@ static PyObject* pytrf_strfinder_next(pytrf_STRFinder *self) {
 
 static PyObject* pytrf_strfinder_as_list(pytrf_STRFinder *self) {
 	int j;
-	int replen;
-	int repeats;
-	int length;
+
+	//repeat length
+	int rl;
+
+	//ssr repeats
+	int sr;
+
+	//ssr length
+	int sl;
 	
-	char *motif = (char *)malloc(7);
+	char motif[7];
 
 	Py_ssize_t i;
+	
+	//current start position
 	Py_ssize_t cs;
+	
+	//str end position
 	Py_ssize_t se;
-	Py_ssize_t eb;
+
+	//boundary
+	Py_ssize_t b;
 
 	PyObject *ssrs = PyList_New(0);
 	PyObject *tmp;
@@ -136,33 +157,31 @@ static PyObject* pytrf_strfinder_as_list(pytrf_STRFinder *self) {
 
 		cs = i;
 		for (j = 1; j < 7; ++j) {
-			eb = self->size - j;
+			b = self->boundary[j];
 
-			while ((i < eb) && (self->seq[i] == self->seq[i+j])) {
+			while ((i < b) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
-			replen = i + j - cs;
+			rl = i + j - cs;
 
-			if (replen >= self->min_lens[j]) {
+			if (rl >= self->min_lens[j]) {
 				memcpy(motif, self->seq+cs, j);
 				motif[j] = '\0';
-				repeats = replen/j;
-				length = repeats * j;
-				se = cs+length;
-				tmp = Py_BuildValue("Onnsiii", self->seqname, cs+1, se, motif, j, repeats, length);
+				sr = rl / j;
+				sl = sr * j;
+				se = cs + sl;
+				tmp = Py_BuildValue("Onnsiii", self->seqname, cs+1, se, motif, j, sr, sl);
 				PyList_Append(ssrs, tmp);
 				Py_DECREF(tmp);
 
-				i = se;
+				i = se - 1;
 				break;
-			} else {
-				i = cs;
 			}
+			i = cs;
 		}
 	}
 
-	free(motif);
 	return ssrs;
 }
 
