@@ -51,14 +51,14 @@ static int** initial_matrix(int n, int m) {
 	return d;
 }
 
-/*void print_matrix(int **mx, int n, int m) {
+void print_matrix(int **mx, int n, int m) {
 	for (int i = 0; i <= n; ++i) {
 		for (int j = 0; j <= m; ++j) {
 			printf("%d\t", mx[i][j]);
 		}
 		printf("\n");
 	}
-}*/
+}
 
 /*
  * @param d array, edit distance matrix
@@ -106,7 +106,7 @@ static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 	}
 
 	//error occured or not
-	return d[i][m] > d[i-1][m] ? 1 : 0
+	return d[i][m] > d[i-1][m] ? 1 : 0;
 }
 
 /*
@@ -123,12 +123,6 @@ static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssize_t st, int n, int me, int dr) {
 	//row number of matrix
 	int i;
-
-	//column number of minimum edit
-	int j;
-
-	//column number of minimum edit in upper row
-	int k = 0;
 
 	//consecutive errors
 	int ce = 0;
@@ -173,65 +167,61 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
  * @param nd int, number of deletions
  * @return int, column number of minimum distance
  */
-static int wrap_around_backtrace(const char *s, char *ms, int ml, int **mx, Py_ssize_t st, int i, int dr, int *nm, int *ns, int *ni, int *nd) {
+static void wrap_around_backtrace(const char *s, char *ms, int ml, int **mx, Py_ssize_t st, int i, int dr, int *nm, int *ns, int *ni, int *nd) {
 	//match or mismatch cost
 	int c;
 
 	//column number of matrix
 	int j;
 
-	//column number for mimimum distance
-	int k = 0;
-
-	//find mimimum edit distance
-	for (j = 1; j <= ml; ++j) {
-		if (mx[i][j] <= mx[i][j-1]) {
-			k = j;
-		}
-	}
-
-	j = k;
-
-	while (i > 0) {
+	j = ml;
+	while (i > 1 || j > 1) {
 		c = s[st+i*dr] == ms[j-1] ? 0 : 1;
 
 		if (j == 1) {
-			if (mx[i][1] == mx[i-1][ml]+c) {
+			if (mx[i][j] == (mx[i-1][ml] + c)) {
 				if (c == 0) {
 					++*nm;
 				} else {
 					++*ns;
 				}
-
+				--i;
 				j = ml;
-			} else if (mx[i][1] == mx[i][ml]+1) {
-				++*nd;
-				j = ml;
-			} else if (mx[i][1] == mx[i-1][1]+1) {
+			} else if (mx[i][j] == (mx[i-1][0] + c)) {
+				if (c == 0) {
+					++*nm;
+				} else {
+					++*ns;
+				}
+				--i;
+				--j;
+			} else if (mx[i][j] == (mx[i-1][1] + 1)) {
 				++*ni;
+				--i;
 			}
-
-			--i;
 		} else {
-			if (mx[i][j] == mx[i][j-1]+1) {
+			if ((j < ml) && (mx[i][j] == (mx[i][j-1] + 1))) {
 				++*nd;
-				--j;
-			} else if (mx[i][j] == mx[i-1][j-1]+c) {
-				if (c == 0) {
-					++*nm;
-				} else {
-					++*ns;
+				--i;
+			} else {
+				if (mx[i][j] == (mx[i-1][j-1] + c)) {
+					if (c == 0) {
+						++*nm;
+					} else {
+						++*ns;
+					}
+					--i;
+					--j;
+				} else if (mx[i][j] == (mx[i][j-1] + 1)) {
+					++*nd;
+					--j;
+				} else if (mx[i][j] == (mx[i-1][j] + 1)) {
+					++*ni;
+					--i;
 				}
-				--i;
-				--j;
-			} else if (mx[i][j] == mx[i-1][j]+1) {
-				++*ni;
-				--i;
 			}
 		}
 	}
-
-	return k;
 }
 
 static PyObject* pytrf_itrfinder_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
@@ -401,6 +391,8 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 					wrap_around_backtrace(self->seq, self->motif, j, self->matrix, extend_start,
 											extend_len, 1, &tandem_match, &tandem_substitute,
 											&tandem_insert, &tandem_delete);
+
+					print_matrix(self->matrix, extend_len, j);
 				}
 
 				tandem_end = extend_start + extend_len + 1;
@@ -532,6 +524,7 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 					wrap_around_backtrace(self->seq, self->motif, j, self->matrix, extend_start,
 											extend_len, 1, &tandem_match, &tandem_substitute,
 											&tandem_insert, &tandem_delete);
+					print_matrix(self->matrix, extend_len, j);
 				}
 
 				tandem_align = tandem_match + tandem_insert + tandem_substitute + tandem_delete;
