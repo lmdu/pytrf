@@ -38,9 +38,6 @@ static int** initial_matrix(int n, int m) {
 
 	for (i = 0; i <= n; ++i) {
 		d[i] = (int *)malloc(sizeof(int)*(m+1));
-	}
-
-	for (i = 0; i <= n; ++i) {
 		d[i][0] = i;
 	}
 
@@ -524,6 +521,8 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 					wrap_around_backtrace(self->seq, self->motif, j, self->matrix, extend_start,
 											extend_len, 1, &tandem_match, &tandem_substitute,
 											&tandem_insert, &tandem_delete);
+
+					printf("%d\n", extend_len);
 					print_matrix(self->matrix, extend_len, j);
 				}
 
