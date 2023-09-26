@@ -75,7 +75,7 @@ def wrap_around_backtrace(s, ms, ml, mx, st, i, dr):
 
 	path = []
 
-	while i > 1 or j > 1:
+	while i > 0 or j > 0:
 		path.append((i, j))
 
 		if s[st+i*dr] == ms[j-1]:
@@ -107,6 +107,7 @@ def wrap_around_backtrace(s, ms, ml, mx, st, i, dr):
 				i -= 1
 
 		else:
+			"""
 			if j < ml and mx[i][j] == (mx[i][j-1] + 1):
 				nd += 1
 				i -= 1
@@ -120,7 +121,7 @@ def wrap_around_backtrace(s, ms, ml, mx, st, i, dr):
 
 					i -= 1
 					j -= 1
-				
+
 				elif mx[i][j] == (mx[i][j-1] + 1):
 					nd += 1
 					j -= 1
@@ -128,6 +129,25 @@ def wrap_around_backtrace(s, ms, ml, mx, st, i, dr):
 				elif mx[i][j] == (mx[i-1][j] + 1):
 					ni += 1
 					i -= 1
+			"""
+
+			mval = min(mx[i-1][j-1], mx[i-1][j], mx[i][j-1])
+
+			if mval == mx[i-1][j-1]:
+				if mval == mx[i][j]:
+					nm += 1
+				else:
+					ns += 1
+
+				i -= 1
+				j -= 1
+			elif mval == mx[i-1][j]:
+				ni += 1
+				i -= 1
+
+			elif mval == mx[i][j-1]:
+				nd += 1
+				j -= 1
 
 	return nm, ns, ni, nd, path
 
@@ -197,6 +217,7 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 												max_consecutive_error, 1)
 
 				if extend_len > 0:
+					print_matrix(seq, motif, matrix, extend_start, extend_len, j)
 					ed = wrap_around_backtrace(seq, motif, j, matrix, extend_start, extend_len, 1)
 					tandem_match += ed[0]
 					tandem_substitute += ed[1]
@@ -232,7 +253,8 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 	return atrs
 
 if __name__ == '__main__':
-	s = "AAGAAGAAGAAGCCGAGAAGGTAGATAG"
+	#s = "AAGAAGAAGAAGCCGAGAAGGTAGATAG"
+	s = "ATGCATGCATGCAGGCTGC"
 
 	atrs = atr_finder(s)
 
