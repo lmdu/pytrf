@@ -11,7 +11,8 @@
 #include "structmember.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MIN3(a, b, c) MIN(MIN(a, b), c)
+#define MIN3(a, b, c) MIN(MIN((a), (b)), (c))
+#define MIN4(a, b, c, d) MIN(MIN((a), (b)), MIN((c), (d)))
 
 void reverse_motif(char *s, int m) {
 	int i, j;
@@ -30,8 +31,7 @@ void reverse_motif(char *s, int m) {
  * @return array, dynamic programming edit distance matrix
  */
 static int** initial_matrix(int n, int m) {
-	int i;
-	int j;
+	int i, j;
 	int **d;
 
 	d = (int **)malloc(sizeof(int *)*(n+1));
@@ -164,58 +164,70 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
  * @param nd int, number of deletions
  * @return int, column number of minimum distance
  */
-static void wrap_around_backtrace(const char *s, char *ms, int ml, int **mx, Py_ssize_t st, int i, int dr, int *nm, int *ns, int *ni, int *nd) {
-	//match or mismatch cost
-	int c;
+static void wrap_around_backtrace(int **mx, int m, int i, int dr, int *nm, int *ns, int *ni, int *nd) {
+	//minimum value of edit distance
+	int v;
 
 	//column number of matrix
 	int j;
 
-	j = ml;
-	while (i > 1 || j > 1) {
-		c = s[st+i*dr] == ms[j-1] ? 0 : 1;
+	j = m;
 
+	while (i > 0 || j > 0) {
 		if (j == 1) {
-			if (mx[i][j] == (mx[i-1][ml] + c)) {
-				if (c == 0) {
+			v = MIN4(mx[i][m], mx[i-1][m], mx[i-1][0], mx[i-1][1]);
+
+			if ((i > 0) && (j < m) && (v == mx[i][m])) {
+				++*nd;
+				j = m;
+
+			} else if (v == mx[i-1][m]) {
+				if (v == mx[i][j]) {
 					++*nm;
 				} else {
 					++*ns;
 				}
+
 				--i;
-				j = ml;
-			} else if (mx[i][j] == (mx[i-1][0] + c)) {
-				if (c == 0) {
+				j = m;
+
+			} else if (v == mx[i-1][0]) {
+				if (v == mx[i][j]) {
+					++*nm;
+				} else {
+					++*ns;
+				}
+
+				--i;
+				--j;
+
+			} else if (v == (mx[i-1][1])) {
+				++*ni;
+				--i;
+			} else {
+				printf("j=1, %d, %d, %d\n", i, j, v);
+			}
+		} else {
+			v = MIN3(mx[i-1][j-1], mx[i-1][j], mx[i][j-1]);
+
+			if (v == mx[i-1][j-1]) {
+				if (v == mx[i][j]) {
 					++*nm;
 				} else {
 					++*ns;
 				}
 				--i;
 				--j;
-			} else if (mx[i][j] == (mx[i-1][1] + 1)) {
+
+			} else if (v == mx[i-1][j]) {
 				++*ni;
 				--i;
-			}
-		} else {
-			if ((j < ml) && (mx[i][j] == (mx[i][j-1] + 1))) {
+
+			} else if (v == mx[i][j-1]) {
 				++*nd;
-				--i;
+				--j;
 			} else {
-				if (mx[i][j] == (mx[i-1][j-1] + c)) {
-					if (c == 0) {
-						++*nm;
-					} else {
-						++*ns;
-					}
-					--i;
-					--j;
-				} else if (mx[i][j] == (mx[i][j-1] + 1)) {
-					++*nd;
-					--j;
-				} else if (mx[i][j] == (mx[i-1][j] + 1)) {
-					++*ni;
-					--i;
-				}
+				printf("j>1, %d, %d, %d\n", i, j, v);
 			}
 		}
 	}
@@ -366,10 +378,12 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 												extend_maxlen, self->max_errors, -1);
 
 				if (extend_len > 0) {
-					wrap_around_backtrace(self->seq, self->motif, j, self->matrix, extend_start,
-											extend_len, -1, &tandem_match, &tandem_substitute,
-											&tandem_insert, &tandem_delete);
+					//print_matrix(self->matrix, extend_len, j);
+
+					wrap_around_backtrace(self->matrix, j, extend_len, -1, &tandem_match,
+											&tandem_substitute, &tandem_insert, &tandem_delete);
 				}
+
 				//need to recover motif after extend to left
 				reverse_motif(self->motif, j);
 				tandem_start = extend_start - extend_len + 1;
@@ -385,11 +399,8 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 												extend_maxlen, self->max_errors, 1);
 
 				if (extend_len > 0) {
-					wrap_around_backtrace(self->seq, self->motif, j, self->matrix, extend_start,
-											extend_len, 1, &tandem_match, &tandem_substitute,
-											&tandem_insert, &tandem_delete);
-
-					print_matrix(self->matrix, extend_len, j);
+					wrap_around_backtrace(self->matrix, j, extend_len, 1, &tandem_match,
+											&tandem_substitute, &tandem_insert, &tandem_delete);
 				}
 
 				tandem_end = extend_start + extend_len + 1;
@@ -499,9 +510,8 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 												extend_maxlen, self->max_errors, -1);
 
 				if (extend_len > 0) {
-					wrap_around_backtrace(self->seq, self->motif, j, self->matrix, extend_start,
-											extend_len, -1, &tandem_match, &tandem_substitute,
-											&tandem_insert, &tandem_delete);
+					wrap_around_backtrace(self->matrix, j, extend_len, -1, &tandem_match,
+											&tandem_substitute, &tandem_insert, &tandem_delete);
 				}
 
 				reverse_motif(self->motif, j);
@@ -518,12 +528,8 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 												extend_maxlen, self->max_errors, 1);
 
 				if (extend_len > 0) {
-					wrap_around_backtrace(self->seq, self->motif, j, self->matrix, extend_start,
-											extend_len, 1, &tandem_match, &tandem_substitute,
-											&tandem_insert, &tandem_delete);
-
-					printf("%d\n", extend_len);
-					print_matrix(self->matrix, extend_len, j);
+					wrap_around_backtrace(self->matrix, j, extend_len, 1, &tandem_match,
+											&tandem_substitute, &tandem_insert, &tandem_delete);
 				}
 
 				tandem_align = tandem_match + tandem_insert + tandem_substitute + tandem_delete;

@@ -1,8 +1,12 @@
 import pytrf
+import pyfastx
 
-s = "AAGAAGAAGAAGCCGAGAAGGTAGATAG"
+fa = pyfastx.Fasta('../krait2/data/chr2.fa.gz')
 
-atrs = pytrf.ATRFinder('s1',s).as_list()
+for s in fa:
+	pass
 
-print(atrs)
+atrs = pytrf.ATRFinder(s.name, s.seq)
 
+for atr in atrs:
+	print(atr.as_string())

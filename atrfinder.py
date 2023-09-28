@@ -1,3 +1,5 @@
+import sys
+
 def initial_matrix(n, m):
 	d = []
 
@@ -84,7 +86,11 @@ def wrap_around_backtrace(s, ms, ml, mx, st, i, dr):
 			c = 1
 
 		if j == 1:
-			if mx[i][j] == (mx[i-1][ml] + c):
+			if mx[i][j] == (mx[i][ml] + 1):
+				nd += 1
+				j = ml
+
+			elif mx[i][j] == (mx[i-1][ml] + c):
 				if c == 0:
 					nm += 1
 				else:
@@ -230,8 +236,6 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 						matrix[a][b] = "{}*".format(matrix[a][b])
 
 					print_matrix(seq, motif, matrix, extend_start, extend_len, j)
-
-					
 				
 				tandem_align = tandem_match + tandem_insert + tandem_substitute + tandem_delete
 				tandem_identity = tandem_match / tandem_align
@@ -253,9 +257,9 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 	return atrs
 
 if __name__ == '__main__':
-	#s = "AAGAAGAAGAAGCCGAGAAGGTAGATAG"
-	s = "ATGCATGCATGCAGGCTGC"
+	s = "AAGAAGAAGAAGCCGAGAAGGTAGATAG"
+	#s = "ATGCATGCATGCAGGCTGC"
 
-	atrs = atr_finder(s)
+	atrs = atr_finder(sys.argv[1])
 
 	print(atrs)
