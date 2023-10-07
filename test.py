@@ -1,7 +1,7 @@
 import pytrf
 import pyfastx
 
-fa = pyfastx.Fasta('../krait2/data/chr2.fa.gz')
+fa = pyfastx.Fasta('../krait2/data/chr2.fa.gz', uppercase=True)
 
 for s in fa:
 	pass

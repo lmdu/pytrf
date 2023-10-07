@@ -12,150 +12,123 @@ def initial_matrix(n, m):
 
 	return d
 
-def print_matrix(s, ms, mx, st, n, m):
-	print('\t\t{}'.format('\t'.join(list(ms))))
+def print_matrix(seq, mseq, matrix, start, n, mlen, direction=1):
+	print('\t\t{}'.format('\t'.join(list(mseq))))
 
 	for i in range(n+1):
 		if i > 0:
-			b = s[st+i]
+			base = seq[start+i*direction]
 		else:
-			b = ''
+			base = ''
 
-		print("{}\t{}".format(b, '\t'.join(map(str, mx[i][0:m+1]))))
+		print("{}\t{}".format(base, '\t'.join(map(str, matrix[i][0:mlen+1]))))
 
-def wrap_around_distance(b, s, m, i, d):
+def wrap_around_distance(base, mseq, mlen, i, matrix):
 	#first pass
 	#j = 1
-	if b == s[0]:
-		c = 0
+	if base == mseq[0]:
+		cost = 0
 	else:
-		c = 1
+		cost = 1
 
-	d[i][1] = min(d[i-1][0]+c, d[i-1][m]+c, d[i-1][1]+1)
+	matrix[i][1] = min(matrix[i-1][0]+cost, matrix[i-1][mlen]+cost, matrix[i-1][1]+1)
 
 	#j > 1
-	for j in range(2, m+1):
-		if b == s[j-1]:
-			c = 0
+	for j in range(2, mlen+1):
+		if base == mseq[j-1]:
+			cost = 0
 		else:
-			c = 1
+			cost = 1
 
-		d[i][j] = min(d[i-1][j-1]+c, d[i][j-1]+1, d[i-1][j]+1)
+		matrix[i][j] = min(matrix[i-1][j-1]+cost, matrix[i][j-1]+1, matrix[i-1][j]+1)
 
 	#second pass
-	d[i][1] = min(d[i][1], d[i][m]+1)
+	#j = 1
+	matrix[i][1] = min(matrix[i][1], matrix[i][mlen]+1)
 
-	for j in range(2, m):
-		d[i][j] = min(d[i][j], d[i][j-1]+1)
+	#j > 1
+	for j in range(2, mlen):
+		matrix[i][j] = min(matrix[i][j], matrix[i][j-1]+1)
 
-	return d[i][m] > d[i-1][m]
+	return matrix[i][mlen] > matrix[i-1][mlen]
 
 
-def wrap_around_extend(s, ms, ml, mx, st, n, me, dr):
-	ce = 0
+def wrap_around_extend(seq, mseq, mlen, matrix, start, size, max_error, direction):
+	current_error = 0
 
-	if not n:
-		return 0
+	if size <= 0: return 0
 
-	for i in range(1, n+1):
-		if wrap_around_distance(s[st+i*dr], ms, ml, i, mx):
-			ce += 1
+	for i in range(1, size+1):
+		if wrap_around_distance(seq[start+i*direction], mseq, mlen, i, matrix):
+			current_error += 1
 
 		else:
-			ce = 0
+			current_error = 0
 
-		if ce > me:
-			break
+		if current_error > max_error: break
 
-	i -= ce;
+	i -= current_error
 
 	return i
 
-def wrap_around_backtrace(s, ms, ml, mx, st, i, dr):
-	nm = ns = ni = nd = 0
-	j = ml
+def wrap_around_backtrace(mlen, matrix, i):
+	num_mat = num_sub = num_ins = num_del = 0
+	j = mlen
 
 	path = []
 
 	while i > 0 or j > 0:
 		path.append((i, j))
 
-		if s[st+i*dr] == ms[j-1]:
-			c = 0
-		else:
-			c = 1
-
 		if j == 1:
-			if mx[i][j] == (mx[i][ml] + 1):
-				nd += 1
-				j = ml
+			v = min(matrix[i][mlen], matrix[i-1][mlen], matrix[i-1][0], matrix[i-1][1])
 
-			elif mx[i][j] == (mx[i-1][ml] + c):
-				if c == 0:
-					nm += 1
+			if i > 0 and j < mlen and v == matrix[i][mlen]:
+				num_del += 1
+				j = mlen
+
+			elif v == matrix[i-1][mlen]:
+				if v == matrix[i][j]:
+					num_mat += 1
 				else:
-					ns += 1
+					num_sub += 1
 
 				i -= 1
-				j = ml
+				j = mlen
 
-			elif mx[i][j] == (mx[i-1][0] + c):
-				if c == 0:
-					nm += 1
+			elif v == matrix[i-1][0]:
+				if v == matrix[i][j]:
+					num_mat += 1
 				else:
-					ns += 1
+					num_sub += 1
 
 				i -= 1
 				j -= 1
 
-			elif mx[i][j] == (mx[i-1][1] + 1):
-				ni += 1
+			elif v == matrix[i-1][1]:
+				num_ins += 1
 				i -= 1
 
 		else:
-			"""
-			if j < ml and mx[i][j] == (mx[i][j-1] + 1):
-				nd += 1
-				i -= 1
-			
-			else:
-				if mx[i][j] == (mx[i-1][j-1] + c):
-					if c == 0:
-						nm += 1
-					else:
-						ns += 1
+			v = min(matrix[i-1][j-1], matrix[i-1][j], matrix[i][j-1])
 
-					i -= 1
-					j -= 1
-
-				elif mx[i][j] == (mx[i][j-1] + 1):
-					nd += 1
-					j -= 1
-				
-				elif mx[i][j] == (mx[i-1][j] + 1):
-					ni += 1
-					i -= 1
-			"""
-
-			mval = min(mx[i-1][j-1], mx[i-1][j], mx[i][j-1])
-
-			if mval == mx[i-1][j-1]:
-				if mval == mx[i][j]:
-					nm += 1
+			if v == matrix[i-1][j-1]:
+				if v == matrix[i][j]:
+					num_mat += 1
 				else:
-					ns += 1
+					num_sub += 1
 
 				i -= 1
 				j -= 1
-			elif mval == mx[i-1][j]:
-				ni += 1
+			elif v == matrix[i-1][j]:
+				num_ins += 1
 				i -= 1
 
-			elif mval == mx[i][j-1]:
-				nd += 1
+			elif v == matrix[i][j-1]:
+				num_del += 1
 				j -= 1
 
-	return nm, ns, ni, nd, path
+	return num_mat, num_sub, num_ins, num_del, path
 
 def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 				max_consecutive_error=3, min_identity=0.7, max_extend_length=1000):
@@ -165,9 +138,10 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 	size = len(seq)
 	atrs = []
 	i = 0
-	
+
 	while i < size:
 		if seq[i] == 'N':
+			i += 1
 			continue
 
 		seed_start = i
@@ -203,12 +177,18 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 												 extend_maxlen, max_consecutive_error, -1)
 
 				if extend_len > 0:
-					ed = wrap_around_backtrace(seq, motif, j, matrix, extend_start, extend_len, -1)
+					print("left:")
+					print_matrix(seq, motif, matrix, extend_start, extend_len, j, -1)
+					ed = wrap_around_backtrace(j, matrix, extend_len)
 					tandem_match += ed[0]
 					tandem_substitute += ed[1]
 					tandem_insert += ed[2]
 					tandem_delete += ed[3]
 
+					#path = ed[4]
+
+					#for a, b in path:
+					#	matrix[a][b] = "{}*".format(matrix[a][b])
 				
 				tandem_start = extend_start - extend_len + 1
 				
@@ -223,8 +203,8 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 												max_consecutive_error, 1)
 
 				if extend_len > 0:
-					print_matrix(seq, motif, matrix, extend_start, extend_len, j)
-					ed = wrap_around_backtrace(seq, motif, j, matrix, extend_start, extend_len, 1)
+					#print_matrix(seq, motif, matrix, extend_start, extend_len, j)
+					#ed = wrap_around_backtrace(j, matrix, extend_len)
 					tandem_match += ed[0]
 					tandem_substitute += ed[1]
 					tandem_insert += ed[2]
@@ -232,10 +212,10 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 
 					path = ed[4]
 
-					for a, b in path:
-						matrix[a][b] = "{}*".format(matrix[a][b])
+					#for a, b in path:
+					#	matrix[a][b] = "{}*".format(matrix[a][b])
 
-					print_matrix(seq, motif, matrix, extend_start, extend_len, j)
+					#print_matrix(seq, motif, matrix, extend_start, extend_len, j)
 				
 				tandem_align = tandem_match + tandem_insert + tandem_substitute + tandem_delete
 				tandem_identity = tandem_match / tandem_align
@@ -257,9 +237,10 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 	return atrs
 
 if __name__ == '__main__':
-	s = "AAGAAGAAGAAGCCGAGAAGGTAGATAG"
+	#s = "AAGAAGAAGAAGCCGAGAAGGTAGATAG"
 	#s = "ATGCATGCATGCAGGCTGC"
 
-	atrs = atr_finder(sys.argv[1])
-
-	print(atrs)
+	import pyfastx
+	for s in pyfastx.Fasta('../krait2/data/chr2.fa.gz'):
+		pass
+	atrs = atr_finder(s.seq)

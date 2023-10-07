@@ -378,7 +378,8 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 												extend_maxlen, self->max_errors, -1);
 
 				if (extend_len > 0) {
-					//print_matrix(self->matrix, extend_len, j);
+					printf("left: %s, %zd\n", self->motif, extend_start);
+					print_matrix(self->matrix, extend_len, j);
 
 					wrap_around_backtrace(self->matrix, j, extend_len, -1, &tandem_match,
 											&tandem_substitute, &tandem_insert, &tandem_delete);
@@ -399,6 +400,9 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 												extend_maxlen, self->max_errors, 1);
 
 				if (extend_len > 0) {
+					printf("%s, right:\n", self->motif);
+					print_matrix(self->matrix, extend_len, j);
+
 					wrap_around_backtrace(self->matrix, j, extend_len, 1, &tandem_match,
 											&tandem_substitute, &tandem_insert, &tandem_delete);
 				}
