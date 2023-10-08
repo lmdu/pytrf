@@ -78,16 +78,30 @@ def wrap_around_backtrace(mlen, matrix, i):
 	path = []
 
 	while i > 0 or j > 0:
-		path.append((i, j))
+		print(i, j)
+		#go back through second pass
+		if i > 0 and j > 0 and j < mlen:
+			if j == 1:
+				if matrix[i][j] == matrix[i][mlen] + 1:
+					num_del += 1
+					j = mlen
+					continue
+			else:
+				if matrix[i][j] == matrix[i][j-1] + 1:
+					num_del += 1
+					j -= 1
+					continue
 
+		elif i == 0:
+			num_del += 1
+			j -= 1
+			continue
+
+		#go back through first pass
 		if j == 1:
-			v = min(matrix[i][mlen], matrix[i-1][mlen], matrix[i-1][0], matrix[i-1][1])
+			v = min(matrix[i-1][mlen], matrix[i-1][0], matrix[i-1][1])
 
-			if i > 0 and j < mlen and v == matrix[i][mlen]:
-				num_del += 1
-				j = mlen
-
-			elif v == matrix[i-1][mlen]:
+			if v == matrix[i-1][mlen]:
 				if v == matrix[i][j]:
 					num_mat += 1
 				else:
@@ -120,6 +134,7 @@ def wrap_around_backtrace(mlen, matrix, i):
 
 				i -= 1
 				j -= 1
+
 			elif v == matrix[i-1][j]:
 				num_ins += 1
 				i -= 1
@@ -147,7 +162,7 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 		seed_start = i
 
 		for j in range(1, max_motif_size+1):
-			b = size - j;
+			b = size - j
 
 			while i < b and seq[i] == seq[i+j]:
 				i += 1
@@ -159,7 +174,7 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 
 			if seed_repeat >= min_seed_repeat and seed_length >= min_seed_length:
 				motif = seq[seed_start:seed_start+j]
-
+				#0-based end position
 				seed_end = seed_start + seed_length - 1
 				tandem_match = seed_length
 				tandem_substitute = 0
@@ -177,8 +192,8 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 												 extend_maxlen, max_consecutive_error, -1)
 
 				if extend_len > 0:
-					print("left:")
-					print_matrix(seq, motif, matrix, extend_start, extend_len, j, -1)
+					print("left: {} {} {}".format(extend_start, j, seed_length))
+					print_matrix(seq, motif[::-1], matrix, extend_start, extend_len, j, -1)
 					ed = wrap_around_backtrace(j, matrix, extend_len)
 					tandem_match += ed[0]
 					tandem_substitute += ed[1]
@@ -241,6 +256,6 @@ if __name__ == '__main__':
 	#s = "ATGCATGCATGCAGGCTGC"
 
 	import pyfastx
-	for s in pyfastx.Fasta('../krait2/data/chr2.fa.gz'):
+	for s in pyfastx.Fasta('../data/chr2.fa.gz'):
 		pass
 	atrs = atr_finder(s.seq)
