@@ -174,14 +174,32 @@ static void wrap_around_backtrace(int **mx, int m, int i, int dr, int *nm, int *
 	j = m;
 
 	while (i > 0 || j > 0) {
+		//go back through second pass
+		if ((i > 0) && (j > 0) && (j < m)) {
+			if (j == 1) {
+				if (mx[i][j] == (mx[i][m] + 1)) {
+					++*nd;
+					j = m;
+					continue;
+				}
+			} else {
+				if (mx[i][j] == (mx[i][j-1] + 1)) {
+					++*nd;
+					--j;
+					continue;
+				}
+			}
+		} else if (i == 0) {
+			++*nd;
+			--j;
+			continue;
+		}
+
+		//go back through first pass
 		if (j == 1) {
-			v = MIN4(mx[i][m], mx[i-1][m], mx[i-1][0], mx[i-1][1]);
+			v = MIN3(mx[i-1][m], mx[i-1][0], mx[i-1][1]);
 
-			if ((i > 0) && (j < m) && (v == mx[i][m])) {
-				++*nd;
-				j = m;
-
-			} else if (v == mx[i-1][m]) {
+			if (v == mx[i-1][m]) {
 				if (v == mx[i][j]) {
 					++*nm;
 				} else {
@@ -190,7 +208,6 @@ static void wrap_around_backtrace(int **mx, int m, int i, int dr, int *nm, int *
 
 				--i;
 				j = m;
-
 			} else if (v == mx[i-1][0]) {
 				if (v == mx[i][j]) {
 					++*nm;
@@ -200,12 +217,9 @@ static void wrap_around_backtrace(int **mx, int m, int i, int dr, int *nm, int *
 
 				--i;
 				--j;
-
 			} else if (v == (mx[i-1][1])) {
 				++*ni;
 				--i;
-			} else {
-				printf("j=1, %d, %d, %d\n", i, j, v);
 			}
 		} else {
 			v = MIN3(mx[i-1][j-1], mx[i-1][j], mx[i][j-1]);
@@ -216,18 +230,15 @@ static void wrap_around_backtrace(int **mx, int m, int i, int dr, int *nm, int *
 				} else {
 					++*ns;
 				}
+
 				--i;
 				--j;
-
 			} else if (v == mx[i-1][j]) {
 				++*ni;
 				--i;
-
 			} else if (v == mx[i][j-1]) {
 				++*nd;
 				--j;
-			} else {
-				printf("j>1, %d, %d, %d\n", i, j, v);
 			}
 		}
 	}
@@ -378,9 +389,6 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 												extend_maxlen, self->max_errors, -1);
 
 				if (extend_len > 0) {
-					printf("left: %s, %zd\n", self->motif, extend_start);
-					print_matrix(self->matrix, extend_len, j);
-
 					wrap_around_backtrace(self->matrix, j, extend_len, -1, &tandem_match,
 											&tandem_substitute, &tandem_insert, &tandem_delete);
 				}
@@ -400,9 +408,6 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 												extend_maxlen, self->max_errors, 1);
 
 				if (extend_len > 0) {
-					printf("%s, right:\n", self->motif);
-					print_matrix(self->matrix, extend_len, j);
-
 					wrap_around_backtrace(self->matrix, j, extend_len, 1, &tandem_match,
 											&tandem_substitute, &tandem_insert, &tandem_delete);
 				}
