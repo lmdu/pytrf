@@ -26,8 +26,20 @@ typedef struct {
 	//imperfect tandem repeat stop position
 	Py_ssize_t end;
 
+	//seed start position
+	Py_ssize_t sstart;
+
+	//seed end position
+	Py_ssize_t send;
+
+	//seed repeats
+	int srepeat;
+
 	//motif length
 	int mlen;
+
+	//tandem repeat
+	int repeat;
 
 	//tandem length
 	int length;
@@ -45,7 +57,7 @@ typedef struct {
 	int deletions;
 
 	//identity
-	double identity;
+	float identity;
 
 } pytrf_ATR;
 

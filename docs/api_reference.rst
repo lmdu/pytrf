@@ -75,7 +75,7 @@ pytrf.GTRFinder
 pytrf.ATRFinder
 ---------------
 
-.. py:class:: pytrf.ATRFinder(chrom, seq, max_motif_size=6, seed_min_repeat=3, seed_min_length=10, max_continuous_error=3, min_identity=70, max_extend_length=2000)
+.. py:class:: pytrf.ATRFinder(chrom, seq, min_motif_size=1, max_motif_size=6, min_seed_repeat=3, min_seed_length=10, max_consecutive_error=3, min_extend_identity=70, max_extend_length=2000)
 
 	Find all approximate or imperfect tandem repeats (ATRs) from the input sequence
 
@@ -83,15 +83,17 @@ pytrf.ATRFinder
 
 	:param str seq: the input DNA sequence
 
+	:param int min_motif_size: minimum length of motif
+
 	:param int max_motif_size: maximum length of motif
 
-	:param int seed_min_repeat: minimum number of repeat for seed
+	:param int min_seed_repeat: minimum number of repeat for seed
 
-	:param int seed_min_length: minimum length of seed
+	:param int min_seed_length: minimum length of seed
 
-	:param int max_continuous_error: maximum number of allowed continuous aligned errors
+	:param int max_consecutive_error: maximum number of allowed consecutive aligned errors
 
-	:param float min_identity: minimum identity between ATR with its perfect counterpart (0~100)
+	:param float min_extend_identity: minimum identity of extended alignment (0~1)
 
 	:param int max_extend_length: maximum length allowed to extend
 
@@ -99,7 +101,7 @@ pytrf.ATRFinder
 
 	.. py:method:: as_list()
 
-		Put all ATRs in a list and return, each ATR in list has 11 columns including [sequence name, start position, end position, motif sequence, motif length, ATR length, matches, substitutions, insertions, deletions, identity]
+		Put all ATRs in a list and return, each ATR in list has 14 columns including [sequence name, seed start position, seed end position, motif sequence, motif length, seed repeat, ATR start position, ATR end position, ATR repeat, ATR length, extend matches, extend substitutions, extend insertions, extend deletions, extend identity]
 
 pytrf.ETR
 ---------
@@ -128,7 +130,7 @@ pytrf.ETR
 
 		motif length
 
-	.. py:attribute:: repeats
+	.. py:attribute:: repeat
 
 		number of repeats
 
@@ -177,11 +179,23 @@ pytrf.ATR
 
 	.. py:attribute:: start
 
-		ETR one-based start position on sequence
+		ATR one-based start position on sequence
 
 	.. py:attribute:: end
 
-		ETR one-based end position on sequence
+		ATR one-based end position on sequence
+
+	.. py:attribute:: seed_start
+
+		start position of seed
+
+	.. py:attribute:: seed_end
+
+		end position of seed
+
+	.. py:attribute:: seed_repeat
+
+		repeat number of seed
 
 	.. py:attribute:: motif
 
@@ -191,29 +205,33 @@ pytrf.ATR
 
 		motif length
 
+	.. py:attribute:: repeat
+
+		repeat number of perfect counterpart
+
 	.. py:attribute:: length
 
 		length of ITR
 
 	.. py:attribute:: matches
 
-		number of matches
+		number of matches for extend
 
 	.. py:attribute:: substitutions
 
-		number of substitutions
+		number of substitutions for extend
 
 	.. py:attribute:: insertions
 
-		number of insertions
+		number of insertions for extend
 
 	.. py:attribute:: deletions
 
-		number of deletions
+		number of deletions for extend
 
 	.. py:attribute:: identity
 
-		similar identity
+		extend identity
 
 	.. py:attribute:: seq
 

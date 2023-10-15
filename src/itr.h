@@ -35,11 +35,14 @@ typedef struct {
 	//maximal continuous error
 	int max_errors;
 
+	//min motif size
+	int min_motif;
+
 	//max motif size
 	int max_motif;
 
 	//min identity
-	double min_identity;
+	float min_identity;
 
 	//maximal extend length
 	int extend_maxlen;

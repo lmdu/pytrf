@@ -18,16 +18,19 @@ static PyObject* pytrf_atr_repr(pytrf_ATR *self) {
 }
 
 static PyObject* pytrf_atr_as_list(pytrf_ATR *self) {
-	return Py_BuildValue("OnnOiiiiiid", self->seqid, self->start, self->end, self->motif, self->mlen,
+	return Py_BuildValue("OnnOiinniiiiiif", self->seqid, self->sstart, self->send, self->motif,
+						self->mlen, self->srepeat, self->start, self->end, self->repeat,
 						self->length, self->matches, self->substitutions, self->insertions,
 						self->deletions, self->identity);
 }
 
 static PyObject* pytrf_atr_as_dict(pytrf_ATR *self) {
-	return Py_BuildValue("{s:O,s:n,s:n,s:O,s:i,s:i,s:i,s:i,s:i,s:i,s:d}", "chrom", self->seqid,
-						 "start", self->start, "end", self->end, "motif", self->motif, "type", self->mlen,
-						 "length", self->length, "matches", self->matches, "substitutions", self->substitutions,
-						 "insertions", self->insertions, "deletions", self->deletions, "identity", self->identity);
+	return Py_BuildValue("{s:O,s:n,s:n,s:O,s:i,s:n,s:n,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:f}", "chrom", self->seqid,
+						"start", self->start, "end", self->end, "motif", self->motif, "type", self->mlen,
+						"seed_start", self->sstart, "seed_end", self->send, "seed_repeat", self->srepeat,
+						"repeat", self->repeat, "length", self->length, "matches", self->matches,
+						"substitutions", self->substitutions, "insertions", self->insertions,
+						"deletions", self->deletions, "identity", self->identity);
 }
 
 static PyObject* pytrf_atr_as_gff(pytrf_ATR *self, PyObject *args, PyObject *kwargs) {
@@ -42,9 +45,9 @@ static PyObject* pytrf_atr_as_gff(pytrf_ATR *self, PyObject *args, PyObject *kwa
 	}
 
 	percent = PyFloat_FromDouble(self->identity);
-	retval = PyUnicode_FromFormat("%S\tpytrf\tATR\t%zd\t%zd\t.\t+\t.\tMotif=%S;Type=%d;Length=%d;Match=%d;"
-								"Substitutions=%d;Insertions=%d;Deletions=%d;Identity=%S%s", self->seqid, self->start,
-								self->end, self->motif, self->mlen, self->length, self->matches, self->substitutions, 
+	retval = PyUnicode_FromFormat("%S\tpytrf\tATR\t%zd\t%zd\t.\t+\t.\tSeed_start=%zd;Seed_end=%zd;Seed_repeat=%d;Motif=%S;Type=%d;Repeat=%d;Length=%d;Match=%d;Substitutions=%d;Insertions=%d;Deletions=%d;Identity=%S%s",
+								self->seqid, self->start, self->end, self->sstart, self->send, self->srepeat,
+								self->motif, self->mlen, self->repeat, self->length, self->matches, self->substitutions, 
 								self->insertions, self->deletions, percent, terminator);
 	Py_DECREF(percent);
 	return retval;
@@ -64,11 +67,12 @@ static PyObject* pytrf_atr_as_string(pytrf_ATR *self, PyObject *args, PyObject *
 	}
 
 	percent = PyFloat_FromDouble(self->identity);
-	retval = PyUnicode_FromFormat("%S%s%zd%s%zd%s%S%s%d%s%d%s%d%s%d%s%d%s%d%s%S%s", self->seqid, separator,
-								self->start, separator, self->end, separator, self->motif, separator,
-								self->mlen, separator, self->length, separator, self->matches, separator,
-								self->substitutions, separator, self->insertions, separator, self->deletions,
-								separator, percent, terminator);
+	retval = PyUnicode_FromFormat("%S%s%zd%s%zd%s%S%s%d%s%d%s%zd%s%zd%s%d%s%d%s%d%s%d%s%d%s%d%s%S%s",
+								self->seqid, separator, self->sstart, separator, self->send, separator,
+								self->motif, separator, self->mlen, separator, self->srepeat, separator,
+								self->start, separator, self->end, separator, self->repeat, separator, 
+								self->length, separator, self->matches, separator, self->substitutions, separator,
+								self->insertions, separator, self->deletions, separator, percent, terminator);
 	Py_DECREF(percent);
 	return retval;
 }
@@ -96,6 +100,10 @@ static PyMemberDef pytrf_atr_members[] = {
 	{"end", T_PYSSIZET, offsetof(pytrf_ATR, end), READONLY},
 	{"motif", T_OBJECT, offsetof(pytrf_ATR, motif), READONLY},
 	{"type", T_INT, offsetof(pytrf_ATR, mlen), READONLY},
+	{"seed_start", T_PYSSIZET, offsetof(pytrf_ATR, sstart), READONLY},
+	{"seed_end", T_PYSSIZET, offsetof(pytrf_ATR, send), READONLY},
+	{"seed_repeat", T_PYSSIZET, offsetof(pytrf_ATR, repeat), READONLY},
+	{"repeat", T_INT, offsetof(pytrf_ATR, repeat), READONLY},
 	{"length", T_INT, offsetof(pytrf_ATR, length), READONLY},
 	{"matches", T_INT, offsetof(pytrf_ATR, matches), READONLY},
 	{"substitutions", T_INT, offsetof(pytrf_ATR, substitutions), READONLY},
