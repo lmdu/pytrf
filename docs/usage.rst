@@ -31,7 +31,7 @@ You can also iterate over STRFinder object to get exact tandem repeat (ETR) obje
 	>>> for ssr in pytrf.STRFinder(name, seq):
 	>>> 	print(ssr.chrom)
 	>>> 	print(ssr.motif)
-	>>> 	print(ssr.repeats)
+	>>> 	print(ssr.repeat)
 
 You can define the minimum number of repeats required to determine a SSR.
 
@@ -70,13 +70,13 @@ Iterate over GTRFinder object to get ETR object
 	>>> for gtr in pytrf.GTRMiner(name, seq):
 	>>> 	print(gtr.chrom)
 	>>> 	print(gtr.motif)
-	>>> 	print(gtr.repeats)
+	>>> 	print(gtr.repeat)
 
 You can customize the motif size, minimum repeat and minimum length.
 
 .. code:: python
 
-	>>> gtrs = pytrf.GTRFinder(name, seq, max_motif=100, min_repeat=3, min_length=10)
+	>>> gtrs = pytrf.GTRFinder(name, seq, min_motif=20, max_motif=100, min_repeat=3, min_length=10)
 
 A complete example, get all gtrs and output csv format
 
@@ -84,7 +84,7 @@ A complete example, get all gtrs and output csv format
 
 	>>> fa = pyfastx.Fastx('tests/data/test.fa', uppercase=True):
 	>>> for name, seq in fa:
-	>>> 	for gtr in pytrf.GTRFinder(name, seq, 100, 2, 10):
+	>>> 	for gtr in pytrf.GTRFinder(name, seq, 30, 100, 2, 10):
 	>>> 		print(vntr.as_string(','))
 
 Exact tandem repeat
@@ -113,7 +113,7 @@ ETR is a readonly object and allows you to access the attributes and convert to 
 	>>> ssr.motif
 
 	>>> # get number of repeats
-	>>> ssr.repeats
+	>>> ssr.repeat
 
 	>>> # get repeat length
 	>>> ssr.length
@@ -279,7 +279,7 @@ Find exact generic tandem repeats (GTRs) from fasta/q file.
 
 	pytrf gtrfinder -h
 
-	usage: pytrf findgtr [-h] [-o] [-f] [-m] [-r] [-l] fastx
+	usage: pytrf findgtr [-h] [-o] [-f] [-m] [-M] [-r] [-l] fastx
 
 	positional arguments:
 	  fastx               input fasta or fastq file (gzip support)
@@ -288,7 +288,8 @@ Find exact generic tandem repeats (GTRs) from fasta/q file.
 	  -h, --help          show this help message and exit
 	  -o , --out-file     output file (default: stdout)
 	  -f , --out-format   output format, tsv, csv or gff (default: tsv)
-	  -m , --max-motif    maximum motif length (default: 30)
+	  -m , --min-motif    minimum motif length (default: 10)
+	  -M , --max-motif    maximum motif length (default: 100)
 	  -r , --min-repeat   minimum repeat number (default: 3)
 	  -l , --min-length   minimum repeat length (default: 10)
 
@@ -298,7 +299,7 @@ Find imperfect or approximate tandem repeats (ATRs)
 
 	pytrf atrfinder -h
 
-	usage: pytrf findatr [-h] [-o] [-f] [-m] [-r] [-l] [-e] [-p] [-x] fastx
+	usage: pytrf findatr [-h] [-o] [-f] [-m] [-M] [-r] [-l] [-e] [-p] [-x] fastx
 
 	positional arguments:
 	  fastx                 input fasta or fastq file (gzip support)
@@ -307,7 +308,9 @@ Find imperfect or approximate tandem repeats (ATRs)
 	  -h, --help            show this help message and exit
 	  -o , --out-file       output file (default: stdout)
 	  -f , --out-format     output format, tsv, csv or gff (default: tsv)
-	  -m , --max-motif-size
+	  -m , --min-motif-size
+	                        minimum motif length (default: 1)
+	  -M , --max-motif-size
 	                        maximum motif length (default: 6)
 	  -r , --min-seed-repeat
 	                        minimum repeat number for seed (default: 3)
@@ -315,7 +318,7 @@ Find imperfect or approximate tandem repeats (ATRs)
 	                        minimum length for seed (default: 10)
 	  -e , --max-continuous-error
 	                        maximum number of continuous alignment errors (default: 3)
-	  -p , --min-identity   minimum identity from 0 to 100 (default: 70)
+	  -p , --min-identity   minimum identity from 0 to 1 (default: 0.7)
 	  -x , --max-extend-length
 	                        maximum length allowed to extend (default: 2000)
 

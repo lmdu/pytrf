@@ -23,12 +23,12 @@ def str_finder(seq, minrep, outfmt, outfw):
 	ssrs = pytrf.STRFinder(seq[0], seq[1], *minrep)
 	get_format_result(ssrs, outfmt, outfw)
 
-def gtr_finder(seq, maxmotif, minrep, minlen, outfmt, outfw):
-	gtrs = pytrf.GTRFinder(seq[0], seq[1], maxmotif, minrep, minlen)
+def gtr_finder(seq, minmotif, maxmotif, minrep, minlen, outfmt, outfw):
+	gtrs = pytrf.GTRFinder(seq[0], seq[1], minmotif, maxmotif, minrep, minlen)
 	get_format_result(gtrs, outfmt, outfw)
 
-def atr_finder(seq, maxmotif, seedrep, seedlen, maxerror, minscore, maxextend, outfmt, outfw):
-	atrs = pytrf.ATRFinder(seq[0], seq[1], maxmotif, seedrep, seedlen, maxerror, minscore, maxextend)
+def atr_finder(seq, minmotif, maxmotif, seedrep, seedlen, maxerror, minscore, maxextend, outfmt, outfw):
+	atrs = pytrf.ATRFinder(seq[0], seq[1], minmotif, maxmotif, seedrep, seedlen, maxerror, minscore, maxextend)
 	get_format_result(atrs, outfmt, outfw)
 
 def tandem_repeat_finder(args):
@@ -41,6 +41,7 @@ def tandem_repeat_finder(args):
 
 	elif args.cmd == 'gtr':
 		return functools.partial(gtr_finder,
+			minmotif = args.min_motif,
 			maxmotif = args.max_motif,
 			minrep = args.min_repeat,
 			minlen = args.min_length,
@@ -50,6 +51,7 @@ def tandem_repeat_finder(args):
 
 	elif args.cmd == 'atr':
 		return functools.partial(atr_finder,
+			minmotif = args.min_motif_size,
 			maxmotif = args.max_motif_size,
 			seedrep = args.min_seed_repeat,
 			seedlen = args.min_seed_length,
@@ -161,11 +163,18 @@ def main():
 	)
 	parser_gtrfinder.set_defaults(cmd='gtr')
 
-	parser_gtrfinder.add_argument('-m', '--max-motif',
+	parser_gtrfinder.add_argument('-m', '--min-motif',
+		default = 10,
+		metavar = '',
+		type = int,
+		help = "minimum motif length (default: 10)"
+	)
+
+	parser_gtrfinder.add_argument('-M', '--max-motif',
 		default = 30,
 		metavar = '',
 		type = int,
-		help = "maximum motif length (default: 30)"
+		help = "maximum motif length (default: 100)"
 	)
 
 	parser_gtrfinder.add_argument('-r', '--min-repeat',
@@ -189,7 +198,14 @@ def main():
 	)
 	parser_atrfinder.set_defaults(cmd='atr')
 
-	parser_atrfinder.add_argument('-m', '--max-motif-size',
+	parser_atrfinder.add_argument('-m', '--min-motif-size',
+		default = 1,
+		metavar = '',
+		type = int,
+		help = "minimum motif length (default: 1)"
+	)
+
+	parser_atrfinder.add_argument('-M', '--max-motif-size',
 		default = 6,
 		metavar = '',
 		type = int,
