@@ -103,8 +103,8 @@ static PyObject* pytrf_strfinder_next(pytrf_STRFinder *self) {
 				pytrf_ETR *ssr = PyObject_New(pytrf_ETR, &pytrf_ETRType);
 
 				ssr->mlen = j;
-				ssr->repeats = rl/j;
-				ssr->length = ssr->repeats * j;
+				ssr->repeat = rl/j;
+				ssr->length = ssr->repeat * j;
 				ssr->start = cs + 1;
 				ssr->end = cs + ssr->length;
 				ssr->seqid = Py_NewRef(self->seqname);

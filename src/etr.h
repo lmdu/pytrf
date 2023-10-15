@@ -31,7 +31,7 @@ typedef struct {
 	int mlen;
 
 	//number of tandem repeats
-	int repeats;
+	int repeat;
 
 	//tandem repeat element length
 	int length;

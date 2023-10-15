@@ -11,26 +11,51 @@
 #include "compat.h"
 #include "structmember.h"
 
+static int is_redundant_motif(char *s, int l, int m) {
+	int i, j, b;
+
+	if (m == 1) {
+		return 0;
+	}
+
+	for (j = 1; j <= m; ++j) {
+		b = l - j;
+		i = 0;
+
+		while ((i < b) && (s[i] == s[i+j])) {
+			++i;
+		}
+
+		if (i == b) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 static PyObject* pytrf_gtrfinder_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 	int i;
 
-	static char* keywords[] = {"chrom", "seq", "max_motif", "min_repeat", "min_length", NULL};
+	static char* keywords[] = {"chrom", "seq", "min_motif", "max_motif", "min_repeat", "min_length", NULL};
 
 	pytrf_GTRFinder *obj = (pytrf_GTRFinder *)type->tp_alloc(type, 0);
 	if (!obj) return NULL;
 
-	obj->max_motif = 30;
+	obj->min_motif = 1;
+	obj->max_motif = 100;
 	obj->min_repeat = 3;
 	obj->min_length = 10;
 
 	//initialize start search position
 	obj->next_start = 0;
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iii", keywords, &obj->seqname, &obj->seqobj, &obj->max_motif, &obj->min_repeat, &obj->min_length)) {
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iiii", keywords, &obj->seqname, &obj->seqobj, &obj->min_motif, &obj->max_motif, &obj->min_repeat, &obj->min_length)) {
 		return NULL;
 	}
 
 	obj->seq = PyUnicode_AsUTF8AndSize(obj->seqobj, &obj->size);
+	obj->motif = (char *)malloc(obj->max_motif + 1);
 
 	obj->boundary = (Py_ssize_t *)malloc(sizeof(Py_ssize_t) * (obj->max_motif+1));
 	for (i = 0; i <= obj->max_motif; ++i) {
@@ -47,6 +72,8 @@ static void pytrf_gtrfinder_dealloc(pytrf_GTRFinder *self) {
 	if (self->boundary) {
 		free(self->boundary);
 	}
+
+	free(self->motif);
 
 	self->seq = NULL;
 	Py_DECREF(self->seqname);
@@ -87,7 +114,7 @@ static PyObject* pytrf_gtrfinder_next(pytrf_GTRFinder *self) {
 		}
 
 		cs = i;
-		for (j = 1; j <= self->max_motif; ++j) {
+		for (j = self->min_motif; j <= self->max_motif; ++j) {
 			b = self->boundary[j];
 
 			while ((i < b) && (self->seq[i] == self->seq[i+j])) {
@@ -99,16 +126,24 @@ static PyObject* pytrf_gtrfinder_next(pytrf_GTRFinder *self) {
 			rl = rn * j;
 
 			if (rn >= self->min_repeat && rl >= self->min_length) {
+				memcpy(self->motif, self->seq+cs, j);
+				self->motif[j] = '\0';
+
+				if (is_redundant_motif(self->motif, j, self->min_motif)) {
+					i = cs;
+					continue;
+				}
+
 				pytrf_ETR *gtr = PyObject_New(pytrf_ETR, &pytrf_ETRType);
 
 				gtr->mlen = j;
-				gtr->repeats = rn;
+				gtr->repeat = rn;
 				gtr->length = rl;
 				gtr->start = cs + 1;
 				gtr->end = cs + rl;
 				gtr->seqid = Py_NewRef(self->seqname);
 				gtr->seqobj = Py_NewRef(self->seqobj);
-				gtr->motif = PyUnicode_Substring(self->seqobj, cs, cs + j);
+				gtr->motif = PyUnicode_FromString(self->motif);
 
 				self->next_start = gtr->end;
 				return (PyObject *)gtr;
@@ -141,13 +176,8 @@ static PyObject* pytrf_gtrfinder_as_list(pytrf_GTRFinder *self) {
 	//boundary
 	Py_ssize_t b;
 
-	//motif cache
-	char *motif;
-
 	PyObject *gtrs = PyList_New(0);
 	PyObject *tmp;
-
-	motif = (char *)malloc(self->max_motif + 1);
 
 	for (i = 0; i < self->size; ++i) {
 		if (self->seq[i] == 78) {
@@ -155,7 +185,7 @@ static PyObject* pytrf_gtrfinder_as_list(pytrf_GTRFinder *self) {
 		}
 
 		cs = i;
-		for (j = 1; j <= self->max_motif; ++j) {
+		for (j = self->min_motif; j <= self->max_motif; ++j) {
 			b = self->boundary[j];
 
 			while ((i < b) && (self->seq[i] == self->seq[i+j])) {
@@ -167,12 +197,18 @@ static PyObject* pytrf_gtrfinder_as_list(pytrf_GTRFinder *self) {
 			rl = rn * j;
 
 			if (rn >= self->min_repeat && rl >= self->min_length) {
-				memcpy(motif, self->seq+cs, j);
-				motif[j] = '\0';
+				memcpy(self->motif, self->seq+cs, j);
+				self->motif[j] = '\0';
+
+				if (is_redundant_motif(self->motif, j, self->min_motif)) {
+					i = cs;
+					continue;
+				}				
+
 				gs = cs + 1;
 				ge = cs + rl;
-				
-				tmp = Py_BuildValue("Onnsiii", self->seqname, gs, ge, motif, j, rn, rl);
+
+				tmp = Py_BuildValue("Onnsiii", self->seqname, gs, ge, self->motif, j, rn, rl);
 				PyList_Append(gtrs, tmp);
 				Py_DECREF(tmp);
 				
@@ -184,7 +220,6 @@ static PyObject* pytrf_gtrfinder_as_list(pytrf_GTRFinder *self) {
 		}
 	}
 
-	free(motif);
 	return gtrs;
 }
 

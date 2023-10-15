@@ -3,7 +3,7 @@ Changelog
 
 Version 1.2.0 (2023-10-15)
 --------------------------
-
+- Fixed repeat search start position
 - Optimized atr finder algorithm
 
 Version 1.1.0 (2023-09-16)

@@ -48,13 +48,15 @@ pytrf.STRFinder
 pytrf.GTRFinder
 ---------------
 
-.. py:class:: pytrf.GTRFinder(chrom, seq, max_motif=30, min_repeat=3, min_length=10)
+.. py:class:: pytrf.GTRFinder(chrom, seq, min_motif=1, max_motif=100, min_repeat=3, min_length=10)
 
 	Find all exact or perfect generic tandem repeats (GTRs) that meet the minimum repeat and minimum length on the input sequence
 
 	:param str chrom: the sequence name
 
 	:param str seq: the input DNA sequence
+
+	:param int min_motif: minimum length of motif sequence
 
 	:param int max_motif: maximum length of motif sequence
 

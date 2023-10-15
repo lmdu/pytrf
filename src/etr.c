@@ -18,18 +18,18 @@ static void pytrf_etr_dealloc(pytrf_ETR *self) {
 
 static PyObject* pytrf_etr_repr(pytrf_ETR *self) {
 	return PyUnicode_FromFormat("<ETR> (%S)%d @ %S:%zd-%zd", self->motif,
-		self->repeats, self->seqid, self->start, self->end);
+		self->repeat, self->seqid, self->start, self->end);
 }
 
 static PyObject* pytrf_etr_as_list(pytrf_ETR *self) {
 	return Py_BuildValue("OnnOiii", self->seqid, self->start, self->end, self->motif,
-		self->mlen, self->repeats, self->length);
+		self->mlen, self->repeat, self->length);
 }
 
 static PyObject* pytrf_etr_as_dict(pytrf_ETR *self) {
 	return Py_BuildValue("{s:O,s:n,s:n,s:O,s:i,s:i,s:i}", "chrom", self->seqid,
 						 "start", self->start, "end", self->end, "motif", self->motif,
-						 "type", self->mlen, "repeats", self->repeats, "length", self->length);
+						 "type", self->mlen, "repeat", self->repeat, "length", self->length);
 }
 
 static PyObject* pytrf_etr_as_gff(pytrf_ETR *self, PyObject *args, PyObject *kwargs) {
@@ -40,8 +40,8 @@ static PyObject* pytrf_etr_as_gff(pytrf_ETR *self, PyObject *args, PyObject *kwa
 		return NULL;
 	}
 
-	return PyUnicode_FromFormat("%S\tpytrf\tETR\t%zd\t%zd\t.\t+\t.\tMotif=%S;Type=%d;Repeats=%d;Length=%d%s",
-								self->seqid, self->start, self->end, self->motif, self->mlen, self->repeats,
+	return PyUnicode_FromFormat("%S\tpytrf\tETR\t%zd\t%zd\t.\t+\t.\tMotif=%S;Type=%d;Repeat=%d;Length=%d%s",
+								self->seqid, self->start, self->end, self->motif, self->mlen, self->repeat,
 								self->length, terminator);
 }
 
@@ -56,7 +56,7 @@ static PyObject* pytrf_etr_as_string(pytrf_ETR *self, PyObject *args, PyObject *
 
 	return PyUnicode_FromFormat("%S%s%zd%s%zd%s%S%s%d%s%d%s%d%s", self->seqid, separator,
 								self->start, separator, self->end, separator, self->motif,
-								separator, self->mlen, separator, self->repeats, separator,
+								separator, self->mlen, separator, self->repeat, separator,
 								self->length, terminator);
 }
 
@@ -83,7 +83,7 @@ static PyMemberDef pytrf_etr_members[] = {
 	{"end", T_PYSSIZET, offsetof(pytrf_ETR, end), READONLY},
 	{"motif", T_OBJECT, offsetof(pytrf_ETR, motif), READONLY},
 	{"type", T_INT, offsetof(pytrf_ETR, mlen), READONLY},
-	{"repeats", T_INT, offsetof(pytrf_ETR, repeats), READONLY},
+	{"repeat", T_INT, offsetof(pytrf_ETR, repeat), READONLY},
 	{"length", T_INT, offsetof(pytrf_ETR, length), READONLY},
 	{NULL}
 };

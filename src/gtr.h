@@ -28,6 +28,9 @@ typedef struct {
 	//pointer to sequence object
 	const char *seq;
 
+	//min motif length
+	int min_motif;
+
 	//max motif length
 	int max_motif;
 
@@ -39,6 +42,9 @@ typedef struct {
 
 	//boundary
 	Py_ssize_t *boundary;
+
+	//motif
+	char *motif;
 
 } pytrf_GTRFinder;
 
