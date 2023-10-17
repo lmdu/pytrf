@@ -343,12 +343,7 @@ static PyObject* pytrf_itrfinder_new(PyTypeObject *type, PyObject *args, PyObjec
 	return (PyObject *)obj;
 }
 
-void pytrf_itrfinder_dealloc(pytrf_ITRFinder *self) {
-	Py_DECREF(self->seqname);
-	Py_DECREF(self->seqobj);
-
-	self->seq = NULL;
-
+static void pytrf_itrfinder_dealloc(pytrf_ITRFinder *self) {
 	if (self->motif) {
 		free(self->motif);
 	}
@@ -360,6 +355,11 @@ void pytrf_itrfinder_dealloc(pytrf_ITRFinder *self) {
 	if (self->boundary) {
 		free(self->boundary);
 	}
+
+	self->seq = NULL;
+
+	Py_DECREF(self->seqname);
+	Py_DECREF(self->seqobj);
 
 	Py_TYPE(self)->tp_free((PyObject *)self);
 }

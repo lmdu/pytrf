@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 1.2.1 (2023-10-17)
+--------------------------
+
+- Fixed STRFinder GC collection error
+
 Version 1.2.0 (2023-10-15)
 --------------------------
 - Fixed repeat search start position

@@ -47,13 +47,11 @@ static PyObject* pytrf_strfinder_new(PyTypeObject *type, PyObject *args, PyObjec
 }
 
 static void pytrf_strfinder_dealloc(pytrf_STRFinder *self) {
-	if (self->boundary) {
-		free(self->boundary);
-	}
+	self->seq = NULL;
 
 	Py_DECREF(self->seqname);
 	Py_DECREF(self->seqobj);
-	self->seq = NULL;
+
 	Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -133,7 +131,7 @@ static PyObject* pytrf_strfinder_as_list(pytrf_STRFinder *self) {
 
 	//ssr length
 	int sl;
-	
+
 	char motif[7];
 
 	Py_ssize_t i;
