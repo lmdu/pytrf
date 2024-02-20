@@ -12,7 +12,7 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MIN3(a, b, c) MIN(MIN((a), (b)), (c))
-#define MIN4(a, b, c, d) MIN(MIN((a), (b)), MIN((c), (d)))
+//#define MIN4(a, b, c, d) MIN(MIN((a), (b)), MIN((c), (d)))
 
 /*
  *@param s str, motif sequence
@@ -211,11 +211,20 @@ static float wrap_around_backtrace(int **mx, int m, int i, int dr, int *eds) {
 	//extend length
 	int l;
 
+	//create match array
+	int *marr;
+	int k;
+
 	j = m;
 	l = i;
 
 	if (i <= 0) {
 		return 0;
+	}
+
+	marr = (int *)malloc((i + 1) * sizeof(int));
+	for (k=0; k <= i; ++k) {
+		marr[k] = 0;
 	}
 
 	while (i > 0 || j > 0) {
