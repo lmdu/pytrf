@@ -22,13 +22,13 @@ jobs:
         env:
           CIBW_SKIP: pp*
           CIBW_BUILD_VERBOSITY: 0
-          CIBW_ARCHS_MACOS: x86_64 arm64 universal2
 
       - name: Display wheel
         run: ls -l wheelhouse
 
       - uses: actions/upload-artifact@v4
         with:
+          name: artifact-${{ matrix.os }}
           path: ./wheelhouse/*.whl
 
   build_sdist:
@@ -50,6 +50,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
+          name: artifact-source
           path: dist/*.tar.gz
   
   upload_pypi:
@@ -59,7 +60,8 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: artifact
+          pattern: artifact-*
+          merge-multiple: true
           path: dist
 
       - uses: pypa/gh-action-pypi-publish@release/v1
