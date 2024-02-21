@@ -183,6 +183,39 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 }
 
 /*
+ * @param n int, alignment array length
+ * @return array
+ */
+static int** create_alignment_array(int n) {
+	int i, j;
+	int **arr;
+
+	arr = (int **)malloc(sizeof(int *) * (n+1));
+
+	for (i = 0; i <= n; ++i) {
+		arr[i] = (int *)malloc(sizeof(int) * 4);
+
+		for (j = 0; j < 4; ++j) {
+			arr[i][j] = 0;
+		}
+	}
+
+	return arr;
+}
+
+/*
+ * @param arr int array,
+ * @param n int, array length 
+ */
+static void free_alignment_array(int **arr, int n) {
+	for (int i = 0; i <= n; ++i) {
+		free(arr[i]);
+	}
+
+	free(arr);
+}
+
+/*
  * @param s str, DNA sequence
  * @param ms str, motif sequence
  * @param ml int, motif length
@@ -191,9 +224,10 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
  * @param i int, row number in matrix
  * @param dr int, backtrace direction -1 to left and 1 to right
  * @param eds int array, number of mat, sub, del and ins
+ * @param mi float, minimum identity
  * @return int, column number of minimum distance
  */
-static float wrap_around_backtrace(int **mx, int m, int i, int dr, int *eds) {
+static int wrap_around_backtrace(int **mx, int m, int i, int dr, int *eds, float mi) {
 	int mat = 0;
 	int sub = 0;
 	int del = 0;
@@ -211,9 +245,12 @@ static float wrap_around_backtrace(int **mx, int m, int i, int dr, int *eds) {
 	//extend length
 	int l;
 
-	//create match array
-	int *marr;
+	//match array
+	int **marr;
 	int k;
+
+	//current extend position
+	int p = 0;
 
 	j = m;
 	l = i;
@@ -222,30 +259,30 @@ static float wrap_around_backtrace(int **mx, int m, int i, int dr, int *eds) {
 		return 0;
 	}
 
-	marr = (int *)malloc((i + 1) * sizeof(int));
-	for (k=0; k <= i; ++k) {
-		marr[k] = 0;
-	}
+	marr = create_alignment_array(i);
 
 	while (i > 0 || j > 0) {
 		//go back through second pass
 		if ((i > 0) && (j > 0) && (j < m)) {
 			if (j == 1) {
 				if (mx[i][j] == (mx[i][m] + 1)) {
-					
-					++del;
+					//++del;
+					++marr[i][3];
+
 					j = m;
 					continue;
 				}
 			} else {
 				if (mx[i][j] == (mx[i][j-1] + 1)) {
-					++del;
+					//++del;
+					++marr[i][3];
 					--j;
 					continue;
 				}
 			}
 		} else if (i == 0) {
-			++del;
+			//++del;
+			++marr[i][3];
 			--j;
 			continue;
 		}
@@ -256,24 +293,29 @@ static float wrap_around_backtrace(int **mx, int m, int i, int dr, int *eds) {
 
 			if (v == mx[i-1][m]) {
 				if (v == mx[i][j]) {
-					++mat;
+					//++mat;
+					++marr[i][0];
 				} else {
-					++sub;
+					//++sub;
+					++marr[i][1];
 				}
 
 				--i;
 				j = m;
 			} else if (v == mx[i-1][0]) {
 				if (v == mx[i][j]) {
-					++mat;
+					//++mat;
+					++marr[i][0];
 				} else {
-					++sub;
+					//++sub;
+					++marr[i][1];
 				}
 
 				--i;
 				--j;
 			} else if (v == (mx[i-1][1])) {
-				++ins;
+				//++ins;
+				++marr[i][2];
 				--i;
 			}
 		} else {
@@ -281,31 +323,50 @@ static float wrap_around_backtrace(int **mx, int m, int i, int dr, int *eds) {
 
 			if (v == mx[i-1][j-1]) {
 				if (v == mx[i][j]) {
-					++mat;
+					//++mat;
+					++marr[i][0];
 				} else {
-					++sub;
+					//++sub;
+					++marr[i][1];
 				}
 
 				--i;
 				--j;
 			} else if (v == mx[i-1][j]) {
-				++ins;
+				//++ins;
+				++marr[i][2];
 				--i;
 			} else if (v == mx[i][j-1]) {
-				++del;
+				//++del;
+				++marr[i][3];
 				--j;
 			}
 		}
 	}
 
-	eds[0] = mat;
-	eds[1] = sub;
-	eds[2] = ins;
-	eds[3] = del;
+	//find max ratio
+	for (k = 1; k <= l; ++k) {
+		mat += marr[k][0];
+		sub += marr[k][1];
+		ins += marr[k][2];
+		del += marr[k][3];
 
-	r = 1.0 * mat / l;
+		if (marr[k][0] > 0) {
+			r = 1.0 * mat / (mat + sub + ins + del);
 
-	return r;
+			if (r >= mi) {
+				p = k;
+				eds[0] = mat;
+				eds[1] = sub;
+				eds[2] = ins;
+				eds[3] = del;
+			}
+		}
+	}
+
+	free_alignment_array(marr, l);
+
+	return p;
 }
 
 static PyObject* pytrf_itrfinder_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
@@ -408,8 +469,8 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 	int left_extend;
 	int right_extend;
 
-	float left_ratio;
-	float right_ratio;
+	int left_adjust;
+	int right_adjust;
 
 	int left_edits[4];
 	int right_edits[4];
@@ -460,7 +521,7 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 
 				left_extend = wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
 												extend_maxlen, self->max_errors, -1);
-				left_ratio = wrap_around_backtrace(self->matrix, j, left_extend, -1, left_edits);
+				left_adjust = wrap_around_backtrace(self->matrix, j, left_extend, -1, left_edits, self->min_identity);
 
 				//need to recover motif after extend to left
 				reverse_motif(self->motif, j);
@@ -475,7 +536,7 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 
 				right_extend = wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
 												extend_maxlen, self->max_errors, 1);
-				right_ratio = wrap_around_backtrace(self->matrix, j, right_extend, 1, right_edits);
+				right_adjust = wrap_around_backtrace(self->matrix, j, right_extend, 1, right_edits, self->min_identity);
 
 
 				//tandem_end = extend_start + extend_len + 1;
@@ -490,21 +551,21 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 				tandem_delete = 0;
 				tandem_start = seed_start + 1;
 				tandem_end = seed_end + 1;
-				
-				if (left_ratio >= self->min_identity) {
+
+				if (left_adjust > 0) {
 					tandem_match += left_edits[0];
 					tandem_substitute += left_edits[1];
 					tandem_insert += left_edits[2];
 					tandem_delete += left_edits[3];
-					tandem_start -= left_extend;
+					tandem_start -= left_adjust;
 				}
-				
-				if (right_ratio >= self->min_identity) {
+
+				if (right_adjust > 0) {
 					tandem_match += right_edits[0];
 					tandem_substitute += right_edits[1];
 					tandem_insert += right_edits[2];
 					tandem_delete += right_edits[3];
-					tandem_end += right_extend;
+					tandem_end += right_adjust;
 				}
 
 				tandem_length = tandem_end - tandem_start + 1;
@@ -545,7 +606,7 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 
 	return NULL;
 }
- 
+
 static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 	int j;
 	Py_ssize_t i;
@@ -571,8 +632,8 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 	int left_extend;
 	int right_extend;
 
-	float left_ratio;
-	float right_ratio;
+	int left_adjust;
+	int right_adjust;
 
 	int left_edits[4];
 	int right_edits[4];
@@ -626,7 +687,7 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 				left_extend = wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
 												extend_maxlen, self->max_errors, -1);
 
-				left_ratio = wrap_around_backtrace(self->matrix, j, left_extend, -1, left_edits);
+				left_adjust = wrap_around_backtrace(self->matrix, j, left_extend, -1, left_edits, self->min_identity);
 
 				reverse_motif(self->motif, j);
 
@@ -639,8 +700,7 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 
 				right_extend = wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
 												extend_maxlen, self->max_errors, 1);
-
-				right_ratio = wrap_around_backtrace(self->matrix, j, right_extend, 1, right_edits);
+				right_adjust = wrap_around_backtrace(self->matrix, j, right_extend, 1, right_edits, self->min_identity);
 
 				tandem_match = 0;
 				tandem_substitute = 0;
@@ -649,20 +709,20 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 				tandem_start = seed_start + 1;
 				tandem_end = seed_end + 1;
 
-				if (left_ratio >= self->min_identity) {
+				if (left_adjust > 0) {
 					tandem_match += left_edits[0];
 					tandem_substitute += left_edits[1];
 					tandem_insert += left_edits[2];
 					tandem_delete += left_edits[3];
-					tandem_start -= left_extend;
+					tandem_start -= left_adjust;
 				}
 				
-				if (right_ratio >= self->min_identity) {
+				if (right_adjust > 0) {
 					tandem_match += right_edits[0];
 					tandem_substitute += right_edits[1];
 					tandem_insert += right_edits[2];
 					tandem_delete += right_edits[3];
-					tandem_end += right_extend;
+					tandem_end += right_adjust;
 				}
 
 				tandem_length = tandem_end - tandem_start + 1;

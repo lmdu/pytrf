@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 1.2.2 (2024-02-21)
+--------------------------
+
+- Optimized ATR finder extending identity
+
 Version 1.2.1 (2023-10-17)
 --------------------------
 
