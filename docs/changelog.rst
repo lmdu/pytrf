@@ -1,10 +1,11 @@
 Changelog
 =========
 
-Version 1.2.2 (2024-02-21)
+Version 1.3.0 (2024-02-21)
 --------------------------
 
 - Optimized ATR finder extending identity
+- Added support for Python 3.12
 
 Version 1.2.1 (2023-10-17)
 --------------------------
