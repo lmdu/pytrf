@@ -41,7 +41,7 @@ typedef struct {
 	int min_length;
 
 	//boundary
-	Py_ssize_t *boundary;
+	Py_ssize_t *limit;
 
 	//motif
 	char *motif;

@@ -26,7 +26,7 @@ static int is_redundant_motif(char *s, int l, int m) {
 		return 0;
 	}
 
-	for (j = 1; j <= m; ++j) {
+	for (j = 1; j < m; ++j) {
 		b = l - j;
 		i = 0;
 
@@ -402,9 +402,9 @@ static PyObject* pytrf_itrfinder_new(PyTypeObject *type, PyObject *args, PyObjec
 	obj->motif = (char *)malloc(obj->max_motif + 1);
 	obj->matrix = initial_matrix(obj->extend_maxlen, obj->max_motif);
 
-	obj->boundary = (Py_ssize_t *)malloc(sizeof(Py_ssize_t) * (obj->max_motif+1));
+	obj->limit = (Py_ssize_t *)malloc(sizeof(Py_ssize_t) * (obj->max_motif+1));
 	for (i = 0; i <= obj->max_motif; ++i) {
-		obj->boundary[i] = obj->size - i;
+		obj->limit[i] = obj->size - i;
 	}
 
 	Py_INCREF(obj->seqname);
@@ -422,8 +422,8 @@ static void pytrf_itrfinder_dealloc(pytrf_ITRFinder *self) {
 		release_matrix(self->matrix, self->extend_maxlen);
 	}
 
-	if (self->boundary) {
-		free(self->boundary);
+	if (self->limit) {
+		free(self->limit);
 	}
 
 	self->seq = NULL;
@@ -484,7 +484,7 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 
 		seed_start = i;
 		for (j = self->min_motif; j <= self->max_motif; ++j) {
-			b = self->boundary[j];
+			b = self->limit[j];
 
 			while ((i < b) && (self->seq[i] == self->seq[i+j])) {
 				++i;
@@ -638,21 +638,17 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 	int left_edits[4];
 	int right_edits[4];
 
-	Py_ssize_t b;
-
 	PyObject *itrs = PyList_New(0);
 	PyObject *tmp;
 
 	for (i = 0; i < self->size; ++i) {
-		if (self->seq[i] == 78) {
+		if (self->seq[i] == 'N' || self->seq[i] == 'n') {
 			continue;
 		}
 
 		seed_start = i;
 		for (j = self->min_motif; j <= self->max_motif; ++j) {
-			b = self->boundary[j];
-
-			while ((i < b) && (self->seq[i] == self->seq[i+j])) {
+			while ((i < self->limit[j]) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
@@ -683,12 +679,9 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 				}
 
 				reverse_motif(self->motif, j);
-
 				left_extend = wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
 												extend_maxlen, self->max_errors, -1);
-
 				left_adjust = wrap_around_backtrace(self->matrix, j, left_extend, -1, left_edits, self->min_identity);
-
 				reverse_motif(self->motif, j);
 
 				//extend to right

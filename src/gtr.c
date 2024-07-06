@@ -10,7 +10,11 @@
 #include "etr.h"
 #include "compat.h"
 #include "structmember.h"
-
+/*
+ * @param s str, motif sequence
+ * @param l int, motif length
+ * @param m int, min motif length
+*/
 static int is_redundant_motif(char *s, int l, int m) {
 	int i, j, b;
 
@@ -18,7 +22,7 @@ static int is_redundant_motif(char *s, int l, int m) {
 		return 0;
 	}
 
-	for (j = 1; j <= m; ++j) {
+	for (j = 1; j < m; ++j) {
 		b = l - j;
 		i = 0;
 
@@ -57,9 +61,9 @@ static PyObject* pytrf_gtrfinder_new(PyTypeObject *type, PyObject *args, PyObjec
 	obj->seq = PyUnicode_AsUTF8AndSize(obj->seqobj, &obj->size);
 	obj->motif = (char *)malloc(obj->max_motif + 1);
 
-	obj->boundary = (Py_ssize_t *)malloc(sizeof(Py_ssize_t) * (obj->max_motif+1));
+	obj->limit = (Py_ssize_t *)malloc(sizeof(Py_ssize_t) * (obj->max_motif+1));
 	for (i = 0; i <= obj->max_motif; ++i) {
-		obj->boundary[i] = obj->size - i;
+		obj->limit[i] = obj->size - i;
 	}
 
 	Py_INCREF(obj->seqname);
@@ -69,8 +73,8 @@ static PyObject* pytrf_gtrfinder_new(PyTypeObject *type, PyObject *args, PyObjec
 }
 
 static void pytrf_gtrfinder_dealloc(pytrf_GTRFinder *self) {
-	if (self->boundary) {
-		free(self->boundary);
+	if (self->limit) {
+		free(self->limit);
 	}
 
 	free(self->motif);
@@ -104,20 +108,15 @@ static PyObject* pytrf_gtrfinder_next(pytrf_GTRFinder *self) {
 	//current start position
 	Py_ssize_t cs;
 
-	//boundary
-	Py_ssize_t b;
-
 	for (i = self->next_start; i < self->size; ++i) {
 		//remove unkown base
-		if (self->seq[i] == 78) {
+		if (self->seq[i] == 'N' || self->seq[i] == 'n') {
 			continue;
 		}
 
 		cs = i;
 		for (j = self->min_motif; j <= self->max_motif; ++j) {
-			b = self->boundary[j];
-
-			while ((i < b) && (self->seq[i] == self->seq[i+j])) {
+			while ((i < self->limit[j]) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
@@ -173,22 +172,17 @@ static PyObject* pytrf_gtrfinder_as_list(pytrf_GTRFinder *self) {
 	Py_ssize_t gs;
 	Py_ssize_t ge;
 
-	//boundary
-	Py_ssize_t b;
-
 	PyObject *gtrs = PyList_New(0);
 	PyObject *tmp;
 
 	for (i = 0; i < self->size; ++i) {
-		if (self->seq[i] == 78) {
+		if (self->seq[i] == 'N' || self->seq[i] == 'n') {
 			continue;
 		}
 
 		cs = i;
 		for (j = self->min_motif; j <= self->max_motif; ++j) {
-			b = self->boundary[j];
-
-			while ((i < b) && (self->seq[i] == self->seq[i+j])) {
+			while ((i < self->limit[j]) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
@@ -196,14 +190,17 @@ static PyObject* pytrf_gtrfinder_as_list(pytrf_GTRFinder *self) {
 			rn = rl / j;
 			rl = rn * j;
 
+			printf("i: %zd, j: %d, cs: %zd, rn: %d, rl: %d\n", i, j, cs, rn, rl);
+
 			if (rn >= self->min_repeat && rl >= self->min_length) {
 				memcpy(self->motif, self->seq+cs, j);
 				self->motif[j] = '\0';
 
 				if (is_redundant_motif(self->motif, j, self->min_motif)) {
 					i = cs;
+					printf("end end\n");
 					continue;
-				}				
+				}
 
 				gs = cs + 1;
 				ge = cs + rl;

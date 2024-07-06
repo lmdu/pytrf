@@ -2,13 +2,15 @@ import time
 import pytrf
 import pyfastx
 
-fa = pyfastx.Fasta('../data/chr2.fa.gz', uppercase=True)
+fa = pyfastx.Fasta('../krait2/data/chr2.fa.gz', uppercase=True)
 
 for s in fa:
 	pass
 
-ssrs = pytrf.STRFinder(s.name, s.seq)
-for ssr in ssrs:
-	print(ssr.as_list())
-	break
+start = time.time()
+ssrs = pytrf.GTRFinder(s.name, s.seq).as_list()
+print(time.time() - start)
+print(len(ssrs))
+print(ssrs[0])
+print(ssrs[1])
 

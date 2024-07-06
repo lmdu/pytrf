@@ -158,7 +158,7 @@ static PyObject* pytrf_strfinder_as_list(pytrf_STRFinder *self) {
 			b = self->boundary[j];
 
 			while ((i < b) && (self->seq[i] == self->seq[i+j])) {
-				++i; 
+				++i;
 			}
 
 			rl = i + j - cs;

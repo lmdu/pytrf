@@ -54,7 +54,7 @@ typedef struct {
 	int** matrix;
 
 	//boundary
-	Py_ssize_t* boundary;
+	Py_ssize_t* limit;
 
 } pytrf_ITRFinder;
 
