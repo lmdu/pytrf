@@ -190,15 +190,12 @@ static PyObject* pytrf_gtrfinder_as_list(pytrf_GTRFinder *self) {
 			rn = rl / j;
 			rl = rn * j;
 
-			printf("i: %zd, j: %d, cs: %zd, rn: %d, rl: %d\n", i, j, cs, rn, rl);
-
 			if (rn >= self->min_repeat && rl >= self->min_length) {
 				memcpy(self->motif, self->seq+cs, j);
 				self->motif[j] = '\0';
 
 				if (is_redundant_motif(self->motif, j, self->min_motif)) {
 					i = cs;
-					printf("end end\n");
 					continue;
 				}
 
