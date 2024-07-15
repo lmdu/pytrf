@@ -77,7 +77,7 @@ pytrf.GTRFinder
 pytrf.ATRFinder
 ---------------
 
-.. py:class:: pytrf.ATRFinder(chrom, seq, min_motif_size=1, max_motif_size=6, min_seed_repeat=3, min_seed_length=10, max_consecutive_error=3, min_extend_identity=70, max_extend_length=2000)
+.. py:class:: pytrf.ATRFinder(chrom, seq, min_motif=1, max_motif=6, min_seedrep=3, min_seedlen=10, max_errors=3, min_identity=70, max_extend=2000)
 
 	Find all approximate or imperfect tandem repeats (ATRs) from the input sequence
 
@@ -85,19 +85,19 @@ pytrf.ATRFinder
 
 	:param str seq: the input DNA sequence
 
-	:param int min_motif_size: minimum length of motif
+	:param int min_motif: minimum length of motif
 
-	:param int max_motif_size: maximum length of motif
+	:param int max_motif: maximum length of motif
 
-	:param int min_seed_repeat: minimum number of repeat for seed
+	:param int min_seedrep: minimum number of repeat for seed
 
-	:param int min_seed_length: minimum length of seed
+	:param int min_seedlen: minimum length of seed
 
-	:param int max_consecutive_error: maximum number of allowed consecutive aligned errors
+	:param int max_errors: maximum number of allowed consecutive errors
 
-	:param float min_extend_identity: minimum identity of extended alignment (0~1)
+	:param float min_identity: minimum identity of alignment (0~100)
 
-	:param int max_extend_length: maximum length allowed to extend
+	:param int max_extend: maximum length allowed to extend
 
 	:return: ATRFinder object
 

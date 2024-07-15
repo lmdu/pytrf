@@ -12,7 +12,7 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MIN3(a, b, c) MIN(MIN((a), (b)), (c))
-//#define MIN4(a, b, c, d) MIN(MIN((a), (b)), MIN((c), (d)))
+#define MIN4(a, b, c, d) MIN(MIN((a), (b)), MIN((c), (d)))
 
 /*
  *@param s str, motif sequence
@@ -116,6 +116,9 @@ static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 	//match or mismatch cost, 0 or 1
 	int c;
 
+	//return value
+	int r;
+
 	//first pass
 	//for the first column j = 1
 	c = b == s[0] ? 0 : 1;
@@ -134,8 +137,15 @@ static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 		d[i][j] = MIN(d[i][j], d[i][j-1]+1);
 	}
 
-	//error occured or not
-	return d[i][m] > d[i-1][m] ? 1 : 0;
+	//find minimum edits
+	r = 0;
+	for (j = 1; j <= m; ++j) {
+		if (d[i][j] <= d[i][r]) {
+			r = j;
+		}
+	}
+
+	return r;
 }
 
 /*
@@ -149,9 +159,12 @@ static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
  * @param dr int, extend direction -1 to left and 1 to right
  * @return int, extend length or row number of matrix
  */
-static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssize_t st, int n, int me, int dr) {
+static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssize_t st, int n, int me, int dr, int *row, int *col) {
 	//row number of matrix
 	int i;
+
+	//column number of minimum value
+	int k, j, m;
 
 	//consecutive errors
 	int ce = 0;
@@ -160,13 +173,21 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 		return 0;
 	}
 
+	k = 0;
+	m = 0;
+
 	//fill the matrix row by row
 	for (i = 1; i <= n; ++i) {
-		if (wrap_around_distance(s[st+i*dr], ms, ml, i, mx) > 0) {
+		j = wrap_around_distance(s[st+i*dr], ms, ml, i, mx);
+
+		if (mx[i][j] > mx[i-1][k]) {
 			++ce;
 		} else {
 			ce = 0;
+			m = j;
 		}
+
+		k = j;
 
 		if (ce > me) {
 			break;
@@ -179,14 +200,21 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 
 	i -= ce;
 
-	return i;
+	*row = i;
+	*col = m;
+	//return i;
+
+	//print_matrix(mx, *row, *col);
+	//printf("row: %d, column: %d\n", *row, *col);
+
+	return 0;
 }
 
 /*
  * @param n int, alignment array length
  * @return array
  */
-static int** create_alignment_array(int n) {
+/*static int** create_alignment_array(int n) {
 	int i, j;
 	int **arr;
 
@@ -201,19 +229,19 @@ static int** create_alignment_array(int n) {
 	}
 
 	return arr;
-}
+}*/
 
 /*
  * @param arr int array,
  * @param n int, array length 
  */
-static void free_alignment_array(int **arr, int n) {
+/*static void free_alignment_array(int **arr, int n) {
 	for (int i = 0; i <= n; ++i) {
 		free(arr[i]);
 	}
 
 	free(arr);
-}
+}*/
 
 /*
  * @param s str, DNA sequence
@@ -227,62 +255,120 @@ static void free_alignment_array(int **arr, int n) {
  * @param mi float, minimum identity
  * @return int, column number of minimum distance
  */
-static int wrap_around_backtrace(int **mx, int m, int i, int dr, int *eds, float mi) {
+static int wrap_around_backtrace(int **mx, int m, int i, int j, int dr, int *eds, float mi) {
 	int mat = 0;
 	int sub = 0;
 	int del = 0;
 	int ins = 0;
 
 	//alignment ratio
-	float r;
+	//float r;
 
 	//minimum value of edit distance
 	int v;
 
 	//column number of matrix
-	int j;
+	//int j;
 
 	//extend length
-	int l;
+	//int l;
 
 	//match array
-	int **marr;
-	int k;
+	//int **marr;
+	//int k;
 
 	//current extend position
-	int p = 0;
+	//int p = 0;
 
-	j = m;
-	l = i;
+	//j = m;
+	//l = i;
 
 	if (i <= 0) {
-		return 0;
+		//return 0;
+		j = 0;
 	}
 
-	marr = create_alignment_array(i);
-
+	//marr = create_alignment_array(i);
 	while (i > 0 || j > 0) {
+		if (j == 0) {
+			++ins;
+			--i;
+		} else if (i == 0) {
+			++del;
+			--j;
+		} else if (j == 1) {
+			v = MIN4(mx[i-1][0], mx[i-1][m], mx[i][0], mx[i-1][1]);
+
+			if (v == mx[i-1][m]) {
+				if (v == mx[i][j]) {
+					++mat;
+				} else {
+					++sub;
+				}
+
+				--i;
+				j = m;
+			} else if (v == mx[i-1][0]) {
+				if (v == mx[i][j]) {
+					++mat;
+				} else {
+					++sub;
+				}
+
+				--i;
+				j = 0;
+			} else if (v == mx[i-1][1]) {
+				++ins;
+				--i;
+			} else if (v == mx[i][0]) {
+				++del;
+				--j;
+			}
+
+		} else {
+			v = MIN3(mx[i-1][j-1], mx[i-1][j], mx[i][j-1]);
+
+			if (v == mx[i-1][j-1]) {
+				if (v == mx[i][j]) {
+					++mat;
+				} else {
+					++sub;
+				}
+
+				--i;
+				--j;
+			} else if (v == mx[i-1][j]) {
+				++ins;
+				--i;
+			} else if (v == mx[i][j-1]) {
+				++del;
+				--j;
+			}
+		}
+	}
+
+	/*while (i > 0 || j > 0) {
 		//go back through second pass
 		if ((i > 0) && (j > 0) && (j < m)) {
 			if (j == 1) {
 				if (mx[i][j] == (mx[i][m] + 1)) {
-					//++del;
-					++marr[i][3];
+					++del;
+					//++marr[i][3];
 
 					j = m;
 					continue;
 				}
 			} else {
 				if (mx[i][j] == (mx[i][j-1] + 1)) {
-					//++del;
-					++marr[i][3];
+					++del;
+					//++marr[i][3];
 					--j;
 					continue;
 				}
 			}
 		} else if (i == 0) {
-			//++del;
-			++marr[i][3];
+			++del;
+			//++marr[i][3];
 			--j;
 			continue;
 		}
@@ -293,58 +379,61 @@ static int wrap_around_backtrace(int **mx, int m, int i, int dr, int *eds, float
 
 			if (v == mx[i-1][m]) {
 				if (v == mx[i][j]) {
-					//++mat;
-					++marr[i][0];
+					++mat;
+					//++marr[i][0];
 				} else {
-					//++sub;
-					++marr[i][1];
+					++sub;
+					//++marr[i][1];
 				}
 
 				--i;
 				j = m;
 			} else if (v == mx[i-1][0]) {
 				if (v == mx[i][j]) {
-					//++mat;
-					++marr[i][0];
+					++mat;
+					//++marr[i][0];
 				} else {
-					//++sub;
-					++marr[i][1];
+					++sub;
+					//++marr[i][1];
 				}
 
 				--i;
 				--j;
 			} else if (v == (mx[i-1][1])) {
-				//++ins;
-				++marr[i][2];
+				++ins;
+				//++marr[i][2];
 				--i;
 			}
+		} else if (j == 0 && i == 1) {
+			++ins;
+			--i;
 		} else {
 			v = MIN3(mx[i-1][j-1], mx[i-1][j], mx[i][j-1]);
 
 			if (v == mx[i-1][j-1]) {
 				if (v == mx[i][j]) {
-					//++mat;
-					++marr[i][0];
+					++mat;
+					//++marr[i][0];
 				} else {
-					//++sub;
-					++marr[i][1];
+					++sub;
+					//++marr[i][1];
 				}
 
 				--i;
 				--j;
 			} else if (v == mx[i-1][j]) {
-				//++ins;
-				++marr[i][2];
+				++ins;
+				//++marr[i][2];
 				--i;
 			} else if (v == mx[i][j-1]) {
-				//++del;
-				++marr[i][3];
+				++del;
+				//++marr[i][3];
 				--j;
 			}
 		}
-	}
+	}*/
 
-	//find max ratio
+	/*/find max ratio
 	for (k = 1; k <= l; ++k) {
 		mat += marr[k][0];
 		sub += marr[k][1];
@@ -364,17 +453,23 @@ static int wrap_around_backtrace(int **mx, int m, int i, int dr, int *eds, float
 		}
 	}
 
-	free_alignment_array(marr, l);
+	free_alignment_array(marr, l);*/
 
-	return p;
+	//return p;
+	eds[0] = mat;
+	eds[1] = sub;
+	eds[2] = ins;
+	eds[3] = del;
+
+	return mat;
 }
 
 static PyObject* pytrf_itrfinder_new(PyTypeObject *type, PyObject *args, PyObject *kwargs) {
 	int i;
 
 	static char* keywords[] = {
-		"chrom", "seq", "min_motif_size", "max_motif_size", "min_seed_repeat", "min_seed_length",
-		"max_consecutive_error", "min_extend_identity", "max_extend_length", NULL
+		"chrom", "seq", "min_motif", "max_motif", "min_seedrep", "min_seedlen",
+		"max_errors", "min_identity", "max_extend", NULL
 	};
 
 	pytrf_ITRFinder *obj = (pytrf_ITRFinder *)type->tp_alloc(type, 0);
@@ -387,8 +482,8 @@ static PyObject* pytrf_itrfinder_new(PyTypeObject *type, PyObject *args, PyObjec
 	obj->max_errors = 3;
 	obj->min_motif = 1;
 	obj->max_motif = 6;
-	obj->min_identity = 0.7;
-	obj->extend_maxlen = 1000;
+	obj->min_identity = 70.0;
+	obj->extend_maxlen = 2000;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO|iiiiifi", keywords,
 									&obj->seqname, &obj->seqobj, &obj->min_motif,
@@ -475,18 +570,14 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 	int left_edits[4];
 	int right_edits[4];
 
-	Py_ssize_t b;
-
 	for (i = self->next_start; i < self->size;  ++i) {
-		if (self->seq[i] == 78) {
+		if (self->seq[i] == 'N' || self->seq[i] == 'n') {
 			continue;
 		}
 
 		seed_start = i;
 		for (j = self->min_motif; j <= self->max_motif; ++j) {
-			b = self->limit[j];
-
-			while ((i < b) && (self->seq[i] == self->seq[i+j])) {
+			while ((i < self->limit[j]) && (self->seq[i] == self->seq[i+j])) {
 				++i;
 			}
 
@@ -518,14 +609,12 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 
 				//need to reverse motif before extend to left
 				reverse_motif(self->motif, j);
-
-				left_extend = wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
-												extend_maxlen, self->max_errors, -1);
-				left_adjust = wrap_around_backtrace(self->matrix, j, left_extend, -1, left_edits, self->min_identity);
-
+				wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
+									extend_maxlen, self->max_errors, -1, &left_extend, &left_adjust);
+				wrap_around_backtrace(self->matrix, j, left_extend, left_adjust, -1, left_edits, self->min_identity);
 				//need to recover motif after extend to left
 				reverse_motif(self->motif, j);
-				//tandem_start = extend_start - extend_len + 1;
+				tandem_start = extend_start - left_extend + 1;
 
 				//extend to right
 				extend_start = seed_end;
@@ -534,70 +623,41 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 					extend_maxlen = self->extend_maxlen;
 				}
 
-				right_extend = wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
-												extend_maxlen, self->max_errors, 1);
-				right_adjust = wrap_around_backtrace(self->matrix, j, right_extend, 1, right_edits, self->min_identity);
+				wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
+									extend_maxlen, self->max_errors, 1, &right_extend, &right_adjust);
+				wrap_around_backtrace(self->matrix, j, right_extend, right_adjust, 1, right_edits, self->min_identity);
 
-
-				//tandem_end = extend_start + extend_len + 1;
-
-				//tandem_align = tandem_match + tandem_insert + tandem_substitute + tandem_delete;
-				//tandem_identity = tandem_match * 1.0 / tandem_align;
-
-				//tandem_match = seed_length;
-				tandem_match = 0;
-				tandem_substitute = 0;
-				tandem_insert = 0;
-				tandem_delete = 0;
-				tandem_start = seed_start + 1;
-				tandem_end = seed_end + 1;
-
-				if (left_adjust > 0) {
-					tandem_match += left_edits[0];
-					tandem_substitute += left_edits[1];
-					tandem_insert += left_edits[2];
-					tandem_delete += left_edits[3];
-					tandem_start -= left_adjust;
-				}
-
-				if (right_adjust > 0) {
-					tandem_match += right_edits[0];
-					tandem_substitute += right_edits[1];
-					tandem_insert += right_edits[2];
-					tandem_delete += right_edits[3];
-					tandem_end += right_adjust;
-				}
-
+				tandem_end = extend_start + right_extend + 1;
+				tandem_match = left_edits[0] + right_edits[0] + seed_length;
+				tandem_substitute = left_edits[1] + right_edits[1];
+				tandem_insert = left_edits[2] + right_edits[2];
+				tandem_delete = left_edits[3] + right_edits[3];
+				tandem_identity = tandem_match * 1.0 / (tandem_match + tandem_substitute + tandem_insert + tandem_delete) * 100;
 				tandem_length = tandem_end - tandem_start + 1;
 
-				if (tandem_match) {
-					tandem_identity = 1.0 * tandem_match / (tandem_length - seed_length) * 100;
-				} else {
-					tandem_identity = 0;
+				if (tandem_identity >= self->min_identity) {
+					pytrf_ATR *atr = PyObject_New(pytrf_ATR, &pytrf_ATRType);
+					atr->motif = PyUnicode_FromString(self->motif);
+					atr->mlen = j;
+					atr->seqid = Py_NewRef(self->seqname);
+					atr->seqobj = Py_NewRef(self->seqobj);
+					atr->start = tandem_start;
+					atr->end = tandem_end;
+					atr->sstart = seed_start + 1;
+					atr->send = seed_end + 1;
+					atr->srepeat = seed_repeat;
+					atr->repeat = tandem_length * 1.0 / j;
+					atr->length = tandem_length;
+					atr->matches = tandem_match;
+					atr->substitutions = tandem_substitute;
+					atr->insertions = tandem_insert;
+					atr->deletions = tandem_delete;
+					atr->identity = tandem_identity;
+
+					self->next_start = tandem_end;
+
+					return (PyObject *)atr;
 				}
-
-				//create new atr element object
-				pytrf_ATR *atr = PyObject_New(pytrf_ATR, &pytrf_ATRType);
-				atr->motif = PyUnicode_FromString(self->motif);
-				atr->mlen = j;
-				atr->seqid = Py_NewRef(self->seqname);
-				atr->seqobj = Py_NewRef(self->seqobj);
-				atr->start = tandem_start;
-				atr->end = tandem_end;
-				atr->sstart = seed_start + 1;
-				atr->send = seed_end + 1;
-				atr->srepeat = seed_repeat;
-				atr->repeat = (tandem_length - tandem_insert + tandem_delete) / j;
-				atr->length = tandem_length;
-				atr->matches = tandem_match;
-				atr->substitutions = tandem_substitute;
-				atr->insertions = tandem_insert;
-				atr->deletions = tandem_delete;
-				atr->identity = tandem_identity;
-
-				self->next_start = tandem_end;
-
-				return (PyObject *)atr;
 			}
 
 			i = seed_start;
@@ -622,18 +682,19 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 	Py_ssize_t tandem_start;
 	Py_ssize_t tandem_end;
 	int tandem_length;
-	int tandem_repeat;
+	//int tandem_repeat;
 	int tandem_match;
 	int tandem_substitute;
 	int tandem_insert;
 	int tandem_delete;
+	float tandem_repeat;
 	float tandem_identity;
 
-	int left_extend;
-	int right_extend;
+	int left_extend = 0;
+	int right_extend = 0;
 
-	int left_adjust;
-	int right_adjust;
+	int left_adjust = 0;
+	int right_adjust = 0;
 
 	int left_edits[4];
 	int right_edits[4];
@@ -679,10 +740,12 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 				}
 
 				reverse_motif(self->motif, j);
-				left_extend = wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
-												extend_maxlen, self->max_errors, -1);
-				left_adjust = wrap_around_backtrace(self->matrix, j, left_extend, -1, left_edits, self->min_identity);
+				wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
+									extend_maxlen, self->max_errors, -1, &left_extend, &left_adjust);
+				wrap_around_backtrace(self->matrix, j, left_extend, left_adjust, -1, left_edits, self->min_identity);
 				reverse_motif(self->motif, j);
+
+				tandem_start = extend_start - left_extend + 1;
 
 				//extend to right
 				extend_start = seed_end;
@@ -691,51 +754,30 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 					extend_maxlen = self->extend_maxlen;
 				}
 
-				right_extend = wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
-												extend_maxlen, self->max_errors, 1);
-				right_adjust = wrap_around_backtrace(self->matrix, j, right_extend, 1, right_edits, self->min_identity);
+				wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
+									extend_maxlen, self->max_errors, 1, &right_extend, &right_adjust);
+				wrap_around_backtrace(self->matrix, j, right_extend, right_adjust, 1, right_edits, self->min_identity);
 
-				tandem_match = 0;
-				tandem_substitute = 0;
-				tandem_insert = 0;
-				tandem_delete = 0;
-				tandem_start = seed_start + 1;
-				tandem_end = seed_end + 1;
-
-				if (left_adjust > 0) {
-					tandem_match += left_edits[0];
-					tandem_substitute += left_edits[1];
-					tandem_insert += left_edits[2];
-					tandem_delete += left_edits[3];
-					tandem_start -= left_adjust;
-				}
-				
-				if (right_adjust > 0) {
-					tandem_match += right_edits[0];
-					tandem_substitute += right_edits[1];
-					tandem_insert += right_edits[2];
-					tandem_delete += right_edits[3];
-					tandem_end += right_adjust;
-				}
-
+				tandem_end = extend_start + right_extend + 1;
+				tandem_match = left_edits[0] + right_edits[0] + seed_length;
+				tandem_substitute = left_edits[1] + right_edits[1];
+				tandem_insert = left_edits[2] + right_edits[2];
+				tandem_delete = left_edits[3] + right_edits[3];
+				tandem_identity = tandem_match * 1.0 / (tandem_match + tandem_substitute + tandem_insert + tandem_delete) * 100;
 				tandem_length = tandem_end - tandem_start + 1;
-				tandem_repeat = (tandem_length - tandem_insert + tandem_delete) / j;
+				tandem_repeat = tandem_length * 1.0 / j;
 
-				if (tandem_match) {
-					tandem_identity = 1.0 * tandem_match / (tandem_length - seed_length) * 100;
-				} else {
-					tandem_identity = 0;
+				if (tandem_identity >= self->min_identity) {
+					tmp = Py_BuildValue("Onnsiinnfiiiiif", self->seqname, seed_start + 1, seed_end + 1, self->motif,
+										j, seed_repeat, tandem_start, tandem_end, tandem_repeat, tandem_length, tandem_match,
+										tandem_substitute, tandem_insert, tandem_delete, tandem_identity);
+
+					PyList_Append(itrs, tmp);
+					Py_DECREF(tmp);
+
+					i = tandem_end - 1;
+					break;
 				}
-
-				tmp = Py_BuildValue("Onnsiinniiiiiif", self->seqname, seed_start + 1, seed_end + 1, self->motif,
-									j, seed_repeat, tandem_start, tandem_end, tandem_repeat, tandem_length,
-									tandem_match, tandem_substitute, tandem_insert, tandem_delete, tandem_identity);
-
-				PyList_Append(itrs, tmp);
-				Py_DECREF(tmp);
-
-				i = tandem_end - 1;
-				break;
 			}
 
 			i = seed_start;

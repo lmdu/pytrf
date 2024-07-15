@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 1.3.1 (2024-07-15)
+--------------------------
+
+- Fixed minimum motif setting error
+- Fixed caluclation error of alignment 
+
 Version 1.3.0 (2024-02-21)
 --------------------------
 

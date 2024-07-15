@@ -39,7 +39,7 @@ typedef struct {
 	int mlen;
 
 	//tandem repeat
-	int repeat;
+	float repeat;
 
 	//tandem length
 	int length;
