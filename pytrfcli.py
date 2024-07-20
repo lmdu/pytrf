@@ -4,7 +4,6 @@ import pytrf
 import pyfastx
 import argparse
 import functools
-import multiprocessing
 
 def get_format_result(trs, outfmt, outfw):
 	if outfmt == 'tsv':
@@ -51,13 +50,13 @@ def tandem_repeat_finder(args):
 
 	elif args.cmd == 'atr':
 		return functools.partial(atr_finder,
-			minmotif = args.min_motif_size,
-			maxmotif = args.max_motif_size,
-			seedrep = args.min_seed_repeat,
-			seedlen = args.min_seed_length,
-			maxerror = args.max_continuous_error,
+			minmotif = args.min_motif,
+			maxmotif = args.max_motif,
+			seedrep = args.min_seedrep,
+			seedlen = args.min_seedlen,
+			maxerror = args.max_errors,
 			minscore = args.min_identity,
-			maxextend = args.max_extend_length,
+			maxextend = args.max_extend,
 			outfmt = args.out_format,
 			outfw = args.out_file
 		)
@@ -198,35 +197,35 @@ def main():
 	)
 	parser_atrfinder.set_defaults(cmd='atr')
 
-	parser_atrfinder.add_argument('-m', '--min-motif-size',
+	parser_atrfinder.add_argument('-m', '--min-motif',
 		default = 1,
 		metavar = '',
 		type = int,
 		help = "minimum motif length (default: 1)"
 	)
 
-	parser_atrfinder.add_argument('-M', '--max-motif-size',
+	parser_atrfinder.add_argument('-M', '--max-motif',
 		default = 6,
 		metavar = '',
 		type = int,
 		help = "maximum motif length (default: 6)"
 	)
 
-	parser_atrfinder.add_argument('-r', '--min-seed-repeat',
+	parser_atrfinder.add_argument('-r', '--min-seedrep',
 		default = 3,
 		metavar = '',
 		type = int,
 		help = "minimum repeat number for seed (default: 3)"
 	)
 
-	parser_atrfinder.add_argument('-l', '--min-seed-length',
+	parser_atrfinder.add_argument('-l', '--min-seedlen',
 		default = 10,
 		metavar = '',
 		type = int,
 		help = "minimum length for seed (default: 10)"
 	)
 
-	parser_atrfinder.add_argument('-e', '--max-continuous-error',
+	parser_atrfinder.add_argument('-e', '--max-errors',
 		default = 3,
 		metavar = '',
 		type = int,
@@ -240,7 +239,7 @@ def main():
 		help = "minimum identity from 0 to 100 (default: 70)"
 	)
 
-	parser_atrfinder.add_argument('-x', '--max-extend-length',
+	parser_atrfinder.add_argument('-x', '--max-extend',
 		default = 2000,
 		metavar = '',
 		type = int,
@@ -299,7 +298,10 @@ def main():
 	else:
 		with args.out_file:
 			func = tandem_repeat_finder(args)
-			seqs = pyfastx.Fastx(args.fastx)
+			seqs = pyfastx.Fastx(args.fastx, uppercase=True)
 
 			for seq in seqs:
 				func(seq)
+
+if __name__ == '__main__':
+	main()

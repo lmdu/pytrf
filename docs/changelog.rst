@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 1.3.2 (2024-07-20)
+--------------------------
+
+- Fixed dna sequence uppercase
+- Updated command line parameters
+
 Version 1.3.1 (2024-07-15)
 --------------------------
 
