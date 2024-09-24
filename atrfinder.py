@@ -1,5 +1,3 @@
-import sys
-
 def initial_matrix(n, m):
 	d = []
 
@@ -206,7 +204,7 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 					#	matrix[a][b] = "{}*".format(matrix[a][b])
 				
 				tandem_start = extend_start - extend_len + 1
-				
+
 				#extend to right
 				extend_start = seed_end
 				extend_maxlen = size - extend_start - 1
@@ -225,7 +223,7 @@ def atr_finder(seq, max_motif_size=6, min_seed_repeat=3, min_seed_length=10,
 					tandem_insert += ed[2]
 					tandem_delete += ed[3]
 
-					path = ed[4]
+					#path = ed[4]
 
 					#for a, b in path:
 					#	matrix[a][b] = "{}*".format(matrix[a][b])
