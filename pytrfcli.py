@@ -14,6 +14,12 @@ def get_format_result(trs, outfmt, outfw):
 		for tr in trs:
 			print(tr.as_string(','), file=outfw)
 
+	elif outfmt == 'bed':
+		for tr in trs:
+			it = tr.as_list()
+			it[1] -= 1
+			print(*it, sep='\t', file=outfw)
+
 	elif outfmt == 'gff':
 		for tr in trs:
 			print(tr.as_gff(), file=outfw)
@@ -137,7 +143,7 @@ def main():
 	parser_parent.add_argument('-f', '--out-format',
 		default = 'tsv',
 		metavar = '',
-		help = "output format, tsv, csv or gff (default: tsv)"
+		help = "output format, tsv, csv, bed or gff (default: tsv)"
 	)
 
 	#ssr finder

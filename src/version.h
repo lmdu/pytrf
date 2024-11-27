@@ -1,1 +1,1 @@
-#define PYTRF_VERSION "1.3.3"
+#define PYTRF_VERSION "1.3.4"

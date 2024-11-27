@@ -30,6 +30,8 @@ sequence repeated consecutively. The pytrf is a lightweight Python C extension f
 or perfect SSRs. It also can find generic tandem repeats with any size of motif,
 such as with maximum motif length of 100 bp. Additionally, it has capability of finding approximate or imperfect tandem repeats. Furthermore, the pytrf not only can be used as Python package but also provides command line interface for users to facilitate the identification of tandem repeats.
 
+Note: pytrf is not a Python binding to common used tool `TRF <https://tandem.bu.edu/trf/trf.html>`_.
+
 Usage
 =====
 
