@@ -51,5 +51,8 @@ setup(
 		'console_scripts': ['pytrf = pytrfcli:main']
 	},
 	py_modules = ["pytrfcli"],
+	install_requires = [
+		"pyfastx>=2.1.0"
+	],
 	test_suite = "tests"
 )
