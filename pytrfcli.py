@@ -309,5 +309,5 @@ def main():
 			for seq in seqs:
 				func(seq)
 
-#if __name__ == '__main__':
-#	main()
+if __name__ == '__main__':
+	main()

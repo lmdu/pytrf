@@ -1,1 +1,13 @@
 
+build/lib.linux-x86_64-3.10/pytrf.cpython-310-x86_64-linux-gnu.so
+build/temp.linux-x86_64-3.10/src/atr.o
+build/temp.linux-x86_64-3.10/src/etr.o
+build/temp.linux-x86_64-3.10/src/gtr.o
+build/temp.linux-x86_64-3.10/src/itr.o
+build/temp.linux-x86_64-3.10/src/pytrf.o
+build/temp.linux-x86_64-3.10/src/str.o
+hs1.fa.gz
+hs1.fa.gz.fxi
+hs1.issr.out
+hs1.kpf
+pytrf.cpython-310-x86_64-linux-gnu.so
