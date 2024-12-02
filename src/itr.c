@@ -107,7 +107,7 @@ static void release_matrix(int **d, int n) {
  * @param m int, motif length
  * @param i int, row number
  * @param d array, wrap-around dynamic programming matrix
- * @return bool, 0 for no error occured, 1 for error occured
+ * @return int, minimum edit distance
  */
 static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 	//column number
@@ -116,7 +116,7 @@ static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 	//match or mismatch cost, 0 or 1
 	int c;
 
-	//return value
+	//position of mimimum edit distance
 	int r;
 
 	//first pass
@@ -132,17 +132,18 @@ static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 
 	//sencond pass
 	d[i][1] = MIN(d[i][1], d[i][m]+1);
+	r = 1;
 
 	for (j = 2; j < m; ++j) {
 		d[i][j] = MIN(d[i][j], d[i][j-1]+1);
-	}
 
-	//find minimum edits
-	r = 0;
-	for (j = 1; j <= m; ++j) {
 		if (d[i][j] <= d[i][r]) {
 			r = j;
 		}
+	}
+
+	if (d[i][m] <= d[i][r]) {
+		r = j;
 	}
 
 	return r;
@@ -181,7 +182,9 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 		j = wrap_around_distance(s[st+i*dr], ms, ml, i, mx);
 
 		if (mx[i][j] > mx[i-1][k]) {
-			++ce;
+			if (++ce > me) {
+				break;
+			}
 		} else {
 			ce = 0;
 			m = j;
@@ -189,9 +192,7 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 
 		k = j;
 
-		if (ce > me) {
-			break;
-		}
+		printf("i: %d, k: %d, ce: %d\n", i, k, ce);
 	}
 
 	if (i > n) {
@@ -615,6 +616,8 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 				//need to recover motif after extend to left
 				reverse_motif(self->motif, j);
 				tandem_start = extend_start - left_extend + 1;
+
+				print_matrix(self->matrix, left_extend, j);
 
 				//extend to right
 				extend_start = seed_end;
