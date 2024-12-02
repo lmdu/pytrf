@@ -191,8 +191,6 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 		}
 
 		k = j;
-
-		printf("i: %d, k: %d, ce: %d\n", i, k, ce);
 	}
 
 	if (i > n) {
