@@ -107,7 +107,7 @@ static void release_matrix(int **d, int n) {
  * @param m int, motif length
  * @param i int, row number
  * @param d array, wrap-around dynamic programming matrix
- * @return int, minimum edit distance
+ * @return bool, error occurred
  */
 static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 	//column number
@@ -139,7 +139,17 @@ static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 
 	r = (i - 1) % m + 1;
 
-	return r
+	if (r > 1) {
+		if (d[i][r] > d[i-1][r-1]) {
+			return 1;
+		}
+	} else {
+		if (d[i][r] > d[i-1][m]) {
+			return 1;
+		}
+	}
+
+	return 0;
 }
 
 /*
@@ -158,7 +168,7 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 	int i;
 
 	//column number of minimum value
-	int k, j, m;
+	int j, m;
 
 	//consecutive errors
 	int ce = 0;
@@ -167,14 +177,9 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 		return 0;
 	}
 
-	k = 0;
-	m = 0;
-
 	//fill the matrix row by row
 	for (i = 1; i <= n; ++i) {
-		j = wrap_around_distance(s[st+i*dr], ms, ml, i, mx);
-
-		if (mx[i][j] > mx[i-1][j-1]) {
+		if (wrap_around_distance(s[st+i*dr], ms, ml, i, mx)) {
 			if (++ce > me) {
 				break;
 			}
@@ -188,6 +193,14 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 	}
 
 	i -= ce;
+
+	//find minimum edit position
+	m = 0;
+	for (j = 1; j <= ml; ++j) {
+		if (mx[i][j] <= mx[i][j-1]) {
+			m = j;
+		}
+	}
 
 	*row = i;
 	*col = m;
@@ -383,11 +396,11 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 	int tandem_delete;
 	float tandem_identity;
 	
-	int left_extend;
-	int right_extend;
+	int left_extend = 0;
+	int right_extend = 0;
 
-	int left_adjust;
-	int right_adjust;
+	int left_adjust = 0;
+	int right_adjust = 0;
 
 	int left_edits[4];
 	int right_edits[4];
@@ -438,7 +451,7 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 				reverse_motif(self->motif, j);
 				tandem_start = extend_start - left_extend + 1;
 
-				print_matrix(self->matrix, left_extend, j);
+				//print_matrix(self->matrix, left_extend, j);
 
 				//extend to right
 				extend_start = seed_end;
