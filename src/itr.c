@@ -116,7 +116,7 @@ static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 	//match or mismatch cost, 0 or 1
 	int c;
 
-	//position of mimimum edit distance
+	//position of edit distance
 	int r;
 
 	//first pass
@@ -132,21 +132,14 @@ static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 
 	//sencond pass
 	d[i][1] = MIN(d[i][1], d[i][m]+1);
-	r = 1;
 
 	for (j = 2; j < m; ++j) {
 		d[i][j] = MIN(d[i][j], d[i][j-1]+1);
-
-		if (d[i][j] <= d[i][r]) {
-			r = j;
-		}
 	}
 
-	if (d[i][m] <= d[i][r]) {
-		r = j;
-	}
+	r = (i - 1) % m + 1;
 
-	return r;
+	return r
 }
 
 /*
@@ -181,16 +174,13 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 	for (i = 1; i <= n; ++i) {
 		j = wrap_around_distance(s[st+i*dr], ms, ml, i, mx);
 
-		if (mx[i][j] > mx[i-1][k]) {
+		if (mx[i][j] > mx[i-1][j-1]) {
 			if (++ce > me) {
 				break;
 			}
 		} else {
 			ce = 0;
-			m = j;
 		}
-
-		k = j;
 	}
 
 	if (i > n) {
@@ -201,46 +191,9 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 
 	*row = i;
 	*col = m;
-	//return i;
-
-	//print_matrix(mx, *row, *col);
-	//printf("row: %d, column: %d\n", *row, *col);
 
 	return 0;
 }
-
-/*
- * @param n int, alignment array length
- * @return array
- */
-/*static int** create_alignment_array(int n) {
-	int i, j;
-	int **arr;
-
-	arr = (int **)malloc(sizeof(int *) * (n+1));
-
-	for (i = 0; i <= n; ++i) {
-		arr[i] = (int *)malloc(sizeof(int) * 4);
-
-		for (j = 0; j < 4; ++j) {
-			arr[i][j] = 0;
-		}
-	}
-
-	return arr;
-}*/
-
-/*
- * @param arr int array,
- * @param n int, array length 
- */
-/*static void free_alignment_array(int **arr, int n) {
-	for (int i = 0; i <= n; ++i) {
-		free(arr[i]);
-	}
-
-	free(arr);
-}*/
 
 /*
  * @param s str, DNA sequence
@@ -260,34 +213,13 @@ static int wrap_around_backtrace(int **mx, int m, int i, int j, int dr, int *eds
 	int del = 0;
 	int ins = 0;
 
-	//alignment ratio
-	//float r;
-
 	//minimum value of edit distance
 	int v;
 
-	//column number of matrix
-	//int j;
-
-	//extend length
-	//int l;
-
-	//match array
-	//int **marr;
-	//int k;
-
-	//current extend position
-	//int p = 0;
-
-	//j = m;
-	//l = i;
-
 	if (i <= 0) {
-		//return 0;
 		j = 0;
 	}
 
-	//marr = create_alignment_array(i);
 	while (i > 0 || j > 0) {
 		if (j == 0) {
 			++ins;
@@ -346,115 +278,6 @@ static int wrap_around_backtrace(int **mx, int m, int i, int j, int dr, int *eds
 		}
 	}
 
-	/*while (i > 0 || j > 0) {
-		//go back through second pass
-		if ((i > 0) && (j > 0) && (j < m)) {
-			if (j == 1) {
-				if (mx[i][j] == (mx[i][m] + 1)) {
-					++del;
-					//++marr[i][3];
-
-					j = m;
-					continue;
-				}
-			} else {
-				if (mx[i][j] == (mx[i][j-1] + 1)) {
-					++del;
-					//++marr[i][3];
-					--j;
-					continue;
-				}
-			}
-		} else if (i == 0) {
-			++del;
-			//++marr[i][3];
-			--j;
-			continue;
-		}
-
-		//go back through first pass
-		if (j == 1) {
-			v = MIN3(mx[i-1][m], mx[i-1][0], mx[i-1][1]);
-
-			if (v == mx[i-1][m]) {
-				if (v == mx[i][j]) {
-					++mat;
-					//++marr[i][0];
-				} else {
-					++sub;
-					//++marr[i][1];
-				}
-
-				--i;
-				j = m;
-			} else if (v == mx[i-1][0]) {
-				if (v == mx[i][j]) {
-					++mat;
-					//++marr[i][0];
-				} else {
-					++sub;
-					//++marr[i][1];
-				}
-
-				--i;
-				--j;
-			} else if (v == (mx[i-1][1])) {
-				++ins;
-				//++marr[i][2];
-				--i;
-			}
-		} else if (j == 0 && i == 1) {
-			++ins;
-			--i;
-		} else {
-			v = MIN3(mx[i-1][j-1], mx[i-1][j], mx[i][j-1]);
-
-			if (v == mx[i-1][j-1]) {
-				if (v == mx[i][j]) {
-					++mat;
-					//++marr[i][0];
-				} else {
-					++sub;
-					//++marr[i][1];
-				}
-
-				--i;
-				--j;
-			} else if (v == mx[i-1][j]) {
-				++ins;
-				//++marr[i][2];
-				--i;
-			} else if (v == mx[i][j-1]) {
-				++del;
-				//++marr[i][3];
-				--j;
-			}
-		}
-	}*/
-
-	/*/find max ratio
-	for (k = 1; k <= l; ++k) {
-		mat += marr[k][0];
-		sub += marr[k][1];
-		ins += marr[k][2];
-		del += marr[k][3];
-
-		if (marr[k][0] > 0) {
-			r = 1.0 * mat / (mat + sub + ins + del);
-
-			if (r >= mi) {
-				p = k;
-				eds[0] = mat;
-				eds[1] = sub;
-				eds[2] = ins;
-				eds[3] = del;
-			}
-		}
-	}
-
-	free_alignment_array(marr, l);*/
-
-	//return p;
 	eds[0] = mat;
 	eds[1] = sub;
 	eds[2] = ins;
