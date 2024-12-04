@@ -118,7 +118,7 @@ static void release_matrix(int **d, int n) {
  * @param m int, motif length
  * @param i int, row number
  * @param d array, wrap-around dynamic programming matrix
- * @return bool, error occurred
+ * @return int, position of minimum edit distance
  */
 static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 	//column number
@@ -143,28 +143,21 @@ static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 
 	//sencond pass
 	d[i][1] = MIN(d[i][1], d[i][m]+1);
+	r = 1;
 
 	for (j = 2; j < m; ++j) {
 		d[i][j] = MIN(d[i][j], d[i][j-1]+1);
-	}
 
-	r = (i - 1) % m + 1;
-
-	if (r > 1) {
-		if (d[i][r] > d[i-1][r-1]) {
-			return 1;
-		}
-	} else {
-		if (i == 1) {
-			m = 0;
-		}
-
-		if (d[i][r] > d[i-1][m]) {
-			return 1;
+		if (d[i][j] <= d[i][r]) {
+			r = j;
 		}
 	}
 
-	return 0;
+	if (d[i][m] <= d[i][r]) {
+		r = m;
+	}
+
+	return r;
 }
 
 /*
@@ -188,19 +181,27 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 	//consecutive errors
 	int ce = 0;
 
+	//prev row minimum edit position
+	int p = 0;
+
 	if (n <= 0) {
 		return 0;
 	}
 
 	//fill the matrix row by row
 	for (i = 1; i <= n; ++i) {
-		if (wrap_around_distance(s[st+i*dr], ms, ml, i, mx)) {
+		j = wrap_around_distance(s[st+i*dr], ms, ml, i, mx);
+		k = (i - 1) % ml + 1;
+
+		if (mx[i][k] > mx[i-1][p]) {
 			if (++ce > me) {
 				break;
 			}
 		} else {
 			ce = 0;
 		}
+
+		p = j;
 	}
 
 	if (i > n) {
@@ -209,30 +210,13 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 
 	i -= ce;
 
-	//find minimum edit position
-	if (i > 0) {
-		k = 0;
-		for (j = 0; j <= ml; ++j) {
-			if (mx[i-1][j] < mx[i-1][k]) {
-				k = j;
-			}
+	m = (i - 1) % ml + 1;
+	for (j = 1; j <= ml; ++j) {
+		if (mx[i][j] < mx[i][m]) {
+			m = j;
 		}
-
-		m = (i - 1) % ml + 1;
-
-		if (mx[i][m] > mx[i-1][k]) {
-			--i;
-			m = k;
-		} else {
-			for (j = 1; j <= ml; ++j) {
-				if (mx[i][j] < mx[i][m]) {
-					m = j;
-				}
-			}
-		}
-	} else {
-		m = 0;
 	}
+
 
 	*row = i;
 	*col = m;
