@@ -80,8 +80,19 @@ static int** initial_matrix(int n, int m) {
 	return d;
 }
 
-void print_matrix(int **mx, int n, int m) {
+void print_matrix(int **mx, const char *s, int n, Py_ssize_t st, int dr, char *ms, int m) {
+	printf("\t\t");
+	for (int j = 0; j < m; ++j) {
+		printf("%c\t", ms[j]);
+	}
+	printf("\n");
+
 	for (int i = 0; i <= n; ++i) {
+		if (i > 0) {
+			printf("%c\t", s[st+i*dr]);
+		} else {
+			printf("\t");
+		}
 		for (int j = 0; j <= m; ++j) {
 			printf("%d\t", mx[i][j]);
 		}
@@ -144,6 +155,10 @@ static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
 			return 1;
 		}
 	} else {
+		if (i == 1) {
+			m = 0;
+		}
+
 		if (d[i][r] > d[i-1][m]) {
 			return 1;
 		}
@@ -168,7 +183,7 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 	int i;
 
 	//column number of minimum value
-	int j, m;
+	int j, m, k;
 
 	//consecutive errors
 	int ce = 0;
@@ -195,15 +210,34 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 	i -= ce;
 
 	//find minimum edit position
-	m = 0;
-	for (j = 1; j <= ml; ++j) {
-		if (mx[i][j] <= mx[i][j-1]) {
-			m = j;
+	if (i > 0) {
+		k = 0;
+		for (j = 0; j <= ml; ++j) {
+			if (mx[i-1][j] < mx[i-1][k]) {
+				k = j;
+			}
 		}
+
+		m = (i - 1) % ml + 1;
+
+		if (mx[i][m] > mx[i-1][k]) {
+			--i;
+			m = k;
+		} else {
+			for (j = 1; j <= ml; ++j) {
+				if (mx[i][j] < mx[i][m]) {
+					m = j;
+				}
+			}
+		}
+	} else {
+		m = 0;
 	}
 
 	*row = i;
 	*col = m;
+
+	//print_matrix(mx, s, n, st, dr, ms, ml);
 
 	return 0;
 }
@@ -436,7 +470,7 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 
 				//extend to left
 				extend_start = seed_start;
-				extend_maxlen = extend_start;
+				extend_maxlen = extend_start - self->next_start;
 
 				if (extend_maxlen > self->extend_maxlen) {
 					extend_maxlen = self->extend_maxlen;
@@ -536,6 +570,8 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 	int left_edits[4];
 	int right_edits[4];
 
+	Py_ssize_t next_start = 0;
+
 	PyObject *itrs = PyList_New(0);
 	PyObject *tmp;
 
@@ -570,7 +606,7 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 
 				//extend to left
 				extend_start = seed_start;
-				extend_maxlen = extend_start;
+				extend_maxlen = extend_start - next_start;
 
 				if (extend_maxlen > self->extend_maxlen) {
 					extend_maxlen = self->extend_maxlen;
@@ -612,6 +648,7 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 					PyList_Append(itrs, tmp);
 					Py_DECREF(tmp);
 
+					next_start = tandem_end;
 					i = tandem_end - 1;
 					break;
 				}
