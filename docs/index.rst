@@ -16,6 +16,8 @@ Additionally, it has capability of finding approximate or imperfect tandem repea
 Furthermore, the pytrf not only can be used as Python package but also provides command
 line interface for users to facilitate the identification of tandem repeats.
 
+Note: pytrf is not a Python binding to common used tool `TRF <https://tandem.bu.edu/trf/trf.html>`_.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
