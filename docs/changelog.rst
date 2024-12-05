@@ -5,6 +5,7 @@ Version 1.4.0 (2024-12-05)
 --------------------------
 
 - Added seed length to ATR object
+- Added support for Python 3.13
 - Changed the output column order of findatr
 - Fixed tandem repeat overlap
 - Fixed wraparound backtrace error
