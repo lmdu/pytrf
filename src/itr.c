@@ -171,12 +171,12 @@ static int wrap_around_distance(char b, char *s, int m, int i, int **d) {
  * @param dr int, extend direction -1 to left and 1 to right
  * @return int, extend length or row number of matrix
  */
-static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssize_t st, int n, int me, int dr, int *row, int *col) {
+static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssize_t st, int n, int me, int dr) {
 	//row number of matrix
 	int i;
 
 	//column number of minimum value
-	int j, m, k;
+	int j;
 
 	//consecutive errors
 	int ce = 0;
@@ -191,9 +191,8 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 	//fill the matrix row by row
 	for (i = 1; i <= n; ++i) {
 		j = wrap_around_distance(s[st+i*dr], ms, ml, i, mx);
-		k = (i - 1) % ml + 1;
 
-		if (mx[i][k] > mx[i-1][p]) {
+		if (mx[i][j] > mx[i-1][p]) {
 			if (++ce > me) {
 				break;
 			}
@@ -210,20 +209,9 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
 
 	i -= ce;
 
-	m = (i - 1) % ml + 1;
-	for (j = 1; j <= ml; ++j) {
-		if (mx[i][j] < mx[i][m]) {
-			m = j;
-		}
-	}
-
-
-	*row = i;
-	*col = m;
-
 	//print_matrix(mx, s, n, st, dr, ms, ml);
 
-	return 0;
+	return i;
 }
 
 /*
@@ -236,19 +224,26 @@ static int wrap_around_extend(const char *s, char *ms, int ml, int **mx, Py_ssiz
  * @param dr int, backtrace direction -1 to left and 1 to right
  * @param eds int array, number of mat, sub, del and ins
  * @param mi float, minimum identity
- * @return int, column number of minimum distance
+ * @return int, number of matches
  */
-static int wrap_around_backtrace(int **mx, int m, int i, int j, int dr, int *eds, float mi) {
+static int wrap_around_backtrace(int **mx, int m, int i, int dr, int *eds, float mi) {
 	int mat = 0;
 	int sub = 0;
 	int del = 0;
 	int ins = 0;
 
 	//minimum value of edit distance
-	int v;
+	int v, j, k;
 
-	if (i <= 0) {
-		j = 0;
+	j = 0;
+
+	//find minimum value
+	if (i > 0) {
+		for (k = 1; k <= m; ++k) {
+			if (mx[i][k] <= mx[i][j]) {
+				j = k;
+			}
+		}
 	}
 
 	while (i > 0 || j > 0) {
@@ -286,25 +281,23 @@ static int wrap_around_backtrace(int **mx, int m, int i, int j, int dr, int *eds
 				++del;
 				--j;
 			}
-
 		} else {
 			v = MIN3(mx[i-1][j-1], mx[i-1][j], mx[i][j-1]);
 
-			if (v == mx[i-1][j-1]) {
-				if (v == mx[i][j]) {
-					++mat;
-				} else {
-					++sub;
-				}
-
+			if (v == mx[i-1][j-1] && v == mx[i][j]) {
+				++mat;
+				--i;
+				--j;
+			} else if (v == mx[i][j-1]) {
+				++del;
+				--j;
+			} else if (v == mx[i-1][j-1]) {
+				++sub;
 				--i;
 				--j;
 			} else if (v == mx[i-1][j]) {
 				++ins;
 				--i;
-			} else if (v == mx[i][j-1]) {
-				++del;
-				--j;
 			}
 		}
 	}
@@ -417,9 +410,6 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 	int left_extend = 0;
 	int right_extend = 0;
 
-	int left_adjust = 0;
-	int right_adjust = 0;
-
 	int left_edits[4];
 	int right_edits[4];
 
@@ -462,9 +452,9 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 
 				//need to reverse motif before extend to left
 				reverse_motif(self->motif, j);
-				wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
-									extend_maxlen, self->max_errors, -1, &left_extend, &left_adjust);
-				wrap_around_backtrace(self->matrix, j, left_extend, left_adjust, -1, left_edits, self->min_identity);
+				left_extend = wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
+									extend_maxlen, self->max_errors, -1);
+				wrap_around_backtrace(self->matrix, j, left_extend, -1, left_edits, self->min_identity);
 				//need to recover motif after extend to left
 				reverse_motif(self->motif, j);
 				tandem_start = extend_start - left_extend + 1;
@@ -478,9 +468,9 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 					extend_maxlen = self->extend_maxlen;
 				}
 
-				wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
-									extend_maxlen, self->max_errors, 1, &right_extend, &right_adjust);
-				wrap_around_backtrace(self->matrix, j, right_extend, right_adjust, 1, right_edits, self->min_identity);
+				right_extend = wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
+									extend_maxlen, self->max_errors, 1);
+				wrap_around_backtrace(self->matrix, j, right_extend, 1, right_edits, self->min_identity);
 
 				tandem_end = extend_start + right_extend + 1;
 				tandem_match = left_edits[0] + right_edits[0] + seed_length;
@@ -548,9 +538,6 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 	int left_extend = 0;
 	int right_extend = 0;
 
-	int left_adjust = 0;
-	int right_adjust = 0;
-
 	int left_edits[4];
 	int right_edits[4];
 
@@ -597,9 +584,9 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 				}
 
 				reverse_motif(self->motif, j);
-				wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
-									extend_maxlen, self->max_errors, -1, &left_extend, &left_adjust);
-				wrap_around_backtrace(self->matrix, j, left_extend, left_adjust, -1, left_edits, self->min_identity);
+				left_extend = wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
+									extend_maxlen, self->max_errors, -1);
+				wrap_around_backtrace(self->matrix, j, left_extend, -1, left_edits, self->min_identity);
 				reverse_motif(self->motif, j);
 
 				tandem_start = extend_start - left_extend + 1;
@@ -611,9 +598,9 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 					extend_maxlen = self->extend_maxlen;
 				}
 
-				wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
-									extend_maxlen, self->max_errors, 1, &right_extend, &right_adjust);
-				wrap_around_backtrace(self->matrix, j, right_extend, right_adjust, 1, right_edits, self->min_identity);
+				right_extend = wrap_around_extend(self->seq, self->motif, j, self->matrix, extend_start,
+									extend_maxlen, self->max_errors, 1);
+				wrap_around_backtrace(self->matrix, j, right_extend, 1, right_edits, self->min_identity);
 
 				tandem_end = extend_start + right_extend + 1;
 				tandem_match = left_edits[0] + right_edits[0] + seed_length;

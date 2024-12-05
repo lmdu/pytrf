@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 1.3.4 (2024-12-06)
+--------------------------
+
+- Fixed tandem repeat overlap
+- Fixed wraparound backtrace error
+
 Version 1.3.3 (2024-07-20)
 --------------------------
 
