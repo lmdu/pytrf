@@ -1,7 +1,7 @@
 Changelog
 =========
 
-Version 1.4.0 (2024-12-06)
+Version 1.4.0 (2024-12-05)
 --------------------------
 
 - Added seed length to ATR object
