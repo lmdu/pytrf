@@ -6,5 +6,5 @@ import pytrf
 #seq = "AAAAAAAAAAAAAAAAGAAATCCAAATAAAATTT"
 seq = "GTTTTGTTTTGTTTTGTTTTTTGAGACAGAGTTTC"
 
-atr = pytrf.ATRFinder('chr1', seq)
-print(atr.as_list())
+for atr in pytrf.ATRFinder('chr1', seq):
+	print(atr.as_string())
