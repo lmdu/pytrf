@@ -39,7 +39,7 @@ pytrf.STRFinder
 
 	.. py:method:: as_list()
 
-		Put all SSRs in a list and return, each SSR in list has 7 columns including [sequence name, start position, end position, motif sequence, motif length, repeats, SSR length]
+		Put all SSRs in a list and return, each SSR in list has 7 columns including [sequence or chromosome name, start position, end position, motif sequence, motif length, repeat number, repeat length]
 
 		:return: all SSRs found
 
@@ -68,7 +68,7 @@ pytrf.GTRFinder
 
 	.. py:method:: as_list()
 
-		Put all GTRs in a list and return, each GTR in list has 7 columns including [sequence name, start position, end position, motif sequence, motif length, repeats, GTR length]
+		Put all GTRs in a list and return, each GTR in list has 7 columns including [sequence or chromosome name, start position, end position, motif sequence, motif length, repeat number, repeat length]
 
 		:return: all GTRs found
 
@@ -103,7 +103,7 @@ pytrf.ATRFinder
 
 	.. py:method:: as_list()
 
-		Put all ATRs in a list and return, each ATR in list has 14 columns including [sequence name, seed start position, seed end position, motif sequence, motif length, seed repeat, ATR start position, ATR end position, ATR repeat, ATR length, extend matches, extend substitutions, extend insertions, extend deletions, extend identity]
+		Put all ATRs in a list and return, each ATR in list has 16 columns including [sequence or chromosome name, start position, end position, motif sequence, motif length, repeat number, repeat length, seed start position, seed end position, seed repeat, seed length, extend matches, extend substitutions, extend insertions, extend deletions, extend identity]
 
 pytrf.ETR
 ---------
@@ -146,7 +146,7 @@ pytrf.ETR
 
 	.. py:method:: as_list()
 
-		convert ETR object to a list
+		convert ETR object to a list, [sequence or chromosome name, start position, end position, motif sequence, motif length, repeat number, repeat length]
 
 	.. py:method:: as_dict()
 
@@ -158,7 +158,7 @@ pytrf.ETR
 
 	.. py:method:: as_string(separator='\t', terminator='')
 
-		convert ETR object to a TSV or CSV string by using separator and terminator
+		convert ETR object to a TSV or CSV string by using separator and terminator, columns: sequence or chromosome name, start position, end position, motif sequence, motif length, repeat number, repeat length
 
 		:param str separator: a separator between columns
 
@@ -241,7 +241,7 @@ pytrf.ATR
 
 	.. py:method:: as_list()
 
-		convert ATR object to a list
+		convert ATR object to a list, [sequence or chromosome name, start position, end position, motif sequence, motif length, repeat number, repeat length, seed start position, seed end position, seed repeat, seed length, extend matches, extend substitutions, extend insertions, extend deletions, extend identity]
 
 	.. py:method:: as_dict()
 
@@ -253,7 +253,7 @@ pytrf.ATR
 
 	.. py:method:: as_string(separator='\t', terminator='')
 
-		convert ATR object to a TSV or CSV string by using separator and terminator
+		convert ATR object to a TSV or CSV string by using separator and terminator, columns: sequence or chromosome name, start position, end position, motif sequence, motif length, repeat number, repeat length, seed start position, seed end position, seed repeat, seed length, extend matches, extend substitutions, extend insertions, extend deletions, extend identity
 
 		:param str separator: a separator between columns
 

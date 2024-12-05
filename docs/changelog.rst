@@ -1,9 +1,11 @@
 Changelog
 =========
 
-Version 1.3.4 (2024-12-06)
+Version 1.4.0 (2024-12-06)
 --------------------------
 
+- Added seed length to ATR object
+- Changed the output column order of findatr
 - Fixed tandem repeat overlap
 - Fixed wraparound backtrace error
 

@@ -35,6 +35,9 @@ typedef struct {
 	//seed repeats
 	int srepeat;
 
+	//seed length
+	int slen;
+
 	//motif length
 	int mlen;
 

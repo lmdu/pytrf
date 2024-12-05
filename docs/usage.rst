@@ -269,9 +269,11 @@ Find exact microsatellites or simple sequence repeats (SSRs) from fasta/q file.
 	options:
 	  -h, --help            show this help message and exit
 	  -o , --out-file       output file (default: stdout)
-	  -f , --out-format     output format, tsv, csv or gff (default: tsv)
+	  -f , --out-format     output format, tsv, csv, bed or gff (default: tsv)
 	  -r mono di tri tetra penta hexa, --repeats mono di tri tetra penta hexa
 	                        minimum repeats for each STR type (default: 12 7 5 4 4 4)
+
+The columns in findstr tsv, csv, bed output file: sequence or chromosome name, start position, end position, motif sequence, motif length, repeat number, repeat length.
 
 Find exact generic tandem repeats (GTRs) from fasta/q file.
 
@@ -292,6 +294,8 @@ Find exact generic tandem repeats (GTRs) from fasta/q file.
 	  -M , --max-motif    maximum motif length (default: 100)
 	  -r , --min-repeat   minimum repeat number (default: 3)
 	  -l , --min-length   minimum repeat length (default: 10)
+
+The columns in findgtr tsv, csv, bed output file: sequence or chromosome name, start position, end position, motif sequence, motif length, repeat number, repeat length.
 
 Find imperfect or approximate tandem repeats (ATRs)
 
@@ -321,6 +325,8 @@ Find imperfect or approximate tandem repeats (ATRs)
 	  -p , --min-identity   minimum identity from 0 to 1 (default: 0.7)
 	  -x , --max-extend-length
 	                        maximum length allowed to extend (default: 2000)
+
+The columns in findatr tsv, csv, bed output file: sequence or chromosome name, start position, end position, motif sequence, motif length, repeat number, repeat length, seed start position, seed end position, seed repeat number, seed length, number of matches, number of substitutions, number of insertions, number of deletions, extend alignment identity between imperfect repeat and its perfect counterpart.
 
 Extract tandem repeat sequence and flanking sequence according results of findatr, findgtr or findstr.
 

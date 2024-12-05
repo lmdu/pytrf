@@ -491,6 +491,7 @@ static PyObject* pytrf_itrfinder_next(pytrf_ITRFinder *self) {
 					atr->sstart = seed_start + 1;
 					atr->send = seed_end + 1;
 					atr->srepeat = seed_repeat;
+					atr->slen = seed_length;
 					atr->repeat = tandem_length * 1.0 / j;
 					atr->length = tandem_length;
 					atr->matches = tandem_match;
@@ -612,9 +613,10 @@ static PyObject* pytrf_itrfinder_as_list(pytrf_ITRFinder *self) {
 				tandem_repeat = tandem_length * 1.0 / j;
 
 				if (tandem_identity >= self->min_identity) {
-					tmp = Py_BuildValue("Onnsiinnfiiiiif", self->seqname, seed_start + 1, seed_end + 1, self->motif,
-										j, seed_repeat, tandem_start, tandem_end, tandem_repeat, tandem_length, tandem_match,
-										tandem_substitute, tandem_insert, tandem_delete, tandem_identity);
+					tmp = Py_BuildValue("Onnsifinniiiiiif", self->seqname, tandem_start, tandem_end, self->motif, j,
+										tandem_repeat, tandem_length, seed_start + 1, seed_end + 1, seed_repeat,
+										seed_length, tandem_match, tandem_substitute, tandem_insert, tandem_delete,
+										tandem_identity);
 
 					PyList_Append(itrs, tmp);
 					Py_DECREF(tmp);

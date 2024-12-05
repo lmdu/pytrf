@@ -242,7 +242,7 @@ def main():
 		default = 70,
 		metavar = '',
 		type = float,
-		help = "minimum identity from 0 to 100 (default: 70)"
+		help = "minimum identity for extending, 0 to 100 (default: 70)"
 	)
 
 	parser_atrfinder.add_argument('-x', '--max-extend',
