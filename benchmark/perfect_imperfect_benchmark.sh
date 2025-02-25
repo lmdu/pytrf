@@ -59,44 +59,24 @@ for gfile in ${gfiles[@]}; do
 	filename=$(basename $gfile)
 	filename="${filename%.*}"
 
-	#MISA
-	measure_memory_time "perl $bindir/misa.pl $gfile"
-	mv $gfile.misa $outdir/$filename.misa.out
+	#TRF
+	measure_memory_time "trf $gfile 2 7 7 80 10 50 100 -h -d"
+	mv $gfile.2.7.7.80.10.50.100.dat $outdir/$filename.trf.out
 
 	#SciRoKoCo
-	measure_memory_time "mono $bindir/SciRoKo/SciRoKoCo.exe -i $gfile -o $outdir/$filename.sciroko.td -mode misa -m 13-7-5-4-3-3"
-
-	#PERF
-	measure_memory_time "PERF -i $gfile -m 1 -M 6 -u repeat_units.txt -o $outdir/$filename.perf.out"
-
-	#RPTRF
-	#measure_memory_time "$bindir/RPTRF -s $gfile -m 6 -t 13"
-	#cat $PWD/result-*.txt > $outdir/$filename.rptrf.out
-	#rm $PWD/result-*.txt
-
-	#GMATA
-	measure_memory_time "perl $bindir/GMATA/gssr.pl -i $gfile -o $outdir/$filename.gmata.out -m 1 -x 6 -r 3 -s 0"
+	measure_memory_time "mono $bindir/SciRoKo/SciRoKoCo.exe -i $gfile -o $outdir/$filename.sciroko.td -mode mmfp -seedl 10"
 
 	#Phobos
 	measure_memory_time "$bindir/phobos/bin/phobos_64_libstdc++6 -M exact -l 13 -u 1 -U 6 --minPerfection 100 --outputFormat 3 --reportUnit 0 $gfile $outdir/$filename.phobos.out"
 
-	#MREPS
-	#measure_memory_time "$bindir/mreps -minsize 13 -minperiod 1 -maxperiod 6 -exp 3 -noprint -fasta $gfile" "$outdir/$filename.mreps.out"
-
-	#dot2dot
-	#measure_memory_time "$bindir/dot.linux -s $gfile -c dot.config -o $outdir/$filename.out.dot -l 1 -L 6"
-
-	#KMERSSR
-	measure_memory_time "$bindir/kmer-ssr -i $gfile -o $outdir/$filename.kmer.out -p 1-6 -r 3 -n 13"
-
-	#SSRIT
-	measure_memory_time "perl $bindir/ssrit.pl $gfile" "$outdir/$filename.ssrit.out"
+	#ULTRA
+	measure_memory_time "$bindir/ultra --minunit 1 -o $outdir/$filename.ultra.out  $gfile"
 
 	#Tantan
-	measure_memory_time "$bindir/tantan -f4 -b0 -j0 -w6 -n3 $gfile" "$outdir/$filename.tantan.out"
+	measure_memory_time "$bindir/tantan -f4 -w100 -n3 $gfile" "$outdir/$filename.tantan.out"
 
 	#PYTRF
-	measure_memory_time "pytrf findstr -o $outdir/$filename.pytrf.out -r 13 7 5 4 3 3 $gfile"
+	measure_memory_time "pytrf findatr -M 100 -o $outdir/$filename.pytrf.out $gfile"
 
 	#get genome information
 	array=($(python3 get_fasta_info.py $gfile))
