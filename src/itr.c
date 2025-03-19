@@ -27,15 +27,17 @@ static int is_redundant_motif(char *s, int l, int m) {
 	}
 
 	for (j = 1; j < m; ++j) {
-		b = l - j;
-		i = 0;
+		if (l % j == 0) {
+			b = l - j;
+			i = 0;
 
-		while ((i < b) && (s[i] == s[i+j])) {
-			++i;
-		}
+			while ((i < b) && (s[i] == s[i+j])) {
+				++i;
+			}
 
-		if (i == b) {
-			return 1;
+			if (i == b) {
+				return 1;
+			}
 		}
 	}
 

@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 1.4.2 (2025-03-19)
+--------------------------
+
+- Fixed atr and gtr redundant motif
+
 Version 1.4.1 (2024-12-05)
 --------------------------
 
