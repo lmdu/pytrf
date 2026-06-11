@@ -6,9 +6,7 @@ extension = Extension('pytrf',
 	sources = glob.glob('src/*.c'),
 )
 
-description = (
-	"pytrf is a python package for finding tandem repeats from genomic sequences"
-)
+description = "Fast finding tandem repeats from genomic sequences"
 
 with open('README.rst') as fh:
 	long_description = fh.read()
@@ -33,16 +31,14 @@ setup(
 			"Intended Audience :: Education",
 			"Intended Audience :: Science/Research",
 			"Natural Language :: English",
-			"License :: OSI Approved :: MIT License",
 			"Programming Language :: C",
-			"Programming Language :: Python :: 3.6",
-			"Programming Language :: Python :: 3.7",
 			"Programming Language :: Python :: 3.8",
 			"Programming Language :: Python :: 3.9",
 			"Programming Language :: Python :: 3.10",
 			"Programming Language :: Python :: 3.11",
 			"Programming Language :: Python :: 3.12",
 			"Programming Language :: Python :: 3.13",
+			"Programming Language :: Python :: 3.14",
 			"Operating System :: Microsoft :: Windows",
 			"Operating System :: POSIX :: Linux",
 			"Operating System :: Unix",
@@ -53,7 +49,7 @@ setup(
 	},
 	py_modules = ["pytrfcli"],
 	install_requires = [
-		"pyfastx>=2.1.0"
+		"pyfastx>=2.3.1"
 	],
 	test_suite = "tests"
 )

@@ -17,6 +17,7 @@ def get_format_result(trs, outfmt, outfw):
 	elif outfmt == 'bed':
 		for tr in trs:
 			it = tr.as_list()
+			it = list(it)
 			it[1] -= 1
 			print(*it, sep='\t', file=outfw)
 
@@ -73,7 +74,7 @@ def extract_sequence(args):
 	#get input format
 	dialect = csv.Sniffer().sniff(args.repeat_file.read(1024))
 	args.repeat_file.seek(0)
-	reader = csv.reader(args.repeat_file, delimiter=dialect)
+	reader = csv.reader(args.repeat_file, dialect)
 
 	if args.out_format == 'fasta':
 		for row in reader:
