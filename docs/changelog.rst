@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Version 1.5.0 (2026-06-11)
+--------------------------
+
+- Added support for Python 3.14
+- Fixed bed format output
+- Fixed extract command delimiter error
+
 Version 1.4.2 (2025-03-19)
 --------------------------
 
