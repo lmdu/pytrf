@@ -80,3 +80,8 @@ Documentation
 =============
 
 For more detailed usage, see our manual: `https://pytrf.readthedocs.io <https://pytrf.readthedocs.io>`_
+
+Citation
+========
+
+`Du et al. Pytrf: a python package for finding tandem repeats from genomic sequences. BMC Bioinformatics, 2025, 26: 151 <https://doi.org/10.1186/s12859-025-06168-3>`_
